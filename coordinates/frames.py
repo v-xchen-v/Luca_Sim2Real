@@ -34,6 +34,9 @@ real_world_frame = create_frame([0, 0, 0], [0, 0, 0]) # Origin at the a predefin
 camera_local_frame = create_frame([0, 0, 0], [0, 0, 0]) # Origin at the camera's focal point and no rotation
 calibration_board_local_frame = create_frame([0, 0, 0], [0, 0, 0]) # Origin at the calibration board's first corner and no rotation
 object_local_frame = create_frame([0, 0, 0], [0, 0, 0]) # Origin at the object's center (or a predefined reference point) and no rotation
+robot_base_local_frame = create_frame([0, 0, 0], [0, 0, 0]) # Origin at the robot's right arm base and no rotation
+
+## Calculate real-world frames
 
 
 coordinate_frames = {

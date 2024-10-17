@@ -3,7 +3,7 @@ module_path = os.path.abspath(os.path.join('.'))
 if module_path not in sys.path:
     sys.path.append(module_path)
     
-from luca_transformation.coordinate_frame import coordinate_frames
+from coordinates.frames import coordinate_frames
 import matplotlib.pyplot as plt
 from pytransform3d.transformations import plot_transform
 

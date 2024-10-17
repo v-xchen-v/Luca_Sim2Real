@@ -39,7 +39,8 @@ rotation_z = np.array([
 ])
 
 # Define all the transformations in the table
-T_sim_to_real = create_transformation_matrix([1, 1, 0], rotation_z)
+## Transformation between simulation and real world: Make them the same
+T_sim_to_real = create_transformation_matrix([0, 0, 0], None)
 T_real_to_sim = np.linalg.inv(T_sim_to_real)  # Inverse of sim to real
 
 T_robot_base_real_to_world = create_transformation_matrix([0, 0, 1])
@@ -73,15 +74,16 @@ ax = fig.add_subplot(111, projection='3d')
 
 # List of transformations to plot
 transforms = {
-    "sim_world": np.eye(4),
-    "real_world": T_sim_to_real,
-    "robot_base_real": T_robot_base_real_to_world,
-    "robot_base_sim": T_robot_base_sim_to_sim_world,
-    "right_hand_real": T_robot_right_hand_real_to_world,
-    "right_hand_sim": T_robot_right_hand_sim_to_sim_world,
-    "object_real": T_object_real_to_world,
-    "object_sim": T_object_sim_to_sim_world,
-    "camera_real": T_camera_real_to_world,
+    "T_sim_to_real": T_sim_to_real,
+    # "sim_world": np.eye(4),
+    # "real_world": T_sim_to_real,
+    # "robot_base_real": T_robot_base_real_to_world,
+    # "robot_base_sim": T_robot_base_sim_to_sim_world,
+    # "right_hand_real": T_robot_right_hand_real_to_world,
+    # "right_hand_sim": T_robot_right_hand_sim_to_sim_world,
+    # "object_real": T_object_real_to_world,
+    # "object_sim": T_object_sim_to_sim_world,
+    # "camera_real": T_camera_real_to_world,
 }
 
 # Plot all frames
