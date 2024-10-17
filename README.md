@@ -28,9 +28,18 @@
 │   ├── robot_control.py        # Robot control logic (move joints, grasp objects)
 │   └── robot_kinematics.py     # Robot kinematics calculations (forward/inverse)
 │
-├── /scripts/                  # Standalone scripts and examples
+├── /scripts/                  # Standalone scripts
 │   ├── run_calibration.py     # Example of how to run the calibration
 │   └── visualize_transforms.py # Example of visualization of all frames
+│
+├── /examples/                 # Examples folder for standalone demos
+│   ├── vis_transforms.py      # Example of using transformation matrices
+│   └── example_visualization.py  # Example of visualizing multiple frames
+|
+├── /debug/                    # debug folder for testing and troubleshooting
+│   ├── debug_transformations.py  # Script to print and validate transformations
+│   ├── debug_visualization.py    # Script to visualize frames with extra logging
+│   └── debug_robot.py             # Script to test robot control commands and log errors
 │
 ├── /tests/                    # Tests for calibration, transformations, and robot logic
 │   ├── test_calibration.py
