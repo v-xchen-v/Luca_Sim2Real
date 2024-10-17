@@ -12,6 +12,8 @@ from matplotlib import pyplot as plt
 from pytransform3d.transformations import plot_transform
 import numpy as np
 import cv2
+from coordinates.transformations import create_transformation_matrix
+from scipy.spatial.transform import Rotation as R
 
 pattern_size = (5, 8)  # Checkerboard size (rows, columns)
 square_size = 0.03  # Size of a square on the checkerboard (in meters)
@@ -67,7 +69,7 @@ if __name__ == "__main__":
             
             # Compute the transformation matrix from the calibration board to the camera
             try:
-                T_table_to_camera = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir, error_threshold=None)
+                T_table_to_camera = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir=None, error_threshold=None)
 
                 # Visualize the transformation dynamically
                     # Clear the previous plot
@@ -80,16 +82,17 @@ if __name__ == "__main__":
                 # Re-plot the initial frame and the new dynamic frame
                 
                 # calibration_board_frame, x to right, y to down, z to back, 4x4 transformation matrix
-                # construct a 
+                # construct a rotation matrix, 
+                T_world_to_calibration_board_local = create_transformation_matrix([0, 0, 0], R.from_rotvec([np.pi, 0, 0]).as_matrix())
                 
-                calibration_board_frame = np.array([[1, 0, 0, 0],
-                                                    [0, -1, 0, 0],
-                                                    [0, 0, -1, 0],
-                                                    [0, 0, 0, 1]])
+                # calibration_board_frame = np.array([[1, 0, 0, 0],
+                #                                     [0, -1, 0, 0],
+                #                                     [0, 0, -1, 0],
+                #                                     [0, 0, 0, 1]])
 
                 plot_transform(ax=ax, A2B=np.eye(4), name="Origin")  # Frame at origin
-                plot_transform(ax=ax, A2B=calibration_board_frame, name="Start Frame")  # Frame at origin
-                plot_transform(ax=ax, A2B=new_transform, name="Dynamic Frame")  # New frame
+                plot_transform(ax=ax, A2B=T_world_to_calibration_board_local, name="Start Frame")  # Frame at origin
+                plot_transform(ax=ax, A2B=new_transform@T_table_to_camera, name="Dynamic Frame")  # New frame
 
                 # Pause to create the animation effect
                 plt.pause(0.1)

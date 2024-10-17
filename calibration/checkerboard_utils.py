@@ -78,7 +78,7 @@ def generate_object_points(pattern_size: Tuple[int, int], square_size: float) ->
     
     return objp
 
-def visualize_detected_corners(image, corners, pattern_size, found):
+def draw_detected_corners(image, corners, pattern_size, found):
     """
     Visualize detected corners on the checkerboard image.
 
@@ -90,12 +90,14 @@ def visualize_detected_corners(image, corners, pattern_size, found):
     """
     vis_image = image.copy()  # Make a copy to draw on
     if found:
+        # draw the first corner
+        cv2.circle(vis_image, tuple(corners[0].flatten().astype(int)), 5, (0, 0, 255), -1)
+        
         cv2.drawChessboardCorners(vis_image, pattern_size, corners, found)
-        cv2.imshow("Detected Corners", vis_image)
-        cv2.waitKey(0)  # Wait for a key press to close the window
-        cv2.destroyAllWindows()
+        return vis_image
     else:
         print("Checkerboard not found. Cannot visualize corners.")
+        return None
               
 def save_visualization(image, corners, pattern_size, found, output_path):
     """
@@ -108,13 +110,8 @@ def save_visualization(image, corners, pattern_size, found, output_path):
     - found: Boolean indicating if the checkerboard was found.
     - output_path: Path to save the visualization image.
     """
-    vis_image = image.copy()  # Make a copy to draw on
     if found:
-        # draw the first corner
-        cv2.circle(vis_image, tuple(corners[0].flatten().astype(int)), 5, (0, 0, 255), -1)
-        
-        # draw all the corners
-        cv2.drawChessboardCorners(vis_image, pattern_size, corners, found)
+        vis_image = draw_detected_corners(image, corners, pattern_size, found)
         cv2.imwrite(output_path, vis_image)
         print(f"Corner visualization saved to {output_path}.")
     else:
