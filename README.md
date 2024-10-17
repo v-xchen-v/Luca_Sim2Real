@@ -4,6 +4,25 @@
 - **0.1.0** (2024-10-17)
     - Initial release with core features: setting up coordinate frames in grasp task.
 
+## Progress Overview
+
+### Completed Features
+- [x] Core functionality (e.g., Transformation between coordinate frames)
+- [x] Compute T_table_to_camera with a checkerboard image.
+- [x] Basic input/output handling
+- [x] 2D plotting of landmarks
+
+### Ongoing Development
+- [ ] Add 3D plotting (`plot3d_landmarks`)
+- [ ] Implement constraints (e.g., Max velocity/acceleration)
+- [ ] Finalize PD controller gains tuning  
+- [ ] Optimize transformations for points and axes
+
+### Planned Features
+- [ ] Integration with ROS topics (`/rm_driver/JointPos`)
+- [ ] Refine force/angle handling in Isaac Sim
+- [ ] Add unit tests and documentation for camera-world-robot transformations  
+- [ ] Example scripts showcasing common workflows (in `example/` folder)
 
 ## Folder Structure
 /robotics_project/
@@ -15,7 +34,8 @@
 │   │   ├── extrinsics.yaml
 │   │   └── calibration_report.txt
 │   ├── checkerboard_utils.py  # Utilities for handling checkerboard patterns
-│   └── calibrate.py           # Main script for running calibration
+<!-- │   └── calibrate.py           # Main script for running calibration -->
+│   └── calibrate_board_to_camera.py  # Script to compute the transformation matrix
 │
 ├── /coordinates/              # Contains coordinate frames and transformations
 │   ├── __init__.py
