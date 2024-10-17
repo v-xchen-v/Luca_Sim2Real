@@ -6,7 +6,8 @@ setup(
     packages=['luca_transformation'],
     install_requires=[
         'pytransform3d',
-        'opencv-python'
+        'opencv-python',
+        'pyrealsense2',
     ],
     python_requires='>=3.8',
 )

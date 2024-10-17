@@ -43,6 +43,8 @@ rotation_z = np.array([
 T_sim_to_real = create_transformation_matrix([0, 0, 0], None)
 T_real_to_sim = np.linalg.inv(T_sim_to_real)  # Inverse of sim to real
 
+## Compute the transformation from table_real to camera_real
+# T_table_real_to_camera_real = 
 T_robot_base_real_to_world = create_transformation_matrix([0, 0, 1])
 T_robot_base_sim_to_sim_world = create_transformation_matrix([0.5, 0.5, 0])
 

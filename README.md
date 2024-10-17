@@ -26,6 +26,13 @@
 
 ## Folder Structure
 /robotics_project/
+|
+├── /camera_operations/               # Folder for camera operations
+│   ├── __init__.py                   # Make it a Python package
+│   ├── camera_capture.py             # Script to capture images from a camera
+<!-- │   ├── camera_manager.py             # Manage multiple cameras
+│   ├── video_stream.py               # Handle video streams from cameras -->
+│   └── utils.py                      # Helper functions for camera operations
 │
 ├── /calibration/              # Contains calibration-related files and utilities
 │   ├── __init__.py

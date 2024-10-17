@@ -3,6 +3,7 @@ from .checkerboard_utils import detect_checkerboard_corners, save_visualization,
 import cv2
 import numpy as np
 import os
+from .calibration_exceptions import CalibrationBoardNotFoundError, ReprojectionThresholdExceededError
 
 def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_dir, error_threshold):
     """
@@ -16,7 +17,7 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
     - K: Camera intrinsic matrix.
     - dist: Distortion coefficients.
     - report_dir: Directory to save the visualization image and error report.
-    - error_threshold: Maximum allowable reprojection error.
+    - error_threshold: Maximum allowable reprojection error. if None, no error is raised.
 
     Returns:
     - T: 4x4 transformation matrix (table to camera).
@@ -24,7 +25,9 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
     ret, corners = detect_checkerboard_corners(image, pattern_size)
 
     if not ret:
-        raise ValueError("Checkerboard not found in the image.")
+        # Define a new error CalibrationErrror
+        
+        raise CalibrationBoardNotFoundError("Checkerboard not found in the image.")
 
     obj_points = generate_object_points(pattern_size, square_size)
 
@@ -43,8 +46,8 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
     error = compute_reprojection_error(obj_points, corners, rvec, tvec, mtx, dist)
 
     # Raise an error if the reprojection error exceeds the threshold
-    if error > error_threshold:
-        raise ValueError(f"Reprojection error {error:.4f} exceeds threshold {error_threshold:.4f}")
+    if error_threshold is not None and error > error_threshold:
+        raise ReprojectionThresholdExceededError(f"Reprojection error {error:.4f} exceeds threshold {error_threshold:.4f}")
 
     if report_dir is not None:
         if not os.path.exists(report_dir):
@@ -53,6 +56,19 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
         # Save the corner visualization
         vis_image_path = f"{report_dir}/corner_visualization.jpg"
         save_visualization(image, corners, pattern_size, ret, vis_image_path)
+        
+        # read the image again to draw the axes
+        vis_image = cv2.imread(vis_image_path)
+        # draw axes on the first corner
+        axis_length = 0.03
+        axis_points = np.array([[0, 0, 0], [axis_length, 0, 0], [0, axis_length, 0], [0, 0, axis_length]]).reshape(-1, 3)
+        projected_axis_points, _ = cv2.projectPoints(axis_points, rvec, tvec, mtx, dist)
+        projected_axis_points = projected_axis_points.astype(int)
+        cv2.line(vis_image, tuple(corners[0].flatten().astype(int)), tuple(projected_axis_points[1].flatten()), (0, 0, 255), 2)
+        cv2.line(vis_image, tuple(corners[0].flatten().astype(int)), tuple(projected_axis_points[2].flatten()), (0, 255, 0), 2)
+        cv2.line(vis_image, tuple(corners[0].flatten().astype(int)), tuple(projected_axis_points[3].flatten()), (255, 0, 0), 2)
+        # save the image with axes
+        cv2.imwrite(vis_image_path, vis_image)
     
         # Save the transformation matrix to a .npy file
         T_path = f"{report_dir}/table_to_camera.npy"

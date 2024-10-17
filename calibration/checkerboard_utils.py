@@ -136,5 +136,6 @@ def compute_reprojection_error(obj_points, img_points, rvec, tvec, mtx, dist):
     - error: The reprojection error value.
     """
     projected_img_points, _ = cv2.projectPoints(obj_points, rvec, tvec, mtx, dist)
-    error = np.sqrt(np.mean(np.sum((img_points - projected_img_points) ** 2, axis=2)))
+    # error = np.sqrt(np.mean(np.sum((img_points - projected_img_points) ** 2, axis=2))) # Root Mean Square Error (RMSE), Outliers	More sensitive to large deviations (outliers)
+    error = cv2.norm(img_points, projected_img_points, cv2.NORM_L2)/len(img_points) # Mean L2 Norm Error, 
     return error
