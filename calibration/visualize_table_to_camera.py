@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pytransform3d.transformations import plot_transform
-from .calibration_data_loader import load_table_to_camera_extrinsics_from_npy
 
 def visualize_table_to_camera(T_table_to_camera):
     """

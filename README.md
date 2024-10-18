@@ -74,9 +74,11 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 │   ├── trajectory_utils.py           # Helper functions (e.g., loading trajectories)
 │   └── test_trajectory.py            # Test trajectory processing logic
 |
-├── /scripts/                  # Standalone scripts
-│   ├── run_calibration.py     # Example of how to run the calibration
-│   └── visualize_transforms.py # Example of visualization of all frames
+├── /scripts/                   # Standalone scripts
+│   ├── run_calibration.py      # Example of how to run the calibration
+│   ├── visualize_transforms.py # Example of visualization of all frames
+│   ├── use_precomputed_data.py # Example of using calibration data
+│   └── execute_trajectory.py   # New script to execute processed trajectory
 │
 ├── /examples/                 # Examples folder for standalone demos
 │   ├── vis_transforms.py      # Example of using transformation matrices

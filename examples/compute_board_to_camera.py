@@ -21,7 +21,7 @@ from calibration.visualize_table_to_camera import visualize_table_to_camera
 mtx, dist = load_camera_intrinsic_from_npy("calibration/calibration_data/camera1/camera_intrinsics")
 
 # Load the calibration board image
-image_name = "captured_frame_001"
+image_name = "captured_frame_002"
 image = cv2.imread(f"data/debug_data/calibration/{image_name}.jpg")
 
 # Define the calibration board parameters

@@ -27,5 +27,5 @@ def load_eyehand_extrinsics_from_npy(npy_file_dir):
     - T_camera_to_robot_base: 4x4 transformation matrix (camera to robot base).
     """
     
-    T_camera_to_robot_base = np.load(npy_file_dir + 'cam2base_4x4.npy')
+    T_camera_to_robot_base = np.load(npy_file_dir + '/cam2base_4x4.npy')
     return T_camera_to_robot_base

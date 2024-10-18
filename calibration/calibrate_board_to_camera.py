@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import os
 from .calibration_exceptions import CalibrationBoardNotFoundError, ReprojectionThresholdExceededError
+from camera_operations.camera_capture import RealSenseCamera
 
 def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_dir, error_threshold):
     """
@@ -82,3 +83,29 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
         print(f"Reprojection error saved to {error_report_path}.")
         
     return T
+
+def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dist, report_dir, error_threshold):
+    camera = RealSenseCamera()
+    
+    while True:
+        try:
+            # Get the RGB frame
+            frame = camera.get_rgb_frame()
+            
+            try:
+                T_table_to_camera = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir, error_threshold)
+                return T_table_to_camera
+            except ReprojectionThresholdExceededError as e:
+                print(e)
+                continue
+            except CalibrationBoardNotFoundError as e:
+                print(e)
+                continue
+            
+        
+        except RuntimeError as e:
+            print(e)
+            break
+
+    # Release resources
+    camera.release()
