@@ -24,6 +24,13 @@ def create_frame(origin, euler_angles):
     T[:3, 3] = origin  # Set the origin (translation)
     return T
 
+class Frames:
+    """A class to manage coordinate frames used in this system"""
+    
+    def __init__(self):
+        # Initialize the frames that have known values immdiatelly
+        
+        
 # Define the coordinate frames
 
 ## Define world frames

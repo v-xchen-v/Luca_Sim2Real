@@ -6,6 +6,7 @@ from calibration.calibration_precomputed_data_loader import load_camera_intrinsi
 from calibration.calibration_data_loader import load_table_to_camera_extrinsics_from_npy, table_to_camera_extrinsics_exist
 import os
 from calibration.calibrate_board_to_camera import capture_frame_and_save_table_calibration
+from coordinates.frame_manager import FrameManager
 
 """
 Steps:
@@ -24,6 +25,21 @@ class TrajectoryAdaptor:
         """
         # calibration_data is a dictionary containing camera intrinsic and extrinsic parameters and eye-to-hand transformation
         self.calibration_data = {}
+        
+        # Initialize frame manager to manage coordinate frames and transformations between frames in the system
+        self.frame_manager = FrameManager()
+        ## Initialize frames with known names
+        self.frame_names = [
+            "calibration_board_real",
+            "camera_real",
+            "robot_base_real",
+            "right_hand_base_real",
+            # "world_real",
+        ]
+        self.frame_manager.initialize_frames(self.frame_names)
+        
+        # # Initialize transformations between calibration board, camera, robot base with calibration data
+        # self.compute_all_transformations_with_calibration_data()
         
         
         self.camera_intrinsic = self.calibration_data.get("camera_intrinsic")
@@ -104,6 +120,27 @@ class TrajectoryAdaptor:
         T_camera_to_robot_base = load_eyehand_extrinsics_from_npy(calibration_data_dir + '/camera_to_robot')
         return mtx, dist, T_camera_to_robot_base
 
+    def compute_all_transformations_with_calibration_data(self):
+        """
+        Register transformations between calibration board, camera, robot base with calibration data.
+        
+        """
+        # Ensure all necessary calibration data is available
+        if "T_camera_to_robot" not in self.calibration_data:
+            raise ValueError("Camera-to-Robot transformation not found. Load calibration data first.")
+        if "T_table_to_camera" not in self.calibration_data:
+            raise ValueError("Table-to-Camera transformation not found. Load calibration data first.")
+        
+        # Extract transformations from calibration data
+        T_camera_real_to_robot = self.calibration_data["T_camera_to_robot"]
+        T_calibration_board_real_to_camera = self.calibration_data["T_table_to_camera"]
+        
+        # Register transformations between frames
+        self.frame_manager.add_transformation("calibration_board_real", "camera_real", T_calibration_board_real_to_camera)
+        self.frame_manager.add_transformation("camera_real", "robot_base_real", T_camera_real_to_robot)
+        
+        print("Transformations between calibration board, camera, robot base added with calibration data.")
+        
     def compute_relative_transformation(self, T_source, T_target):
         """
         Compute the relative transformation between two frames.

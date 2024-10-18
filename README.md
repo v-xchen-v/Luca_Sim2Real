@@ -1,4 +1,4 @@
-# Luca_Transformation
+# Luca_Sim2Real
 A trajectory in generated with RL in simulator. -> A trajectory of real world the robot and directly apply.
 
 ## Changelog
@@ -9,7 +9,9 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 
 ### Completed Features
 - [x] Core functionality (e.g., Transformation between coordinate frames)
+- [x] FrameManager class to compute frames based known transformations and a reference starting frame with vivid 3d visualization plotting.
 - [x] Compute T_table_to_camera with a checkerboard image.
+- [x] Compute transformations between calibration board, camera, robot base with calibration data.
 - [x] Basic input/output handling
 - [x] 2D plotting of landmarks
 
