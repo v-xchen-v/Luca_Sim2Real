@@ -38,7 +38,14 @@ robot_base_local_frame = create_frame([0, 0, 0], [0, 0, 0]) # Origin at the robo
 
 ## Calculate real-world frames
 
+# calibration_board_real_frame = create_frame(
+
 
 coordinate_frames = {
     "sim_world": sim_world_frame,
+    "real_world": real_world_frame,
+    "camera_local": camera_local_frame,
+    "calibration_board_local": calibration_board_local_frame,
+    "object_local": object_local_frame,
+    "robot_base_local": robot_base_local_frame,
 }

@@ -1,3 +1,5 @@
+"""Precomputed camera intrinsic and camera to robot transformation, and capture a frame to compute table-to-camera transformation."""
+
 import os, sys
 module_path = os.path.abspath(os.path.join('.'))
 if module_path not in sys.path:
@@ -5,7 +7,6 @@ if module_path not in sys.path:
     
 
 from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
-
 
 # Initialize the trajectory adaptor with pre-computed calibration data
 adaptor = TrajectoryAdaptor()

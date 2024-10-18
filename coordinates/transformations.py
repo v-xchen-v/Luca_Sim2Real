@@ -64,8 +64,9 @@ T_sim_to_real = create_transformation_matrix([0, 0, 0], None)
 T_real_to_sim = np.linalg.inv(T_sim_to_real)  # Inverse of sim to real
 
 # Transformation from calibration
-## Calibration board local frame
-# calibration_board_real = 
+## table calibration
+T_calibration_board_real_to_camera = np.load("data/debug_data/calibration/output/checkerboard_002/table_to_camera.npy")
+
 
 ## Compute the transformation from table_real to camera_real
 # T_table_real_to_camera_real = 

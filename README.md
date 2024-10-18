@@ -42,7 +42,7 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 |   |   ├── /camera_intrinsics/
 |   |   │   ├── dist.npy
 |   |   │   └── mtx.npy
-|   |   ├── /table_to_camera/ # Precomputed table-to-camera transformation 
+|   |   ├── /table_to_camera/ # Table-to-camera transformation, should be update often since that the historical data is useless once the table or calibration board is moved.
 |   |   │   ├── table_to_camera.npy
 |   |   │   ├── corner_visualization.npy
 |   |   │   └── reprojection_error.txt
