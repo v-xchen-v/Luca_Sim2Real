@@ -1,4 +1,5 @@
 # Luca_Transformation
+A trajectory in generated with RL in simulator. -> A trajectory of real world the robot and directly apply.
 
 ## Changelog
 - **0.1.0** (2024-10-17)
@@ -36,11 +37,22 @@
 │
 ├── /calibration/              # Contains calibration-related files and utilities
 │   ├── __init__.py
+│   ├── calibration_data_MMDD/ # Backup histrical data 
 │   ├── calibration_data/      # Store calibration results (extrinsics, intrinsics, etc.)
-│   │   ├── camera_intrinsics.yaml
-│   │   ├── extrinsics.yaml
+|   |   ├── /camera_intrinsics/
+|   |   │   ├── dist.npy
+|   |   │   └── mtx.npy
+|   |   ├── /table_to_camera/ # Precomputed table-to-camera transformation 
+|   |   │   ├── table_to_camera.npy
+|   |   │   ├── corner_visualization.npy
+|   |   │   └── reprojection_error.txt
+|   |   ├── /camera_to_robot/ # Precomputed camera-to-robot transformation
+|   |   │   ├── cam2base_4x4.npy
+|   |   │   └── reprojection_error.txt # Optional, the reprojection error of eye hand calibration
 │   │   └── calibration_report.txt
 │   ├── checkerboard_utils.py  # Utilities for handling checkerboard patterns
+│   ├── calibration_precomputed_data_loader.py  # Utilities for loading precomputed calibration data when setup robot
+│   ├── calibration_data_loader.py  # Utilities for loading calibration data computed during sim2real
 <!-- │   └── calibrate.py           # Main script for running calibration -->
 │   └── calibrate_board_to_camera.py  # Script to compute the transformation matrix
 │
@@ -55,6 +67,13 @@
 │   ├── robot_control.py        # Robot control logic (move joints, grasp objects)
 │   └── robot_kinematics.py     # Robot kinematics calculations (forward/inverse)
 │
+├── /trajectory_processing/           # Sim2Real trajectory processing
+│   ├── __init__.py                   # Makes it a package
+│   ├── trajectory_adapter.py         # Adapt simulated trajectories for real robot
+│   ├── trajectory_smoothing.py       # Smooth trajectories to avoid abrupt movements
+│   ├── trajectory_utils.py           # Helper functions (e.g., loading trajectories)
+│   └── test_trajectory.py            # Test trajectory processing logic
+|
 ├── /scripts/                  # Standalone scripts
 │   ├── run_calibration.py     # Example of how to run the calibration
 │   └── visualize_transforms.py # Example of visualization of all frames
