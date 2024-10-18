@@ -74,25 +74,41 @@ if __name__ == "__main__":
                 # Visualize the transformation dynamically
                     # Clear the previous plot
                 ax.cla()
-                ax.set_xlim([-3, 3])
-                ax.set_ylim([-3, 3])
-                ax.set_zlim([-3, 3])
+                ax.set_xlim([-1, 1])
+                ax.set_ylim([-1, 1])
+                ax.set_zlim([-1, 1])
+                ax.set_xlabel("X-axis")
+                ax.set_ylabel("Y-axis")
+                ax.set_zlabel("Z-axis")
 
                 new_transform = T_table_to_camera # np.linalg.inv(T_table_to_camera)
                 # Re-plot the initial frame and the new dynamic frame
                 
                 # calibration_board_frame, x to right, y to down, z to back, 4x4 transformation matrix
                 # construct a rotation matrix, 
-                T_world_to_calibration_board_local = create_transformation_matrix([0, 0, 0], R.from_rotvec([np.pi, 0, 0]).as_matrix())
+                # T_world_to_calibration_board_local = create_transformation_matrix([0, 0, 0], R.from_rotvec([np.pi, 0, np.pi/2]).as_matrix())
                 
+                # Assum the calibration board is at the origin of the world frame
+                world_real_frame = np.array([[1, 0, 0, 0],
+                                             [0, 1, 0, 0],
+                                            [0, 0, 1, 0],
+                                            [0, 0, 0, 1]])
+                
+                calibration_board_frame = np.array([[0, -1, 0, 0],
+                                                    [-1, 0, 0, 0],
+                                                    [0, 0, -1, 0],
+                                                    [0, 0, 0, 1]])
+                
+                from coordinates.transformations import relative_transformation
+                T_real_world_to_calibration_board = relative_transformation(world_real_frame, calibration_board_frame)
                 # calibration_board_frame = np.array([[1, 0, 0, 0],
                 #                                     [0, -1, 0, 0],
                 #                                     [0, 0, -1, 0],
                 #                                     [0, 0, 0, 1]])
-
-                plot_transform(ax=ax, A2B=np.eye(4), name="Origin")  # Frame at origin
-                plot_transform(ax=ax, A2B=T_world_to_calibration_board_local, name="Start Frame")  # Frame at origin
-                plot_transform(ax=ax, A2B=new_transform@T_table_to_camera, name="Dynamic Frame")  # New frame
+                camera_frame = T_table_to_camera@calibration_board_frame
+                plot_transform(ax=ax, A2B=world_real_frame, name="Origin")  # Frame at origin
+                # plot_transform(ax=ax, A2B=calibration_board_frame, name="Start Frame")  # Frame at origin
+                plot_transform(ax=ax, A2B=camera_frame, name="Dynamic Frame")  # New frame
 
                 # Pause to create the animation effect
                 plt.pause(0.1)
