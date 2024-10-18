@@ -26,6 +26,7 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 - [ ] Example scripts showcasing common workflows (in `example/` folder)
 
 ## Folder Structure
+```
 /robotics_project/
 |
 ├── /camera_operations/               # Folder for camera operations
@@ -99,3 +100,4 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 │
 ├── requirements.txt           # List of dependencies (e.g., numpy, matplotlib, pytransform3d)
 └── README.md                  # Overview of the project
+```
