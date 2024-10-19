@@ -37,6 +37,27 @@ class FrameManager:
             self.frames[frame_name] = matrix
             print(f"Added frame '{frame_name}':\n{matrix}")
             
+    def get_transformation(self, from_frame_name, to_frame_name):
+        """Get the known transformation matrix between two frames. If the transformation is not known, return None.
+        
+        Parameters:
+        - from_frame_name: A string representing the source frame name.
+        - to_frame_name: A string representing the target frame name.
+        
+        Returns:
+        - A 4x4 transformation matrix from the source frame to the target frame.
+        """
+        
+        # check if the transformation is known
+        if (from_frame_name, to_frame_name) in self.transformations:
+            return self.transformations[(from_frame_name, to_frame_name)]
+        else:
+            # check if the reverse transformation is known
+            if (to_frame_name, from_frame_name) in self.transformations:
+                return invert_transform(self.transformations[(to_frame_name, from_frame_name)])
+            else:
+                return self.compute_transformation(from_frame_name, to_frame_name)
+    
     # def update_frame(self, frame_name, matrix):
     #     """Update an existing frame with a new transformation matrix."""
     #     if frame_name in self.frames:
@@ -96,36 +117,36 @@ class FrameManager:
         
 
         
-    # def compute_transformation(self, from_frame, to_frame):
-    #     """Compute the transformation between two frames if possible."""
-    #     if (from_frame, to_frame) in self.transformations:
-    #         return self.transformations[(from_frame, to_frame)]
-    #     elif (to_frame, from_frame) in self.transformations:
-    #         # Use the inverse if the reverse transformation is known
-    #         return invert_transform(self.transformations[(to_frame, from_frame)])
-    #     else:
-    #         # Attempt to find a path and compute the full transformation
-    #         return self._find_path_and_compute(from_frame, to_frame)
+    def compute_transformation(self, from_frame, to_frame):
+        """Compute the transformation between two frames if possible."""
+        if (from_frame, to_frame) in self.transformations:
+            return self.transformations[(from_frame, to_frame)]
+        elif (to_frame, from_frame) in self.transformations:
+            # Use the inverse if the reverse transformation is known
+            return invert_transform(self.transformations[(to_frame, from_frame)])
+        else:
+            # Attempt to find a path and compute the full transformation
+            return self._find_path_and_compute(from_frame, to_frame)
 
-    # def _find_path_and_compute(self, from_frame, to_frame, visited=None):
-    #     """Find a transformation path and compute it."""
-    #     if visited is None:
-    #         visited = set()
-    #     visited.add(from_frame)
+    def _find_path_and_compute(self, from_frame, to_frame, visited=None):
+        """Find a transformation path and compute it."""
+        if visited is None:
+            visited = set()
+        visited.add(from_frame)
 
-    #     for next_frame in self._get_neighbors(from_frame):
-    #         if next_frame in visited:
-    #             continue
+        for next_frame in self._get_neighbors(from_frame):
+            if next_frame in visited:
+                continue
 
-    #         partial_transform = self.compute_transformation(from_frame, next_frame)
-    #         remaining_transform = self.compute_transformation(next_frame, to_frame)
+            partial_transform = self.compute_transformation(from_frame, next_frame)
+            remaining_transform = self.compute_transformation(next_frame, to_frame)
 
-    #         if remaining_transform is not None:
-    #             # Concatenate transformations using pytransform3d's `concat`
-    #             full_transform = concat(remaining_transform, partial_transform)
-    #             self.add_transformation(from_frame, to_frame, full_transform)
-    #             return full_transform
-    #     return None
+            if remaining_transform is not None:
+                # Concatenate transformations using pytransform3d's `concat`
+                full_transform = concat(remaining_transform, partial_transform)
+                self.add_transformation(from_frame, to_frame, full_transform)
+                return full_transform
+        return None
 
     def _get_neighbors(self, frame):
         """Get neighboring frames connected to a given frame."""
