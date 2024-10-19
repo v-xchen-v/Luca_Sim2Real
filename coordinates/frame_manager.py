@@ -199,7 +199,7 @@ class FrameManager:
         ax.set_zlabel("Z-axis")
         
         plt.title(f"Transformation: {from_frame} to {to_frame}")
-        plt.show()
+        plt.show(block=True)
         
     def visualize_transformations_starting_from(self, from_frame):
         """Visualize transformations starting from a given frame."""

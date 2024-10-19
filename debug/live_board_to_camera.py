@@ -4,7 +4,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
     
 from camera_operations.camera_capture import RealSenseCamera
-from calibration.calibration_data_loader import load_camera_intrinsic_from_npy
+from calibration.calibration_precomputed_data_loader import load_camera_intrinsics_from_npy
 from calibration.calibrate_board_to_camera import compute_table_to_camera
 from calibration.calibration_exceptions import CalibrationBoardNotFoundError, ReprojectionThresholdExceededError
 from calibration.visualize_table_to_camera import visualize_table_to_camera
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
 
             # Load the camera intrinsic matrix and distortion coefficients
-            mtx, dist = load_camera_intrinsic_from_npy(intrinsics_dir)
+            mtx, dist = load_camera_intrinsics_from_npy(intrinsics_dir)
             
 
     
@@ -100,15 +100,15 @@ if __name__ == "__main__":
                                                     [0, 0, 0, 1]])
                 
                 from coordinates.transformations import create_relative_transformation
-                T_real_world_to_calibration_board = create_relative_transformation(world_real_frame, calibration_board_frame)
+                T_real_world_to_calibration_board = create_relative_transformation(calibration_board_frame, world_real_frame)
                 # calibration_board_frame = np.array([[1, 0, 0, 0],
                 #                                     [0, -1, 0, 0],
                 #                                     [0, 0, -1, 0],
                 #                                     [0, 0, 0, 1]])
-                camera_frame = T_table_to_camera@calibration_board_frame
-                plot_transform(ax=ax, A2B=world_real_frame, name="Origin")  # Frame at origin
+                camera_frame = T_table_to_camera@T_real_world_to_calibration_board@world_real_frame
+                plot_transform(ax=ax, A2B=world_real_frame, name="world_real")  # Frame at origin
                 # plot_transform(ax=ax, A2B=calibration_board_frame, name="Start Frame")  # Frame at origin
-                plot_transform(ax=ax, A2B=camera_frame, name="Dynamic Frame")  # New frame
+                plot_transform(ax=ax, A2B=camera_frame, name="camera_real")  # New frame
 
                 # Pause to create the animation effect
                 plt.pause(0.1)
