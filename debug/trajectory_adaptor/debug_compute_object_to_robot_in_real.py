@@ -32,4 +32,9 @@ adaptor.frame_manager.visualize_known_frames()
 
 # Assume that calibration is at the origin
 adaptor.frame_manager.add_frame("calibration_board_real", np.eye(4))
-adaptor.frame_manager.visualize_transformations_starting_from(from_frame='calibration_board_real')
+# adaptor.frame_manager.visualize_transformations_starting_from(from_frame='calibration_board_real')
+
+adaptor._compute_transformations_with_dummy_object_setup([0, 0, 0], None)
+adaptor.frame_manager.print_transformations()
+adaptor.frame_manager.add_frame("object_real", np.eye(4))
+adaptor.frame_manager.visualize_transformations_starting_from(from_frame="object_real")

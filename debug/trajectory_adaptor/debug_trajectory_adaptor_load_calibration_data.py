@@ -11,7 +11,7 @@ from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 # Initialize the trajectory adaptor with pre-computed calibration data
 adaptor = TrajectoryAdaptor()
 
-adaptor.get_calibration_data(calibration_data_dir="calibration/calibration_data/camera1", overwrite_if_exists=False, calibration_board_info={
+adaptor._get_calibration_data(calibration_data_dir="calibration/calibration_data/camera1", overwrite_if_exists=False, calibration_board_info={
     "pattern_size": (5, 8),
     "square_size": 0.03
 })

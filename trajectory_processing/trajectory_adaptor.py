@@ -7,12 +7,32 @@ from calibration.calibration_data_loader import load_table_to_camera_extrinsics_
 import os
 from calibration.calibrate_board_to_camera import capture_frame_and_save_table_calibration
 from coordinates.frame_manager import FrameManager
+from coordinates.transformations import create_transformation_matrix, create_relative_transformation
 
 """
 Steps:
     1. Load pre-computed calibration data
     2. Capture frame and compute table-to-camera transformation
-    2. TODO: Compute relative transformation between frames based on calibration data
+    3. Compute relative transformation between frames based on calibration data
+    4. Locate the object in the real world by relative pos to calibration board.
+        - Option1 - Dummy Setup: Manually put the object on the calibration board's origin (or with translation, but origin is less effort for test) 
+            then set relative rotation.
+        - Option2 - Use ICP: Compute the object's position in camera coordinate.
+    5. Compute the transformation between the object and the robot base.
+    6. Map simulator transformations to real-world coordinates with contraints:
+        - the transformation between object and right_hand_base should be the same in both simulator and real world.
+    5. Compute transformation between robot_right_hand_base to robot_base in real world.
+
+# Option1:
+# 1. Load pre-computed calibration data
+# 2. Capture frame and compute table-to-camera transformation
+# 3. Compute relative transformation between frames based on calibration data
+# 4. (Manually) Put the object on the calibration board's origin.
+# 5. Compute relative transformation based on 4.
+        
+Map simulator transformations to real-world coordinates by setting the transformation between real_world(same as sim_world)
+and calibration_board_real as the identity matrix.
+1. 
 """
 # Dummy logic of trajectory adaptor
 class TrajectoryAdaptor:
@@ -29,12 +49,15 @@ class TrajectoryAdaptor:
         # Initialize frame manager to manage coordinate frames and transformations between frames in the system
         self.frame_manager = FrameManager()
         ## Initialize frames with known names
+        ### Register the frames in this system
         self.frame_names = [
             "calibration_board_real",
             "camera_real",
             "robot_base_real",
             "right_hand_base_real",
-            # "world_real",
+            "real_world",
+            "sim_world",
+            "object_real"
         ]
         self.frame_manager.initialize_frames(self.frame_names)
         
@@ -46,7 +69,20 @@ class TrajectoryAdaptor:
         self.T_camera_to_robot = np.array(self.calibration_data.get("T_camera_to_robot"))
         self.T_table_to_camera = None  # To be computed in dynamic calibration
 
-    def get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
+    def calibration(self):
+        pass
+    
+    def object_setup(self):
+        pass
+    
+    def map_sim_to_real(self):
+        """Load simulated trajectory contraints and apply to real world"""
+        pass
+        
+    def save_adapted_trajectory(self):
+        pass
+    
+    def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
         """
         Load calibration data, grab a camera frame and compute table calibration if necessary.
         
@@ -120,7 +156,7 @@ class TrajectoryAdaptor:
         T_camera_to_robot_base = load_eyehand_extrinsics_from_npy(calibration_data_dir + '/camera_to_robot')
         return mtx, dist, T_camera_to_robot_base
 
-    def compute_all_transformations_with_calibration_data(self):
+    def _compute_transformations_with_calibration_data(self):
         """
         Register transformations between calibration board, camera, robot base with calibration data.
         
@@ -140,31 +176,142 @@ class TrajectoryAdaptor:
         self.frame_manager.add_transformation("camera_real", "robot_base_real", T_camera_real_to_robot)
         
         print("Transformations between calibration board, camera, robot base added with calibration data.")
+    
+    def _compute_transformations_with_dummy_object_setup(self, translation_object_to_world, rotation_object_to_world=None):
+        """
+        Aim to compute the transformation between the object and the robot base with the dummy object setup.
+        Dummy object setup: 
+        1. Put the object on the calibration board's origin.
+        2. Set the real world frame same as the simulator world frame.
+        3. Compute the transformation between the object and the robot base.????
         
-    def compute_relative_transformation(self, T_source, T_target):
+        Parameters:
+        - translation_object_to_world: 3D translation vector of the object relative to the world frame.
+        - rotation_object_to_world: 3x3 rotation matrix of the object relative to the world frame.
+        
+        Returns:
+        - T_object_real_to_robot: 4x4 transformation matrix for the object relative to the robot base.
         """
-        Compute the relative transformation between two frames.
-        T_source: 4x4 matrix representing the source frame.
-        T_target: 4x4 matrix representing the target frame.
-        """
-        T_source_inv = np.linalg.inv(T_source)
-        return T_source_inv @ T_target
+        # Define the world's transformation same origin with the calibration board but rotate.
+        ## world(source) frame
+        world_real_frame = np.array([[1, 0, 0, 0],
+                                    [0, 1, 0, 0],
+                                    [0, 0, 1, 0],
+                                    [0, 0, 0, 1]])
+        ## calibartion board frame,
+        calibration_board_frame = np.array([[0, -1, 0, 0], # target x is source -y
+                                            [-1, 0, 0, 0], # target y is source -x
+                                            [0, 0, -1, 0], # target z is source -z
+                                            [0, 0, 0, 1]])
+        self.frame_manager.add_transformation(
+            "real_world", "calibration_board_real",
+            create_relative_transformation(world_real_frame, calibration_board_frame))
+        
+        # Define the real world's transformation same as the simulator world
+        self.frame_manager.add_transformation("real_world", "sim_world", np.eye(4))
+        
+        # Define the object's transformation relative to the real board with the dummy manually setup
+        T_object_real_to_world = create_transformation_matrix(translation_object_to_world, rotation_object_to_world)        
+        self.frame_manager.add_transformation("object_real", "real_world", T_object_real_to_world)
+        
+        T_object_real_to_robot = self.frame_manager.get_transformation("object_real", "robot_base_real")
+        
+        
+        # # Compute the transformation between the object and the robot base
+        # T_object_to_robot = self._compute_object_to_robot_transformation(T_object_real_to_calibration_board_real)
+        
+        # # Register the object's transformation
+        # self.frame_manager.add_transformation("object_real", "robot_right_hand_real", T_object_to_robot)
+        
+        print("Transformations between object and robot base added with dummy object setup.")
+        return T_object_real_to_robot
+        
+        
+    # def _compute_object_to_robot_transformation(self, T_object_to_board):
+    #     """
+    #     When the relative of object to board is known, compute the transformation between the object and the robot base.
 
-    def map_sim_to_real(self, T_sim_world_to_table):
-        """
-        Map a transformation from the simulator to the real world.
-        T_sim_world_to_table: 4x4 matrix of simulator’s table relative to simulator world.
-        """
-        if self.T_table_to_camera is None:
-            raise ValueError("Table-to-Camera transformation not set. Perform calibration first.")
+    #     Parameters:
+    #     - T_object_to_board: 4x4 transformation matrix for the object relative to the calibration board.
+        
+    #     Returns:
+    #     - T_object_to_robot: 4x4 transformation matrix for the object relative to the robot base.
+    #     """
+    #     if self.T_table_to_camera is None:
+    #         raise ValueError("Table-to-Camera transformation not set. Perform calibration first.")
+        
+    #     # Compute the transformation between the object and the camera
+    #     T_object_to_camera = create_relative_transformation(self.T_table_to_camera, T_object_to_board)
+        
+    #     T_object_to_robot = (
+    #         self.T_camera_to_robot @
+    #         self.T_board_to_camera @
+    #         T_object_to_board
+    #     )
+        
+    #     return T_object_to_robot
+        
+    # def compute_relative_transformation(self, T_source, T_target):
+    #     """
+    #     Compute the relative transformation between two frames.
+    #     T_source: 4x4 matrix representing the source frame.
+    #     T_target: 4x4 matrix representing the target frame.
+    #     """
+    #     T_source_inv = np.linalg.inv(T_source)
+    #     return T_source_inv @ T_target
+    def parse_sim_trajectory(self):
+        """Parse the trajectory from the simulator and compute the relative transformation between the object to right hand base"""
+        # Read the trajectory file from the simulator
+        
+        # Extract the raw information of initial relative position of object to right hand base
+        
+        # Compute the relative transformation between the object and the right hand base in the simulator
+        
+        # Return the relative transformation
+        
 
-        # Compute real world mapping: camera-to-robot and table-to-camera are known
-        T_table_to_robot = self.compute_relative_transformation(self.T_table_to_camera, self.T_camera_to_robot)
-        print("Computed Table-to-Robot transformation:\n", T_table_to_robot)
+    def compute_constrained_object_relative_to_right_hand_base(self, T_right_hand_base_sim_to_object):
+        """
+        Aim to compute the right hand base to robot base transformation in real world.
+        
+        Map sim to real by containing the transformation between object and right_hand_base the same in both simulator and real world.
+        Known the transformation between the object and the right-hand base in the simulator and object to robot base in real world. 
+        Compute the right hand base position in real world constrained to maintain the same relative position between the object and the right-hand base in both real and simulated worlds.
+        
+        Parameters:
+        - T_object_to_right_hand_base: 4x4 matrix of simulator's right hand base relative to object.
+        
+        Returns:
+        - T_right_hand_base_real_to_robot_base: 4x4 matrix of real world's right hand base relative to robot base.
+        """
+        # check the should known transformations
+        if self.frame_manager.get_transformation("object_real", "real_world") is None:
+            raise ValueError("Object to real world transformation not found. Perform object setup first.")
+        
+        if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
+            raise ValueError("Right hand base to object transformation in simulator not found.")
+        
+        # check the input transformation
+        if T_right_hand_base_sim_to_object is None:
+            raise ValueError("Transformation between right hand base and object in simulator is required.")
+        
+        self.frame_manager.add_transformation("right_hand_base_real", "object_real", T_right_hand_base_sim_to_object)
+        T_right_hand_base_real_to_robot_base = self.frame_manager.get_transformation("right_hand_base_real", "robot_base_real")
+        if T_right_hand_base_real_to_robot_base is None:
+            raise ValueError("Right hand base to robot base transformation in real world not found.")
+        
+        return T_right_hand_base_real_to_robot_base
+        
+        # if self.T_table_to_camera is None:
+        #     raise ValueError("Table-to-Camera transformation not set. Perform calibration first.")
 
-        # Now compute the mapping from simulator to real world
-        T_sim_to_real = T_table_to_robot @ T_sim_world_to_table
-        return T_sim_to_real
+        # # Compute real world mapping: camera-to-robot and table-to-camera are known
+        # T_table_to_robot = self.compute_relative_transformation(self.T_table_to_camera, self.T_camera_to_robot)
+        # print("Computed Table-to-Robot transformation:\n", T_table_to_robot)
+
+        # # Now compute the mapping from simulator to real world
+        # T_sim_to_real = T_table_to_robot @ T_sim_world_to_table
+        # return T_sim_to_real
 
     def visualize_frames(self, frames):
         """

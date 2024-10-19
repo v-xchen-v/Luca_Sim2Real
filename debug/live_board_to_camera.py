@@ -99,8 +99,8 @@ if __name__ == "__main__":
                                                     [0, 0, -1, 0],
                                                     [0, 0, 0, 1]])
                 
-                from coordinates.transformations import relative_transformation
-                T_real_world_to_calibration_board = relative_transformation(world_real_frame, calibration_board_frame)
+                from coordinates.transformations import create_relative_transformation
+                T_real_world_to_calibration_board = create_relative_transformation(world_real_frame, calibration_board_frame)
                 # calibration_board_frame = np.array([[1, 0, 0, 0],
                 #                                     [0, -1, 0, 0],
                 #                                     [0, 0, -1, 0],

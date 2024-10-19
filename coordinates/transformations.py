@@ -30,7 +30,7 @@ def create_transformation_matrix(translation, rotation_matrix=None):
     return T
 
 # Helper function to create a 4x4 transformation matrix from source frame to target frame
-def relative_transformation(source_matrix, target_matrix):
+def create_relative_transformation(source_matrix, target_matrix):
     """
     Create a 4x4 homogeneous transformation matrix from a source frame to a target frame.
 
@@ -50,6 +50,15 @@ def relative_transformation(source_matrix, target_matrix):
     # Return the resulting 4x4 transformation matrix.
     return T_source_to_target
 
+# def compute_relative_transformation(self, T_source, T_target):
+#     """
+#     Compute the relative transformation between two frames.
+#     T_source: 4x4 matrix representing the source frame.
+#     T_target: 4x4 matrix representing the target frame.
+#     """
+#     T_source_inv = np.linalg.inv(T_source)
+#     return T_source_inv @ T_target
+    
 # Example: Rotation around the Z-axis by 45 degrees
 theta = np.radians(45)
 rotation_z = np.array([
