@@ -1,1 +1,1 @@
-Reprojection Error: 0.3445
+Reprojection Error: 0.3590

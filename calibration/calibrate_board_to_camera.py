@@ -39,9 +39,11 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
     R, _ = cv2.Rodrigues(rvec)
 
     # Construct the 4x4 transformation matrix
-    T = np.eye(4)
-    T[:3, :3] = R
-    T[:3, 3] = tvec.flatten()
+    T_camera_to_object = np.eye(4)
+    T_camera_to_object[:3, :3] = R
+    T_camera_to_object[:3, 3] = tvec.flatten()
+    
+    T_object_to_camera = np.linalg.inv(T_camera_to_object)
     
     # Compute the reprojection error
     error = compute_reprojection_error(obj_points, corners, rvec, tvec, mtx, dist)
@@ -73,7 +75,7 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
     
         # Save the transformation matrix to a .npy file
         T_path = f"{report_dir}/table_to_camera.npy"
-        np.save(T_path, T)
+        np.save(T_path, T_object_to_camera)
         print(f"Transformation matrix saved to {T_path}.")
         
         # Save the reprojection error to a text file
@@ -82,7 +84,7 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
             f.write(f"Reprojection Error: {error:.4f}\n")
         print(f"Reprojection error saved to {error_report_path}.")
         
-    return T
+    return T_object_to_camera
 
 def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dist, report_dir, error_threshold):
     camera = RealSenseCamera()
