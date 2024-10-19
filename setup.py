@@ -8,6 +8,7 @@ setup(
         'pytransform3d',
         'opencv-python',
         'pyrealsense2',
+        'torch', # only for load sim trajectory data, not necessary for the main functionality
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.8.10',
 )

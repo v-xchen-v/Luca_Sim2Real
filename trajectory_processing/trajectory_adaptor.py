@@ -8,6 +8,7 @@ import os
 from calibration.calibrate_board_to_camera import capture_frame_and_save_table_calibration
 from coordinates.frame_manager import FrameManager
 from coordinates.transformations import create_transformation_matrix, create_relative_transformation
+from scipy.spatial.transform import Rotation as R
 
 """
 Steps:
@@ -57,7 +58,9 @@ class TrajectoryAdaptor:
             "right_hand_base_real",
             "real_world",
             "sim_world",
-            "object_real"
+            "object_real",
+            "right_hand_base_sim",
+            "object_sim"
         ]
         self.frame_manager.initialize_frames(self.frame_names)
         
@@ -211,11 +214,16 @@ class TrajectoryAdaptor:
         self.frame_manager.add_transformation("real_world", "sim_world", np.eye(4))
         
         # Define the object's transformation relative to the real board with the dummy manually setup
-        T_object_real_to_world = create_transformation_matrix(translation_object_to_world, rotation_object_to_world)        
+        T_object_real_to_world = create_transformation_matrix(translation_object_to_world, rotation_object_to_world)    
+        
+        # Register the transformation between the object and the real world    
         self.frame_manager.add_transformation("object_real", "real_world", T_object_real_to_world)
         
+        # Compute the transformation between the object and the robot base
         T_object_real_to_robot = self.frame_manager.get_transformation("object_real", "robot_base_real")
         
+        # Register the transformation between the object and the robot base
+        self.frame_manager.add_transformation("object_real", "robot_base_real", T_object_real_to_robot)
         
         # # Compute the transformation between the object and the robot base
         # T_object_to_robot = self._compute_object_to_robot_transformation(T_object_real_to_calibration_board_real)
@@ -259,16 +267,74 @@ class TrajectoryAdaptor:
     #     """
     #     T_source_inv = np.linalg.inv(T_source)
     #     return T_source_inv @ T_target
-    def parse_sim_trajectory(self):
-        """Parse the trajectory from the simulator and compute the relative transformation between the object to right hand base"""
+    def parse_sim_trajectory(self, traj_npy_file):
+        """Parse the trajectory from the simulator and compute the relative transformation between the object to right hand base.
+        
+        Returns:
+        - T_right_hand_base_sim_to_object: 4x4 matrix of simulator's right hand base relative to object.
+        - driven_hand_joint_pos_sim: [num_steps, num_driven_joints] array of driven hand joint positions, in radias.
+        - right_hand_pos_sim: [num_steps, 4, 4] array of right hand base positions 4x4 matrix.
+        - graso_flag_sim: [num_steps, 1] array of grasp flags.
+        # - traj_sim_data: Dictionary containing the parsed trajectory data."""
         # Read the trajectory file from the simulator
+        traj_sim_data = np.load(traj_npy_file, allow_pickle=True)
+        print(traj_sim_data.item().keys())
         
-        # Extract the raw information of initial relative position of object to right hand base
+        # indexed joints information
+        # # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15]
+        # # 'move_x': 0
+        # # 'move_y': 1
+        # # 'move_z': 2
+        # # 'rot_r': 3
+        # # 'rot_p': 4
+        # # 'rot_y': 5
+        # # 'R_index_proximal_joint': 6
+        # # 'R_middle_proximal_joint': 7
+        # # 'R_pinky_proximal_joint': 8
+        # # 'R_ring_proximal_joint': 9
+        # # 'R_thumb_proximal_yaw_joint':10
+        # # 'R_thumb_proximal_pitch_joint': 15
         
-        # Compute the relative transformation between the object and the right hand base in the simulator
+        
+        # Extract the hand joint positions from the trajectory
+        hand_joint_pos = traj_sim_data.item()['hand_dof_pos_buf'] # [num_steps, 1, num_joints]
+        driven_hand_dof_index = [8, 9, 7, 6, 15, 10]
+        driven_hand_joint_pos_sim = hand_joint_pos[:, 0, driven_hand_dof_index] # [num_steps, 1, num_driven_joints]
+        driven_hand_joint_pos_sim = driven_hand_joint_pos_sim.squeeze(axis=1) # [num_steps, num_driven_joints]
+        # traj_sim_data['driven_hand_joint_pos'] = driven_hand_joint_pos
+        
+        
+        # Extract the base link(right hand base) position from the trajectory
+        ## [x, y, z, qx, qy, qz, qw] for translation and quaternion rotation
+        right_hand_base_sim = traj_sim_data.item()['right_hand_base_pose_buf'] # [num_steps, 1, 7]
+        right_hand_base_sim = right_hand_base_sim.squeeze(axis=1) # [num_steps, 7]
+        
+        # # Extract the grasp flag from the trajectory
+        # grasp_flag = traj_sim_data.item()['hold_flag_buf'] # [num_steps, 1, 1]
+        # grasp_flag.squeeze(axis=1) # [num_steps, 1]
+        
+        # Extract the object position from the trajectory
+        object_pos = traj_sim_data.item()['object_pose_buf'] # [num_steps, 1, 7]
+        object_pos = object_pos.squeeze(axis=1) # [num_steps, 7]
+        
+        # Extract the grasp flag from the trajectory
+        grasp_flag_sim = traj_sim_data.item()['hold_flag_buf'] # [num_steps, 1]
+        
+        # In the first step, compute relative transformation of object to right hand base
+        object_pos_0 = object_pos[0, :]
+        right_hand_base_pos_0 = right_hand_base_sim[0, :]
+        ## convert [x, y, z, qx, qy, qz, qw] to 4x4 transformation matrix
+        object_0_frame = create_transformation_matrix(right_hand_base_pos_0[:3], R.from_quat(right_hand_base_pos_0[3:]).as_matrix())
+        right_hand_base_0_frame = create_transformation_matrix(object_pos_0[:3], R.from_quat(object_pos_0[3:]).as_matrix())
+        ## compute relative transformation between object and right hand base
+        T_right_hand_base_sim_to_object = create_relative_transformation(right_hand_base_0_frame, object_0_frame)
+        self.frame_manager.add_transformation("right_hand_base_sim", "object_sim", T_right_hand_base_sim_to_object)
+                
+        ## convert the [x, y, z, qx, qy, qz, qw] to 4x4 transformation matrix
+        right_hand_base_sim = np.array([create_transformation_matrix(pos[:3], R.from_quat(pos[3:]).as_matrix()) for pos in right_hand_base_sim]) # [num_steps, 4, 4]
         
         # Return the relative transformation
-        
+        return T_right_hand_base_sim_to_object, driven_hand_joint_pos_sim, right_hand_base_sim, grasp_flag_sim
 
     def compute_constrained_object_relative_to_right_hand_base(self, T_right_hand_base_sim_to_object):
         """
