@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from pytransform3d.transformations import plot_transform
+from pytransform3d.transformations import plot_transform, concat
 
 # Helper function to create a 4x4 transformation matrix
 def create_transformation_matrix(translation, rotation_matrix=None):
@@ -41,14 +41,28 @@ def create_relative_transformation(source_matrix, target_matrix):
     Returns:
     - T: A 4x4 homogeneous transformation matrix that transforms points from the source frame to the target frame.
     """
-    # Invert the source matrix to get the transformation from source to world
-    source_inv = np.linalg.inv(source_matrix)
-    
-    # Compute the relative transformation from source to target
-    T_source_to_target = np.dot(source_inv, target_matrix)
+    # Ensure the matrices are valid 4x4 matrices
+    if source_matrix.shape != (4, 4) or target_matrix.shape != (4, 4):
+        raise ValueError("Both source_matrix and target_matrix must be 4x4 matrices.")
 
-    # Return the resulting 4x4 transformation matrix.
-    return T_source_to_target
+    # Check if the source matrix is invertible
+    if np.linalg.det(source_matrix) == 0:
+        raise ValueError("Source matrix is not invertible.")
+
+    try:
+        # Invert the source matrix to get the transformation from source to world
+        source_inv = np.linalg.inv(source_matrix)
+
+        # !!! Must use concat instead of np.dot to ensure the correct transformation. It waste me a whole day! !!!
+        # # Compute the relative transformation from source to target
+        # T_source_to_target = np.dot(source_inv, target_matrix)
+        T_source_to_target = concat(source_inv, target_matrix)
+        # Return the resulting 4x4 transformation matrix.
+        return T_source_to_target
+
+    except np.linalg.LinAlgError as e:
+        print("Error during matrix inversion:", e)
+        raise
 
 # def compute_relative_transformation(self, T_source, T_target):
 #     """
