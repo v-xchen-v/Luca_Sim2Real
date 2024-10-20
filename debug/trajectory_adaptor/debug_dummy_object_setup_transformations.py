@@ -12,8 +12,8 @@ from coordinates.transformation_utils import concat
 VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
 VIS_OBJECT_IN_REAL = False
-VIS_HAND_OBJECT_RELATIVE = True
-VIS_ANIM_HAND_APPROACH_OBJECT = True
+VIS_HAND_OBJECT_RELATIVE = False
+VIS_ANIM_HAND_APPROACH_OBJECT = False
 
 # Initialize the trajectory adaptor with pre-computed calibration data
 adaptor = TrajectoryAdaptor()
@@ -65,7 +65,7 @@ if VIS_OBJECT_IN_REAL:
     ])
 
 # Step 4: Load the simulated trajectory and compute the object relative to the right hand base at first step
-T_right_hand_base_sim_to_object, _, right_hand_base_pos_sim, _ = adaptor.parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
+T_right_hand_base_sim_to_object, driven_hand_pos_sim, right_hand_base_pos_sim, grasp_flag_sims = adaptor.parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
 T_right_hand_base_real_to_robot_base = adaptor.compute_constrained_object_relative_to_right_hand_base(T_right_hand_base_sim_to_object)
 adaptor.frame_manager.add_transformation("right_hand_base_step0_real", "robot_base_real", T_right_hand_base_real_to_robot_base)
 if VIS_HAND_OBJECT_RELATIVE:
@@ -118,7 +118,33 @@ if VIS_ANIM_HAND_APPROACH_OBJECT:
     # Display the animation
     plt.show(block=True)
 
-# Step 5: Compute the executable trajectory in real world
-# adaptor.map_sim_to_real_trajectory()
+# Step 5: Save the executable trajectory in real world
+## Save the transformation between robot_right_hand_base to robot_base in real world and joint angles of hand
+
+### Convert 4x4 to [x, y, z, roll, pitch, yaw]
+def transform_to_xyzrpy(transform):
+    xyz = transform[:3, 3]
+    rpy = R.from_matrix(transform[:3, :3]).as_quat()
+    return np.concatenate([xyz, rpy])
+
+T_robot_right_hand_real_to_robot_steps = [transform_to_xyzrpy(T) for T in T_robot_right_hand_real_to_robot_steps]
+
+### Create a npy dict
+traj_real_dict = {
+    "T_right_hand_base_real_to_robot_steps": T_robot_right_hand_real_to_robot_steps, # [num_steps, 6]
+    "driven_hand_pos_sim": driven_hand_pos_sim, # [num_steps, 6]
+    "grasp_flag_sims": grasp_flag_sims # [num_steps, 1]
+}
+
+save_path = "data/trajectory_data/real_trajectory/coka_can_1017/step-0.npy"
+if not os.path.exists(os.path.dirname(save_path)):
+    os.makedirs(os.path.dirname(save_path))
+np.save(save_path, traj_real_dict)
+
+### Reload and check the shape of data
+traj_real_dict = np.load(save_path, allow_pickle=True).item()
+print(np.array(traj_real_dict["T_right_hand_base_real_to_robot_steps"]).shape)
+print(np.array(traj_real_dict["driven_hand_pos_sim"]).shape)
+print(np.array(traj_real_dict["grasp_flag_sims"]).shape)
 
 
