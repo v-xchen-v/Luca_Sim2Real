@@ -76,46 +76,48 @@ class FrameManager:
         
         if (from_frame, to_frame) in self.transformations:
             print(f"Transformation from {from_frame} to {to_frame} already exists!")
+        elif (to_frame, from_frame) in self.transformations:
+            print(f"Transformation from {to_frame} to {from_frame} already exists!")
         else:
             self.transformations[(from_frame, to_frame)] = matrix
         
-    def compute_all_frames(self, reference_frame):
-        """Compute the transformations of all frames relative to a reference frame."""
-        if reference_frame not in self.frames:
-            raise ValueError(f"Reference frame '{reference_frame}' does not exist.")
-        # self.frames[reference_frame] = np.eye(4)  # Reference frame at origin
+    # def compute_all_frames(self, reference_frame):
+    #     """Compute the transformations of all frames relative to a reference frame."""
+    #     if reference_frame not in self.frames:
+    #         raise ValueError(f"Reference frame '{reference_frame}' does not exist.")
+    #     # self.frames[reference_frame] = np.eye(4)  # Reference frame at origin
         
-        # ensure that the reference frame is known
-        if self.frames[reference_frame] is None:
-            raise ValueError(f"Reference frame '{reference_frame}' is unknown.")
+    #     # ensure that the reference frame is known
+    #     if self.frames[reference_frame] is None:
+    #         raise ValueError(f"Reference frame '{reference_frame}' is unknown.")
 
-        # Recursively compute transformations for other frames
-        visited = set()
-        self._compute_frame_recursively(reference_frame, visited)
+    #     # Recursively compute transformations for other frames
+    #     visited = set()
+    #     self._compute_frame_recursively(reference_frame, visited)
 
-    def _compute_frame_recursively(self, current_frame, visited):
-        """Recursively compute transformations relative to the current frame."""
-        visited.add(current_frame)
+    # def _compute_frame_recursively(self, current_frame, visited):
+    #     """Recursively compute transformations relative to the current frame."""
+    #     visited.add(current_frame)
 
-        for neighbor in self._get_neighbors(current_frame):
-            if neighbor in visited:
-                continue
+    #     for neighbor in self._get_to_neighbors(current_frame):
+    #         if neighbor in visited:
+    #             continue
 
-            if (current_frame, neighbor) in self.transformations:
-                transformation = self.transformations[(current_frame, neighbor)]
-            elif (neighbor, current_frame) in self.transformations:
-                # Use the inverse if the reverse transformation is known
-                transformation = invert_transform(self.transformations[(neighbor, current_frame)])
-            else:
-                # if no transformation is known, raise an error
-                raise ValueError(f"No transformation found between '{current_frame}' and '{neighbor}'.")
+    #         if (current_frame, neighbor) in self.transformations:
+    #             transformation = self.transformations[(current_frame, neighbor)]
+    #         elif (neighbor, current_frame) in self.transformations:
+    #             # Use the inverse if the reverse transformation is known
+    #             transformation = invert_transform(self.transformations[(neighbor, current_frame)])
+    #         else:
+    #             # if no transformation is known, raise an error
+    #             raise ValueError(f"No transformation found between '{current_frame}' and '{neighbor}'.")
 
-            # Compute the neighbor's transformation relative to the reference frame
-            self.frames[neighbor] = concat(self.frames[current_frame], transformation)
-            print(f"Computed frame '{neighbor}' relative to '{current_frame}':\n{self.frames[neighbor]}")
+    #         # Compute the neighbor's transformation relative to the reference frame
+    #         self.frames[neighbor] = concat(self.frames[current_frame], transformation)
+    #         print(f"Computed frame '{neighbor}' relative to '{current_frame}':\n{self.frames[neighbor]}")
 
-            # Recurse to compute transformations for other connected frames
-            self._compute_frame_recursively(neighbor, visited)
+    #         # Recurse to compute transformations for other connected frames
+    #         self._compute_frame_recursively(neighbor, visited)
         
         
 
@@ -137,10 +139,11 @@ class FrameManager:
             visited = set()
         visited.add(from_frame)
 
-        for next_frame in self._get_neighbors(from_frame):
+        for next_frame in self._get_to_neighbors(from_frame):
             if next_frame in visited:
                 continue
-
+            
+            # Recursively find a path to the target frame
             partial_transform = self.compute_transformation(from_frame, next_frame)
             remaining_transform = self.compute_transformation(next_frame, to_frame)
 
@@ -151,7 +154,7 @@ class FrameManager:
                 return full_transform
         return None
 
-    def _get_neighbors(self, frame):
+    def _get_to_neighbors(self, frame):
         """Get neighboring frames connected to a given frame."""
         return {
             to for (from_frame, to) in self.transformations if from_frame == frame
@@ -173,6 +176,15 @@ class FrameManager:
         """Print all known frames."""
         for frame_name, matrix in self.frames.items():
             print(f"Frame {frame_name}:\n{matrix}\n")
+    
+    def frames_connected(self, frame_names):
+        """Check if all frames are connected."""
+        for i in range(len(frame_names)):
+            for j in range(i + 1, len(frame_names)):
+                transformation = self.get_transformation(frame_names[i], frame_names[j])
+                if transformation is None:
+                    return False
+        return True
     
     def visualize_transforation(self, from_frame, to_frame):
         """Visualize a transformation between two frames."""
@@ -245,10 +257,13 @@ class FrameManager:
 
          # Plot the current frame if it's not in the ignore list
         if current_frame not in ignore_frames and self.frames[current_frame] is not None:
-            plot_transform(ax=ax, A2B=self.frames[current_frame], name=current_frame, s=0.2)
+            plot_transform(ax=ax, 
+                           A2B=self.frames[current_frame], 
+                           name=current_frame, s=0.2)
+            
 
         # Traverse all neighboring frames
-        for neighbor in self._get_neighbors(current_frame):
+        for neighbor in self._get_to_neighbors(current_frame):
             if neighbor in visited:
                 continue
 
@@ -261,7 +276,10 @@ class FrameManager:
             else:
                 raise ValueError(f"No transformation found between '{current_frame}' and '{neighbor}'.")
             
-            # Compute the neighbor's frame matrix if not already known
+            # If the neighbor's frame matrix is not known, stop here
+            if neighbor not in self.frames:
+                continue
+            
             if self.frames[current_frame] is not None:
                 # !!! Do not use @ operator for matrix multiplication, use pytransform3d's concat function !!!
                 # neighbor_matrix = T @ self.frames[current_frame]
