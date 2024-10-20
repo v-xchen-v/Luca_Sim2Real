@@ -11,6 +11,7 @@ from coordinates.transformation_utils import concat
 
 VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
+VIS_OBJECT_IN_REAL = True
 VIS_HAND_OBJECT_RELATIVE = True
 
 # Initialize the trajectory adaptor with pre-computed calibration data
@@ -56,6 +57,11 @@ if VIS_READABLE_FRAME_SETUP:
 object_rot_vec = [0, 0, -np.pi/2]
 T_object_to_readable = create_transformation_matrix([0, 0, 0], R.from_rotvec(object_rot_vec).as_matrix())
 adaptor.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)
+if VIS_OBJECT_IN_REAL:
+    adaptor.frame_manager.visualize_transformations([
+        ('readable_real', 'calibration_board_real'),
+        ('calibration_board_real', 'object_real'),
+    ])
 
 # Step 4: Load the simulated trajectory and compute the object relative to the right hand base
 T_right_hand_base_sim_to_object, _, _, _ = adaptor.parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')

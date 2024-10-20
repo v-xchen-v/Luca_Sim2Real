@@ -56,7 +56,11 @@ class FrameManager:
             if (to_frame_name, from_frame_name) in self.transformations:
                 return invert_transform(self.transformations[(to_frame_name, from_frame_name)])
             else:
-                return self.compute_transformation(from_frame_name, to_frame_name)
+                T = self.compute_transformation(from_frame_name, to_frame_name)
+                if T is not None:
+                    return T
+                else:
+                    return invert_transform(self.compute_transformation(to_frame_name, from_frame_name))
     
     # def update_frame(self, frame_name, matrix):
     #     """Update an existing frame with a new transformation matrix."""
@@ -215,6 +219,12 @@ class FrameManager:
         
     def visualize_transformations(self, frame_pairs):
         """Visualize a sequence of transformations between paired frames."""
+        # Now working only from pairs' last frame is the next pair's first frame
+        # Check the last from of previous pair is the first of the next pair
+        for i in range(1, len(frame_pairs)):
+            if frame_pairs[i - 1][1] != frame_pairs[i][0]:
+                raise ValueError("Frames are not connected.")
+        
         if len(frame_pairs) < 1:
             raise ValueError("At least one frame pair is required to visualize transformations.")
 
