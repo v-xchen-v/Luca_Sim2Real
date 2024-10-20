@@ -186,7 +186,7 @@ class FrameManager:
                     return False
         return True
     
-    def visualize_transforation(self, from_frame, to_frame):
+    def visualize_transformation(self, from_frame, to_frame):
         """Visualize a transformation between two frames."""
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -225,7 +225,7 @@ class FrameManager:
         current_transform = np.eye(4)
 
         # plot the first transfortion from np.eye(4) to the first frame
-        plot_transform(ax=ax, A2B=current_transform, name=frame_pairs[0][0], s=0.2)
+        plot_transform(ax=ax, A2B=current_transform, name=frame_pairs[0][0], s=0.1)
         
         # Iterate over the list of (from_frame, to_frame) pairs
         for from_frame, to_frame in frame_pairs:
@@ -245,7 +245,7 @@ class FrameManager:
             current_transform = np.dot(current_transform, T)
 
             # Plot the current frame
-            plot_transform(ax=ax, A2B=current_transform, name=to_frame, s=0.2)
+            plot_transform(ax=ax, A2B=current_transform, name=to_frame, s=0.1)
 
         # Set plot limits and labels
         ax.set_xlim([-1, 1])

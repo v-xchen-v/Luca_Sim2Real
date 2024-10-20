@@ -7,7 +7,7 @@ if module_path not in sys.path:
 
 import numpy as np
 from coordinates.frame_manager import FrameManager
-from coordinates.transformations import create_relative_transformation
+from coordinates.transformation_utils import create_relative_transformation
     
 frame_manager = FrameManager()
 frame_manager.initialize_frames(["world", "board", "camera"])

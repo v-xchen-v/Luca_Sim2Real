@@ -21,4 +21,4 @@ adaptor = TrajectoryAdaptor()
  grasp_flag) = adaptor.parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
 
 # Visualize the first step, relative transformation between the object and right hand base
-adaptor.frame_manager.visualize_transforation("object_sim", "right_hand_base_sim")
+adaptor.frame_manager.visualize_transformation("object_sim", "right_hand_base_sim")

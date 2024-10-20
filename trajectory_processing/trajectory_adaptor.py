@@ -7,7 +7,7 @@ from calibration.calibration_data_loader import load_table_to_camera_extrinsics_
 import os
 from calibration.calibrate_board_to_camera import capture_frame_and_save_table_calibration
 from coordinates.frame_manager import FrameManager
-from coordinates.transformations import create_transformation_matrix, create_relative_transformation
+from coordinates.transformation_utils import create_transformation_matrix, create_relative_transformation
 from scipy.spatial.transform import Rotation as R
 
 """
@@ -52,15 +52,22 @@ class TrajectoryAdaptor:
         ## Initialize frames with known names
         ### Register the frames in this system
         self.frame_names = [
+            # calibration transformations
             "calibration_board_real",
             "camera_real",
             "robot_base_real",
+            
+            # readable purpose
+            "readable_real",
+            
+            # object setup
+            "object_real",
+            
             "right_hand_base_real",
             "real_world",
             "sim_world",
-            "object_real",
             "right_hand_base_sim",
-            "object_sim"
+            "object_sim",
         ]
         self.frame_manager.initialize_frames(self.frame_names)
         
@@ -72,8 +79,15 @@ class TrajectoryAdaptor:
         self.T_camera_to_robot = np.array(self.calibration_data.get("T_camera_to_robot"))
         self.T_table_to_camera = None  # To be computed in dynamic calibration
 
-    def calibration(self):
-        pass
+    def add_transfromations_with_calibration(self):
+        self._compute_transformations_with_calibration_data()
+        
+        # check the transformation based on calibration data is computed
+        ## List the frames that transformations between them should already known.
+        transform_added_frames = ["calibration_board_real", "camera_real", "robot_base_real"] 
+        ## Check the known transformations are computed
+        if not self.frame_manager.frames_connected(transform_added_frames):
+            raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
     
     def object_setup(self):
         pass
@@ -158,7 +172,7 @@ class TrajectoryAdaptor:
         mtx, dist = load_camera_intrinsics_from_npy(calibration_data_dir + '/camera_intrinsics')
         T_camera_to_robot_base = load_eyehand_extrinsics_from_npy(calibration_data_dir + '/camera_to_robot')
         return mtx, dist, T_camera_to_robot_base
-
+    
     def _compute_transformations_with_calibration_data(self):
         """
         Register transformations between calibration board, camera, robot base with calibration data.
@@ -350,12 +364,12 @@ class TrajectoryAdaptor:
         Returns:
         - T_right_hand_base_real_to_robot_base: 4x4 matrix of real world's right hand base relative to robot base.
         """
-        # check the should known transformations
-        if self.frame_manager.get_transformation("object_real", "real_world") is None:
-            raise ValueError("Object to real world transformation not found. Perform object setup first.")
+        # # check the should known transformations
+        # if self.frame_manager.get_transformation("object_real", "real_world") is None:
+        #     raise ValueError("Object to real world transformation not found. Perform object setup first.")
         
-        if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
-            raise ValueError("Right hand base to object transformation in simulator not found.")
+        # if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
+        #     raise ValueError("Right hand base to object transformation in simulator not found.")
         
         # check the input transformation
         if T_right_hand_base_sim_to_object is None:
