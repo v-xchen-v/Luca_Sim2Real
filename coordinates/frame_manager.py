@@ -150,7 +150,7 @@ class FrameManager:
             if remaining_transform is not None:
                 # Concatenate transformations using pytransform3d's `concat`
                 full_transform = concat(remaining_transform, partial_transform)
-                self.add_transformation(from_frame, to_frame, full_transform)
+                # self.add_transformation(from_frame, to_frame, full_transform)
                 return full_transform
         return None
 
@@ -213,90 +213,140 @@ class FrameManager:
         plt.title(f"Transformation: {from_frame} to {to_frame}")
         plt.show(block=True)
         
-    def visualize_transformations_starting_from(self, from_frame, ignore_frames=[]):
-        """Visualize transformations starting from a given frame."""
-        # check if the frame exists
-        if from_frame not in self.frames:
-            raise ValueError(f"Frame '{from_frame}' does not exist.")
-        
-        # check if the frame is known
-        if self.frames[from_frame] is None:
-            raise ValueError(f"Frame '{from_frame}' is unknown.")
-        
-        # Disable interactive mode
-        plt.ioff()
-        
+    def visualize_transformations(self, frame_pairs):
+        """Visualize a sequence of transformations between paired frames."""
+        if len(frame_pairs) < 1:
+            raise ValueError("At least one frame pair is required to visualize transformations.")
+
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.set_title(f"Transformations Starting from '{from_frame}'")
 
-        # Use a set to keep track of visited frames and avoid cycles
-        visited = set()
-        self._visualize_transformations_recursively(ax, from_frame, visited, ignore_frames)
+        # Initialize current transformation to identity (origin)
+        current_transform = np.eye(4)
+
+        # plot the first transfortion from np.eye(4) to the first frame
+        plot_transform(ax=ax, A2B=current_transform, name=frame_pairs[0][0], s=0.2)
+        
+        # Iterate over the list of (from_frame, to_frame) pairs
+        for from_frame, to_frame in frame_pairs:
+            # check the frame are registered
+            if from_frame not in self.frames:
+                raise ValueError(f"Frame '{from_frame}' does not exist.")
+            
+            if to_frame not in self.frames:
+                raise ValueError(f"Frame '{to_frame}' does not exist.")
+            
+            # Get the transformation matrix
+            T = self.get_transformation(from_frame, to_frame)
+            if T is None:
+                raise ValueError(f"No transformation found between {from_frame} and {to_frame}.")
+
+            # Accumulate transformations
+            current_transform = np.dot(current_transform, T)
+
+            # Plot the current frame
+            plot_transform(ax=ax, A2B=current_transform, name=to_frame, s=0.2)
 
         # Set plot limits and labels
-        # Set axis limits and labels by frame values range
-        known_frames = {frame_name: frame_matrix for frame_name, frame_matrix in self.frames.items() if frame_matrix is not None}
-        
-        ax.set_xlim([-max(np.abs([frame[0, 3] for frame in known_frames.values()])), max(np.abs([frame[0, 3] for frame in known_frames.values()]))])
-        ax.set_ylim([-max(np.abs([frame[1, 3] for frame in known_frames.values()])), max(np.abs([frame[1, 3] for frame in known_frames.values()]))])
-        ax.set_zlim([-max(np.abs([frame[2, 3] for frame in known_frames.values()])), max(np.abs([frame[2, 3] for frame in known_frames.values()]))])
-        
+        ax.set_xlim([-1, 1])
+        ax.set_ylim([-1, 1])
+        ax.set_zlim([-1, 1])
         ax.set_xlabel("X-axis")
         ax.set_ylabel("Y-axis")
         ax.set_zlabel("Z-axis")
 
+        # Display the sequence of transformations in the title
+        transformation_path = "\n".join([f"{f}->{t}" for f, t in frame_pairs])
+        plt.title(f"Transformations: {transformation_path}")
         plt.show(block=True)
         
-        # Re-enable interactive mode
-        plt.ion()
+    # def visualize_transformations_starting_from(self, from_frame, ignore_frames=[]):
+    #     """Visualize transformations starting from a given frame."""
+    #     # check if the frame exists
+    #     if from_frame not in self.frames:
+    #         raise ValueError(f"Frame '{from_frame}' does not exist.")
+        
+    #     # check if the frame is known
+    #     if self.frames[from_frame] is None:
+    #         raise ValueError(f"Frame '{from_frame}' is unknown.")
+        
+    #     # Disable interactive mode
+    #     plt.ioff()
+        
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111, projection='3d')
+    #     ax.set_title(f"Transformations Starting from '{from_frame}'")
 
-    def _visualize_transformations_recursively(self, ax, current_frame, visited, ignore_frames):
-        """Recursively plot transformations starting from the current frame."""
-        visited.add(current_frame)
+    #     # Use a set to keep track of visited frames and avoid cycles
+    #     visited = set()
+    #     self._visualize_transformations_recursively(ax, from_frame, visited, ignore_frames)
 
-         # Plot the current frame if it's not in the ignore list
-        if current_frame not in ignore_frames and self.frames[current_frame] is not None:
-            plot_transform(ax=ax, 
-                           A2B=self.frames[current_frame], 
-                           name=current_frame, s=0.2)
+    #     # Set plot limits and labels
+    #     # Set axis limits and labels by frame values range
+    #     known_frames = {frame_name: frame_matrix for frame_name, frame_matrix in self.frames.items() if frame_matrix is not None}
+        
+    #     ax.set_xlim([-max(np.abs([frame[0, 3] for frame in known_frames.values()])), max(np.abs([frame[0, 3] for frame in known_frames.values()]))])
+    #     ax.set_ylim([-max(np.abs([frame[1, 3] for frame in known_frames.values()])), max(np.abs([frame[1, 3] for frame in known_frames.values()]))])
+    #     ax.set_zlim([-max(np.abs([frame[2, 3] for frame in known_frames.values()])), max(np.abs([frame[2, 3] for frame in known_frames.values()]))])
+        
+    #     ax.set_xlabel("X-axis")
+    #     ax.set_ylabel("Y-axis")
+    #     ax.set_zlabel("Z-axis")
+
+    #     plt.show(block=True)
+        
+    #     # Re-enable interactive mode
+    #     plt.ion()
+
+    # def _visualize_transformations_recursively(self, ax, current_frame, visited, ignore_frames):
+    #     """Recursively plot transformations starting from the current frame."""
+    #     visited.add(current_frame)
+
+    #      # Plot the current frame if it's not in the ignore list
+    #     if current_frame not in ignore_frames and self.frames[current_frame] is not None:
+    #         plot_transform(ax=ax, 
+    #                        A2B=self.frames[current_frame], 
+    #                        name=current_frame, s=0.2)
             
 
-        # Traverse all neighboring frames
-        for neighbor in self._get_to_neighbors(current_frame):
-            if neighbor in visited:
-                continue
+    #     # Traverse all neighboring frames
+    #     for neighbor in self._get_to_neighbors(current_frame):
+    #         if neighbor in visited:
+    #             continue
 
-            # Get the transformation matrix from current_frame to neighbor
-            if (current_frame, neighbor) in self.transformations:
-                T = self.transformations[(current_frame, neighbor)]
-            elif (neighbor, current_frame) in self.transformations:
-                # Use the inverse if the reverse transformation exists
-                T = invert_transform(self.transformations[(neighbor, current_frame)])
-            else:
-                raise ValueError(f"No transformation found between '{current_frame}' and '{neighbor}'.")
+    #         # Get the transformation matrix from current_frame to neighbor
+    #         # if (current_frame, neighbor) in self.transformations:
+    #         #     T = self.transformations[(current_frame, neighbor)]
+    #         # elif (neighbor, current_frame) in self.transformations:
+    #         #     # Use the inverse if the reverse transformation exists
+    #         #     T = invert_transform(self.transformations[(neighbor, current_frame)])
+    #         # else:
+    #         #     raise ValueError(f"No transformation found between '{current_frame}' and '{neighbor}'.")
+    #         T = self.get_transformation(current_frame, neighbor)
+    #         if T is None:
+    #             raise ValueError(f"No transformation found between '{current_frame}' and '{neighbor}'.")
             
-            # If the neighbor's frame matrix is not known, stop here
-            if neighbor not in self.frames:
-                continue
+    #         # If the neighbor's frame matrix is not known, stop here
+    #         if neighbor not in self.frames:
+    #             continue
             
-            if self.frames[current_frame] is not None:
-                # !!! Do not use @ operator for matrix multiplication, use pytransform3d's concat function !!!
-                # neighbor_matrix = T @ self.frames[current_frame]
-                neighbor_matrix = concat(self.frames[current_frame], T)
-                self.add_frame(neighbor, neighbor_matrix)
+    #         if self.frames[current_frame] is not None:
+    #             # !!! Do not use @ operator for matrix multiplication, use pytransform3d's concat function !!!
+    #             # neighbor_matrix = T @ self.frames[current_frame]
+    #             neighbor_matrix = concat(self.frames[current_frame], T)
+    #             self.add_frame(neighbor, neighbor_matrix)
 
-                # Plot a line between the two frames if not ignored
-                if current_frame not in ignore_frames and neighbor not in ignore_frames:
-                    ax.plot(
-                        [self.frames[current_frame][0, 3], neighbor_matrix[0, 3]],
-                        [self.frames[current_frame][1, 3], neighbor_matrix[1, 3]],
-                        [self.frames[current_frame][2, 3], neighbor_matrix[2, 3]],
-                        'k--'
-                    )
+    #             # Plot a line between the two frames if not ignored
+    #             if current_frame not in ignore_frames and neighbor not in ignore_frames:
+    #                 ax.plot(
+    #                     [self.frames[current_frame][0, 3], neighbor_matrix[0, 3]],
+    #                     [self.frames[current_frame][1, 3], neighbor_matrix[1, 3]],
+    #                     [self.frames[current_frame][2, 3], neighbor_matrix[2, 3]],
+    #                     'k--'
+    #                 )
             
-            # Recursively plot the next frame
-            self._visualize_transformations_recursively(ax, neighbor, visited, ignore_frames)
+    #         # Recursively plot the next frame
+    #         self._visualize_transformations_recursively(ax, neighbor, visited, ignore_frames)
         
         
     # def visualize_known_transformations(self):
@@ -394,45 +444,45 @@ class FrameManager:
 
     #     plt.show()
     
-    def visualize_known_frames(self):
-        """Visualize all frames and transformations."""
-        # check if any known frames exist
-        known_frames = {frame_name: frame_matrix for frame_name, frame_matrix in self.frames.items() if frame_matrix is not None}
-        if len(known_frames) == 0:
-            print("No known frames to visualize.")
-            return
+    # def visualize_known_frames(self):
+    #     """Visualize all frames and transformations."""
+    #     # check if any known frames exist
+    #     known_frames = {frame_name: frame_matrix for frame_name, frame_matrix in self.frames.items() if frame_matrix is not None}
+    #     if len(known_frames) == 0:
+    #         print("No known frames to visualize.")
+    #         return
         
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_title("Frame Transformations")
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111, projection='3d')
+    #     ax.set_title("Frame Transformations")
 
-        # Plot all frames
-        for frame_name, matrix in self.frames.items():
-            if matrix is not None:
-                plot_transform(ax=ax, A2B=matrix, name=frame_name, s=0.1)
+    #     # Plot all frames
+    #     for frame_name, matrix in self.frames.items():
+    #         if matrix is not None:
+    #             plot_transform(ax=ax, A2B=matrix, name=frame_name, s=0.1)
 
-        # Plot all edges between frames
-        for (from_frame, to_frame), matrix in self.transformations.items():
-            start = self.frames.get(from_frame)
-            end = self.frames.get(to_frame)
-            if start is not None and end is not None:
-                # Draw a line between the two frames
-                ax.plot([start[0, 3], end[0, 3]], 
-                        [start[1, 3], end[1, 3]], 
-                        [start[2, 3], end[2, 3]], 'k--')
+    #     # Plot all edges between frames
+    #     for (from_frame, to_frame), matrix in self.transformations.items():
+    #         start = self.frames.get(from_frame)
+    #         end = self.frames.get(to_frame)
+    #         if start is not None and end is not None:
+    #             # Draw a line between the two frames
+    #             ax.plot([start[0, 3], end[0, 3]], 
+    #                     [start[1, 3], end[1, 3]], 
+    #                     [start[2, 3], end[2, 3]], 'k--')
 
         
-        # set axis limits and labels by frame values range
-        ax.set_xlim([min([frame[0, 3] for frame in known_frames.values()]), max([frame[0, 3] for frame in known_frames.values()])])
-        ax.set_ylim([min([frame[1, 3] for frame in known_frames.values()]), max([frame[1, 3] for frame in known_frames.values()])])
-        ax.set_zlim([min([frame[2, 3] for frame in known_frames.values()]), max([frame[2, 3] for frame in known_frames.values()])])
+    #     # set axis limits and labels by frame values range
+    #     ax.set_xlim([min([frame[0, 3] for frame in known_frames.values()]), max([frame[0, 3] for frame in known_frames.values()])])
+    #     ax.set_ylim([min([frame[1, 3] for frame in known_frames.values()]), max([frame[1, 3] for frame in known_frames.values()])])
+    #     ax.set_zlim([min([frame[2, 3] for frame in known_frames.values()]), max([frame[2, 3] for frame in known_frames.values()])])
         
-        # set axis names
-        ax.set_xlabel("X-axis")
-        ax.set_ylabel("Y-axis")
-        ax.set_zlabel("Z-axis")
+    #     # set axis names
+    #     ax.set_xlabel("X-axis")
+    #     ax.set_ylabel("Y-axis")
+    #     ax.set_zlabel("Z-axis")
 
-        plt.show(block=True)
+    #     plt.show(block=True)
             
 # Example usage
 if __name__ == "__main__":
