@@ -164,12 +164,15 @@ class FrameManager:
             to for (from_frame, to) in self.transformations if from_frame == frame
         }
 
-    # def update_transformation(self, from_frame, to_frame, matrix):
-    #     """Update an existing transformation."""
-    #     if (from_frame, to_frame) in self.transformations:
-    #         self.transformations[(from_frame, to_frame)] = matrix
-    #     else:
-    #         print(f"Transformation from {from_frame} to {to_frame} not found!")
+    def update_transformation(self, from_frame, to_frame, matrix, create_if_not_exists=True):
+        """Update an existing transformation."""
+        if (from_frame, to_frame) in self.transformations or create_if_not_exists:
+            self.transformations[(from_frame, to_frame)] = matrix
+        elif (to_frame, from_frame) in self.transformations or create_if_not_exists:
+            self.transformations[(to_frame, from_frame)] = invert_transform(matrix)
+        else:
+            if not create_if_not_exists:
+                print(f"Transformation from {from_frame} to {to_frame} not found!")
 
     def print_transformations(self):
         """Print all known transformations."""
@@ -217,7 +220,7 @@ class FrameManager:
         plt.title(f"Transformation: {from_frame} to {to_frame}")
         plt.show(block=True)
         
-    def visualize_transformations(self, frame_pairs):
+    def visualize_transformations(self, frame_pairs, ax=None):
         """Visualize a sequence of transformations between paired frames."""
         # Now working only from pairs' last frame is the next pair's first frame
         # Check the last from of previous pair is the first of the next pair
@@ -228,8 +231,9 @@ class FrameManager:
         if len(frame_pairs) < 1:
             raise ValueError("At least one frame pair is required to visualize transformations.")
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
 
         # Initialize current transformation to identity (origin)
         current_transform = np.eye(4)
