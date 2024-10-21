@@ -19,10 +19,12 @@ VIS_ANIM_HAND_APPROACH_OBJECT = True
 adaptor = TrajectoryAdaptor()
 
 # Step1: Get calibration data
-adaptor._get_calibration_data(calibration_data_dir="calibration/calibration_data/camera1", overwrite_if_exists=False, calibration_board_info={
+adaptor._get_calibration_data(calibration_data_dir="calibration/calibration_data/camera2", overwrite_if_exists=True, calibration_board_info={
     "pattern_size": (5, 8),
     "square_size": 0.03
-})
+    # "pattern_size": (8, 11),
+    # "square_size": 0.02
+}, error_threshold=1)
 
 
 # Step2: Compute all the transformations based on the calibration datas
@@ -38,7 +40,7 @@ readable_real_frame = np.array([[1, 0, 0, 0],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
 ## For translation respect, it means that the calibration_board_real frame is 0.03*4 meters away from the readable_real_frame in the x direction.
-calibration_board_frame = np.array([[0, -1, 0, 0.03*4],
+calibration_board_frame = np.array([[0, -1, 0, 0.03],
                                     [-1, 0, 0, 0],
                                     [0, 0, -1, 0],
                                     [0, 0, 0, 1]])
@@ -56,7 +58,7 @@ if VIS_READABLE_FRAME_SETUP:
 
 # Step 3: Object setup, Assume we put the object at the origin of readable_real frame   
 object_rot_vec = [0, 0, -np.pi/2]
-T_object_to_readable = create_transformation_matrix([0, 0, 0], R.from_rotvec(object_rot_vec).as_matrix())
+T_object_to_readable = create_transformation_matrix([0, 0, -0.05], R.from_rotvec(object_rot_vec).as_matrix())
 adaptor.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)
 if VIS_OBJECT_IN_REAL:
     adaptor.frame_manager.visualize_transformations([
@@ -79,7 +81,7 @@ if VIS_HAND_OBJECT_RELATIVE:
         ])
 
 # Step 5: Compute transformation between robot_right_hand_base to robot_base in real world
-T_robot_right_hand_real_to_robot_steps = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)   
+T_robot_right_hand_real_to_robot_steps, T_right_hand_base_steps_sim_to_robot_base = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)   
 if VIS_ANIM_HAND_APPROACH_OBJECT:
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation
@@ -134,24 +136,27 @@ def transform_to_xyzrpy(transform):
     rpy = R.from_matrix(transform[:3, :3]).as_quat()
     return np.concatenate([xyz, rpy])
 
-T_robot_right_hand_real_to_robot_steps = [transform_to_xyzrpy(T) for T in T_robot_right_hand_real_to_robot_steps]
+T_right_hand_base_steps_sim_to_robot_base = [transform_to_xyzrpy(T) for T in T_right_hand_base_steps_sim_to_robot_base]
 
 ### Create a npy dict
-traj_real_dict = {
-    "T_right_hand_base_real_to_robot_steps": T_robot_right_hand_real_to_robot_steps, # [num_steps, 6]
-    "driven_hand_pos_sim": driven_hand_pos_sim, # [num_steps, 6]
-    "grasp_flag_sims": grasp_flag_sims # [num_steps, 1]
-}
+# traj_real_dict = {
+#     "T_right_hand_base_real_to_robot_steps": T_robot_right_hand_real_to_robot_steps, # [num_steps, 7]
+#     "driven_hand_pos_sim": driven_hand_pos_sim, # [num_steps, 6]
+#     "grasp_flag_sims": grasp_flag_sims # [num_steps, 1]
+# }
 
+# concat T_robot_right_hand_real_to_robot_step, driven_hand_pos_sim, and grasp grasp_flag_sims
+
+traj_real_data = np.concatenate([T_right_hand_base_steps_sim_to_robot_base, driven_hand_pos_sim, grasp_flag_sims], axis=1)
 save_path = "data/trajectory_data/real_trajectory/coka_can_1017/step-0.npy"
 if not os.path.exists(os.path.dirname(save_path)):
     os.makedirs(os.path.dirname(save_path))
-np.save(save_path, traj_real_dict)
+np.save(save_path, traj_real_data)
 
-### Reload and check the shape of data
-traj_real_dict = np.load(save_path, allow_pickle=True).item()
-print(np.array(traj_real_dict["T_right_hand_base_real_to_robot_steps"]).shape)
-print(np.array(traj_real_dict["driven_hand_pos_sim"]).shape)
-print(np.array(traj_real_dict["grasp_flag_sims"]).shape)
+# ### Reload and check the shape of data
+# traj_real_dict = np.load(save_path, allow_pickle=True).item()
+# print(np.array(traj_real_dict["T_right_hand_base_real_to_robot_steps"]).shape)
+# print(np.array(traj_real_dict["driven_hand_pos_sim"]).shape)
+# print(np.array(traj_real_dict["grasp_flag_sims"]).shape)
 
 

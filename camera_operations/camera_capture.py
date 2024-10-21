@@ -10,7 +10,7 @@ class RealSenseCamera:
         self.config = rs.config()
 
         # Enable the RGB stream
-        self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        self.config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 
         # Start the camera pipeline
         self.pipeline.start(self.config)

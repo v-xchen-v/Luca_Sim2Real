@@ -9,7 +9,7 @@ from calibration.calibrate_board_to_camera import capture_frame_and_save_table_c
 from coordinates.frame_manager import FrameManager
 from coordinates.transformation_utils import create_transformation_matrix, create_relative_transformation
 from scipy.spatial.transform import Rotation as R
-from pytransform3d.transformations import concat
+from pytransform3d.transformations import concat, invert_transform
 """
 Steps:
     1. Load pre-computed calibration data
@@ -137,7 +137,7 @@ class TrajectoryAdaptor:
             'mtx': mtx,
             'dist': dist
         }
-        self.calibration_data['T_camera_to_robot'] = T_camera_to_robot_base
+        self.calibration_data['T_camera_to_robot'] = invert_transform(T_camera_to_robot_base)
         
         # check whether table calibration need to be computed
         table_calibration_data_exist = table_to_camera_extrinsics_exist(calibration_data_dir+"/table_to_camera")
@@ -161,6 +161,7 @@ class TrajectoryAdaptor:
         if table_calibration_data_exist:
             T_table_to_camera = load_table_to_camera_extrinsics_from_npy(calibration_data_dir+"/table_to_camera")
             self.calibration_data['T_table_to_camera'] = T_table_to_camera
+            print(f"!!! Should check the table to camera translation are corrent in real setup: {T_table_to_camera[:3]}")
         else:
             raise ValueError("Table calibration data not found.")
         
@@ -416,9 +417,14 @@ class TrajectoryAdaptor:
         
         # Assume object is stable just as the first step, and the hand moves, computes the relative transformation between object and right hand base
         T_right_hand_base_step0_sim_to_object = self.frame_manager.get_transformation("right_hand_base_step0_real", "object_real")
+        T_object_step0_sim_to_robot_base = self.frame_manager.get_transformation("object_real", "robot_base_real")
+        # self.frame_manager.visualize_transformations([("readable_real", "object_real"), ("object_real", "right_hand_base_step0_real"),
+        #                                               ("right_hand_base_step0_real", "robot_base_real")])
         
         T_right_hand_base_steps_sim_to_object = [concat(T, T_right_hand_base_step0_sim_to_object) for T in T_right_hand_base_steps_relative_to_step0_in_sim]
-        return T_right_hand_base_steps_sim_to_object
+        T_right_hand_base_steps_sim_to_robot_base = [invert_transform(concat(T, T_object_step0_sim_to_robot_base)) for T in T_right_hand_base_steps_sim_to_object]
+        # T_right_hand_base_steps_sim_to_robot_base = [concat(T, T_object_step0_sim_to_robot_base) for T in T_right_hand_base_steps_sim_to_object]
+        return T_right_hand_base_steps_sim_to_object, T_right_hand_base_steps_sim_to_robot_base
         
     def visualize_frames(self, frames):
         """
