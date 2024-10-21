@@ -13,7 +13,7 @@ VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
 VIS_OBJECT_IN_REAL = False
 VIS_HAND_OBJECT_RELATIVE = False
-VIS_ANIM_HAND_APPROACH_OBJECT = False
+VIS_ANIM_HAND_APPROACH_OBJECT = True
 
 # Initialize the trajectory adaptor with pre-computed calibration data
 adaptor = TrajectoryAdaptor()
@@ -109,8 +109,15 @@ if VIS_ANIM_HAND_APPROACH_OBJECT:
         transformation = T_robot_right_hand_real_to_robot_steps[i]
         # plot_transform(ax, A2B=transformation, s=0.1)  # s sets the size of the frame
         adaptor.frame_manager.update_transformation("right_hand_base_real", "object_real", transformation)
-        adaptor.frame_manager.visualize_transformations([
-            ("readable_real", "right_hand_base_real")], ax)
+        # show the dynamic transformation of the object, right_hand_base_real, with respect to readable_real frame 
+        # and optional reference robot_base_real frame and camera_real frame
+        adaptor.frame_manager.visualize_transformations(
+            [
+                ("readable_real", "right_hand_base_real"),
+                ("right_hand_base_real", "robot_base_real"),
+                ("robot_base_real", "camera_real"),
+            ], 
+            ax, block=False)
 
     # Create animation
     anim = FuncAnimation(fig, update_frame, frames=len(T_robot_right_hand_real_to_robot_steps), interval=100)

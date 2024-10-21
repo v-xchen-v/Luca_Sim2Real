@@ -220,7 +220,7 @@ class FrameManager:
         plt.title(f"Transformation: {from_frame} to {to_frame}")
         plt.show(block=True)
         
-    def visualize_transformations(self, frame_pairs, ax=None):
+    def visualize_transformations(self, frame_pairs, ax=None, block=True):
         """Visualize a sequence of transformations between paired frames."""
         # Now working only from pairs' last frame is the next pair's first frame
         # Check the last from of previous pair is the first of the next pair
@@ -272,7 +272,7 @@ class FrameManager:
         # Display the sequence of transformations in the title
         transformation_path = "\n".join([f"{f}->{t}" for f, t in frame_pairs])
         plt.title(f"Transformations: {transformation_path}")
-        plt.show(block=True)
+        plt.show(block=block)
         
     # def visualize_transformations_starting_from(self, from_frame, ignore_frames=[]):
     #     """Visualize transformations starting from a given frame."""
