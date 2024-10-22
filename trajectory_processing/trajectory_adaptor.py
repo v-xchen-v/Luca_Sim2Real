@@ -422,9 +422,9 @@ class TrajectoryAdaptor:
         #                                               ("right_hand_base_step0_real", "robot_base_real")])
         
         T_right_hand_base_steps_sim_to_object = [concat(T, T_right_hand_base_step0_sim_to_object) for T in T_right_hand_base_steps_relative_to_step0_in_sim]
-        T_right_hand_base_steps_sim_to_robot_base = [invert_transform(concat(T, T_object_step0_sim_to_robot_base)) for T in T_right_hand_base_steps_sim_to_object]
+        T_robot_base_to_right_hand_base_steps_sim = [invert_transform(concat(T, T_object_step0_sim_to_robot_base)) for T in T_right_hand_base_steps_sim_to_object]
         # T_right_hand_base_steps_sim_to_robot_base = [concat(T, T_object_step0_sim_to_robot_base) for T in T_right_hand_base_steps_sim_to_object]
-        return T_right_hand_base_steps_sim_to_object, T_right_hand_base_steps_sim_to_robot_base
+        return T_right_hand_base_steps_sim_to_object, T_robot_base_to_right_hand_base_steps_sim
         
     def visualize_frames(self, frames):
         """

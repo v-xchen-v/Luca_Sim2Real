@@ -13,13 +13,15 @@ VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
 VIS_OBJECT_IN_REAL = False
 VIS_HAND_OBJECT_RELATIVE = False
-VIS_ANIM_HAND_APPROACH_OBJECT = True
+VIS_ANIM_HAND_APPROACH_OBJECT = False
+VIS_HAND_XYZ_IN_ROBOT_COORDINATE = True
+VIS_HAND_IN_ROBOT_COORDINATE = True
 
 # Initialize the trajectory adaptor with pre-computed calibration data
 adaptor = TrajectoryAdaptor()
 
 # Step1: Get calibration data
-adaptor._get_calibration_data(calibration_data_dir="calibration/calibration_data/camera2", overwrite_if_exists=True, calibration_board_info={
+adaptor._get_calibration_data(calibration_data_dir="calibration/calibration_data/camera2", overwrite_if_exists=False, calibration_board_info={
     "pattern_size": (5, 8),
     "square_size": 0.03
     # "pattern_size": (8, 11),
@@ -81,7 +83,7 @@ if VIS_HAND_OBJECT_RELATIVE:
         ])
 
 # Step 5: Compute transformation between robot_right_hand_base to robot_base in real world
-T_robot_right_hand_real_to_robot_steps, T_right_hand_base_steps_sim_to_robot_base = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)   
+T_robot_right_hand_real_to_robot_steps, T_robot_base_to_right_hand_base_steps_sim = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)   
 if VIS_ANIM_HAND_APPROACH_OBJECT:
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation
@@ -136,7 +138,7 @@ def transform_to_xyzrpy(transform):
     rpy = R.from_matrix(transform[:3, :3]).as_quat()
     return np.concatenate([xyz, rpy])
 
-T_right_hand_base_steps_sim_to_robot_base = [transform_to_xyzrpy(T) for T in T_right_hand_base_steps_sim_to_robot_base]
+T_robot_base_to_right_hand_base_steps_sim_xyzrpy = [transform_to_xyzrpy(T) for T in T_robot_base_to_right_hand_base_steps_sim]
 
 ### Create a npy dict
 # traj_real_dict = {
@@ -147,16 +149,71 @@ T_right_hand_base_steps_sim_to_robot_base = [transform_to_xyzrpy(T) for T in T_r
 
 # concat T_robot_right_hand_real_to_robot_step, driven_hand_pos_sim, and grasp grasp_flag_sims
 
-traj_real_data = np.concatenate([T_right_hand_base_steps_sim_to_robot_base, driven_hand_pos_sim, grasp_flag_sims], axis=1)
+# Check T_right_hand_base_steps_sim_to_robot_base's x, y, z
+if VIS_HAND_XYZ_IN_ROBOT_COORDINATE:
+## plot the x, y, z of T_right_hand_base_steps_sim_to_robot_base
+    import matplotlib.pyplot as plt
+    T_robot_base_to_right_hand_base_steps_sim_xyzrpy = np.array(T_robot_base_to_right_hand_base_steps_sim_xyzrpy)
+    plt.plot(T_robot_base_to_right_hand_base_steps_sim_xyzrpy[:, 0], label="x")
+    plt.plot(T_robot_base_to_right_hand_base_steps_sim_xyzrpy[:, 1], label="y")
+    plt.plot(T_robot_base_to_right_hand_base_steps_sim_xyzrpy[:, 2], label="z")
+    plt.legend()
+    plt.show()
+
+
+traj_real_data = np.concatenate([T_robot_base_to_right_hand_base_steps_sim_xyzrpy, driven_hand_pos_sim, grasp_flag_sims], axis=1)
 save_path = "data/trajectory_data/real_trajectory/coka_can_1017/step-0.npy"
 if not os.path.exists(os.path.dirname(save_path)):
     os.makedirs(os.path.dirname(save_path))
 np.save(save_path, traj_real_data)
 
-# ### Reload and check the shape of data
-# traj_real_dict = np.load(save_path, allow_pickle=True).item()
-# print(np.array(traj_real_dict["T_right_hand_base_real_to_robot_steps"]).shape)
-# print(np.array(traj_real_dict["driven_hand_pos_sim"]).shape)
-# print(np.array(traj_real_dict["grasp_flag_sims"]).shape)
+# Step 6: Reload and check the shape and content of data
+traj_real_data = np.load(save_path)
+print(traj_real_data.shape)
+
+## Visualize the transformation between robot_right_hand_base in robot_base in real world
+if VIS_HAND_IN_ROBOT_COORDINATE:
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+    from pytransform3d.transformations import plot_transform
+    import matplotlib
+    matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
+    # Set up the plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
 
 
+
+    def update_frame(i):
+        ax.cla()  # Clear the current frame
+        ax.set_xlim([-1, 1])
+        ax.set_ylim([-1, 1])
+        ax.set_zlim([-1, 1])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        # add a text
+        print(f'grasp flag: {grasp_flag_sims[i]}')
+        
+        transformation = T_robot_base_to_right_hand_base_steps_sim[i]
+        # plot_transform(ax, A2B=transformation, s=0.1)  # s sets the size of the frame
+        adaptor.frame_manager.update_transformation("robot_base_real", "right_hand_base_real", transformation)
+        # show the dynamic transformation of the object, right_hand_base_real, with respect to readable_real frame 
+        # and optional reference robot_base_real frame and camera_real frame
+        adaptor.frame_manager.visualize_transformations(
+            [
+                ("right_hand_base_real", "robot_base_real"),
+            ], 
+            ax, block=False)
+
+    # Create animation
+    anim = FuncAnimation(fig, update_frame, frames=len(T_robot_base_to_right_hand_base_steps_sim), interval=100)
+
+    # Display the animation
+    plt.show(block=True)
