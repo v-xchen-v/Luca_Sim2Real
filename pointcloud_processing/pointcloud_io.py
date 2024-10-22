@@ -4,13 +4,20 @@ import open3d as o3d
 import os
 import pyrealsense2 as rs
 
-# def load_point_cloud(self, path: str) -> np.ndarray:
-#     """
-#     Load the point cloud from the given path.
+def load_point_cloud(path: str) -> np.ndarray:
+    """
+    Load the point cloud from the given path.
 
-#     Args:
-#     """
-#     return np.load(path)
+    Args:
+    - path: The path to the point cloud file. The file must be in PCD format or PLY format.
+    
+    Returns:
+    - points: The loaded point cloud as a NumPy array.
+    """
+    point_cloud = o3d.io.read_point_cloud(path)
+    points = np.asarray(point_cloud.points)
+    
+    return points
         
         
 def _save_realsense_point_cloud(rs_points, rs_frames, save_dir: str, file_name: str, overwrite_if_exists=False) -> None:

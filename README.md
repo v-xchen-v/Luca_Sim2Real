@@ -9,6 +9,7 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 
 ### Completed Features
 - [x] Core functionality (e.g., Transformation between coordinate frames)
+- [x] Capture and save point cloud with realsense D455 camera.
 - [x] FrameManager class to compute frames based known transformations and a reference starting frame with vivid 3d visualization plotting.
 - [x] Compute T_table_to_camera with a checkerboard image.
 - [x] Compute transformations between calibration board, camera, robot base with calibration data.
@@ -77,6 +78,17 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 │   ├── trajectory_utils.py           # Helper functions (e.g., loading trajectories)
 │   └── test_trajectory.py            # Test trajectory processing logic
 |
+├── /data/                            # New data folder to store various datasets
+│   ├── /debug_data/                  # Debug data collection
+│   ├── /pointcloud_data/             # Point cloud data
+│   │   ├── candidate_objects/        # Candidate objects to grasp
+│   │   └── camera_captures/          # Captured point clouds during grasp tasks
+│   └── /trajectory_data/             # Trajectory data storage
+│       ├── real_trajectory/
+│       │   └── coka_can_1017/
+│       └── sim_trajectory/
+│           └── coka_can_1017/
+│
 ├── /scripts/                   # Standalone scripts
 │   ├── run_calibration.py      # Example of how to run the calibration
 │   ├── visualize_transforms.py # Example of visualization of all frames
