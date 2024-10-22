@@ -104,6 +104,15 @@ class TrajectoryAdaptor:
     def save_adapted_trajectory(self):
         pass
     
+    def _show_calibration_image(self, calibration_data_dir):
+        import cv2
+        calibration_image_path = calibration_data_dir + "/corner_visualization.jpg"
+        frame = cv2.imread(calibration_image_path)
+        if frame is None:
+            raise ValueError("Calibration image not found.")
+        cv2.imshow("Calibration Image", frame)
+        cv2.waitKey(0)
+        
     def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
         """
         Load calibration data, grab a camera frame and compute table calibration if necessary.
@@ -155,7 +164,11 @@ class TrajectoryAdaptor:
                                                      calibration_data_dir + '/table_to_camera',
                                                      error_threshold=error_threshold
                                                     )
-        
+
+            # pop-up a window to show the calibration image to make sure the calibration physical setup is correct
+            ## To avoid use wrong data, the calibration image should be checked by human.s
+            self._show_calibration_image(calibration_data_dir + "/table_to_camera")
+            
         # load table calibration data
         table_calibration_data_exist = table_to_camera_extrinsics_exist(calibration_data_dir+"/table_to_camera")
         if table_calibration_data_exist:
