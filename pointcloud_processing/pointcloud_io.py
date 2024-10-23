@@ -3,6 +3,7 @@ import numpy as np
 import open3d as o3d
 import os
 import pyrealsense2 as rs
+import cv2
 
 def load_point_cloud(path: str) -> np.ndarray:
     """
@@ -20,9 +21,10 @@ def load_point_cloud(path: str) -> np.ndarray:
     return points
         
         
-def _save_realsense_point_cloud(rs_points, rs_frames, save_dir: str, file_name: str, overwrite_if_exists=False) -> None:
+def _save_realsense_point_cloud(rs_points, rs_frames, color_image, save_dir: str, file_name: str, overwrite_if_exists=False) -> None:
     """
     Save the point cloud captured from the Intel RealSense D455 camera. The point cloud is saved as a PCD file, and a PLY file.
+    And the color image is saved as a PNG file for calibration task.
     """
     exts = ['.pcd', '.ply']
     
@@ -54,8 +56,15 @@ def _save_realsense_point_cloud(rs_points, rs_frames, save_dir: str, file_name: 
     
     # save the point cloud as a PCD file
     ## read ply file and write to pcd file
+    print(f"Saving to {file_name}.pcd...")
     o3d.io.write_point_cloud(f"{save_dir}/{file_name}.pcd", 
                              o3d.io.read_point_cloud(f"{save_dir}/{file_name}.ply"))
+    print("Done")
+    
+    # save the color image
+    print(f"Saving color image to {file_name}.png...")
+    cv2.imwrite(f"{save_dir}/{file_name}.png", color_image)
+    print("Done")
         
 # def save_point_cloud_from_sensors(self) -> np.ndarray:
 #     """
@@ -126,7 +135,7 @@ def save_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_
         # Calculate the point cloud with the aligned depth frame
         points = pc.calculate(aligned_depth_frame)
         
-        _save_realsense_point_cloud(points, frames, save_dir, file_name, overwrite_if_exists)
+        _save_realsense_point_cloud(points, frames, color_image, save_dir, file_name, overwrite_if_exists)
         
         return points, color_image
     finally:
