@@ -2,6 +2,31 @@ import matplotlib.pyplot as plt
 from pytransform3d.transformations import plot_transform
 import numpy as np
 
+def visualize_frame(T, name):
+    """
+    Visualize a single coordinate frame in 3D space.
+    
+    Parameters:
+    - T: 4x4 transformation matrix for the frame.
+    - name: Name of the frame.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    plot_transform(ax=ax, A2B=T, name=name, s=0.2)
+    
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    
+    ax.set_xlabel("X-axis")
+    ax.set_ylabel("Y-axis")
+    ax.set_zlabel("Z-axis")
+    
+    plt.title(f"3D Visualization of {name} Frame")
+    plt.show()
+    
+    
 def visualize_frames(frames, frame_names, limits=None):
     """
     Visualize a set of coordinate frames in 3D space.

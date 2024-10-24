@@ -13,6 +13,12 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 - [x] FrameManager class to compute frames based known transformations and a reference starting frame with vivid 3d visualization plotting.
 - [x] Compute T_table_to_camera with a checkerboard image.
 - [x] Compute transformations between calibration board, camera, robot base with calibration data.
+- [x] Adapte trajection from simulater to real with a point relative to calibration board as object center.
+- [x] Capture and save point cloud data with realsense D455 camera.
+- [x] Core functionality of filter points.
+- [ ] Got the partial view of object inside operation are.
+- [ ] Feature the point cloud outside of operation area and Do ICP to get the matched fullview pointcloud of object.
+- [ ] Adapter trajectory from simulator to real with ICP object center.
 - [x] Basic input/output handling
 - [x] 2D plotting of landmarks
 
@@ -115,3 +121,7 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 ├── requirements.txt           # List of dependencies (e.g., numpy, matplotlib, pytransform3d)
 └── README.md                  # Overview of the project
 ```
+
+## Millestone
+### Can locate the object pos in robot coordiate
+### Can apply a sim2real a traj approach object and grasp it
