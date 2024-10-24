@@ -10,11 +10,13 @@ import numpy as np
 from coordinates.transformation_utils import concat
 from pytransform3d.transformations import invert_transform
 
-VIS_CALIBRATION_TRANSFORMATIONS = True
-VIS_READABLE_FRAME_SETUP = True
-VIS_OBJECT_IN_REAL = True
+VIS_CALIBRATION_TRANSFORMATIONS = False
+VIS_READABLE_FRAME_SETUP = False
+VIS_OBJECT_IN_REAL = False
+VIS_SIM_WORLD_SETUP = False
+VIS_ANIM_HAND_APPROACH_OBJECT_SIM = False
+VIS_ANIM_HAND_APPROACH_OBJECT_REAL = True
 VIS_HAND_OBJECT_RELATIVE = True
-VIS_ANIM_HAND_APPROACH_OBJECT = True
 VIS_HAND_XYZ_IN_ROBOT_COORDINATE = True
 VIS_HAND_IN_ROBOT_COORDINATE = True
 
@@ -66,6 +68,7 @@ if VIS_READABLE_FRAME_SETUP:
         ('calibration_board_real', 'camera_real'),
         ('camera_real', 'robot_base_real')])
 
+# No matter how, assume we already know the relative pos of object_real to readable_real frame
 # Step 3: Object setup, Assume we put the object at the origin of readable_real frame   
 # object_rot_vec = [0, 0, -np.pi/2]
 object_rot_vec = [0, 0, -np.pi/2]
@@ -86,72 +89,81 @@ driven_hand_pos_sim, right_hand_base_pos_sim, grasp_flag_sims = adaptor.parse_si
 
 # Visualize to make sure that the 'world', 'object', 'hand_base' in sim is built correctly same as in Isaac Gym
 # Next is to built the actions in Isaac Gym 
-adaptor.frame_manager.visualize_transformations(
-    [
-        ("sim_world", "object_sim"),
-        ("object_sim", "right_hand_base_sim"),
-    ]
-)
+
+if VIS_SIM_WORLD_SETUP:
+    adaptor.frame_manager.visualize_transformations(
+        [
+            ("sim_world", "object_sim"),
+            ("object_sim", "right_hand_base_sim"),
+        ]
+    )
+    
 # Step 5: Build up 'object_sim', 'right_hand_base_sim' relative pos across steps
 T_right_hand_base_to_object_steps_in_sim = adaptor.compute_right_hand_base_to_object_steps_in_sim(right_hand_base_pos_sim)
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from pytransform3d.transformations import plot_transform
-import matplotlib
-matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
-# Set up the plot
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.set_xlim([-1, 1])
-ax.set_ylim([-1, 1])
-ax.set_zlim([-1, 1])
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-ax.set_zlabel("Z")
-
-def update_frame(i):
-    ax.cla()  # Clear the current frame
+if VIS_ANIM_HAND_APPROACH_OBJECT_SIM:
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+    from pytransform3d.transformations import plot_transform
+    import matplotlib
+    matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
+    # Set up the plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    T_object_in_world = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
-    transformation = invert_transform(T_right_hand_base_to_object_steps_in_sim[i])
-    
-    from coordinates.visualization_utils import _visualize_frames
-    _visualize_frames(ax, {
-        "sim_world": np.eye(4),
-        "object_sim": T_object_in_world,
-        "right_hand_base_sim": transformation
-    }, limits=[[-0.5, 0.5],
-               [-0.5, 0.5],
-               [-0.5, 0.5]])
-    
-    # plot_transform(A2B=transformation, ax=ax, s=0.1)  # s sets the size of the frame
-    # # plot_transform(ax, A2B=transformation, s=0.1)  # s sets the size of the frame
-    # adaptor.frame_manager.update_transformation("right_hand_base_real", "object_real", transformation)
-    # # show the dynamic transformation of the object, right_hand_base_real, with respect to readable_real frame 
-    # # and optional reference robot_base_real frame and camera_real frame
-    # adaptor.frame_manager.visualize_transformations(
-    #     [
-    #         ("readable_real", 'object_real'),
-    #         ('object_real',"right_hand_base_real"),
-    #         ("right_hand_base_real", "robot_base_real"),
-    #         ("robot_base_real", "camera_real"),
-    #     ], 
-    #     ax, block=False)
 
-# Create animation
-anim = FuncAnimation(fig, update_frame, frames=int(len(T_right_hand_base_to_object_steps_in_sim)/5), interval=100)
+    def update_frame(i):
+        ax.cla()  # Clear the current frame
+        ax.set_xlim([-1, 1])
+        ax.set_ylim([-1, 1])
+        ax.set_zlim([-1, 1])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        T_object_in_world = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+        transformation = invert_transform(T_right_hand_base_to_object_steps_in_sim[i])
+        
+        from coordinates.visualization_utils import _visualize_frames
+        _visualize_frames(ax, {
+            "sim_world": np.eye(4),
+            "object_sim": T_object_in_world,
+            "right_hand_base_sim": transformation
+        }, limits=[[-0.5, 0.5],
+                [-0.5, 0.5],
+                [-0.5, 0.5]])
 
-# Display the animation
-plt.show(block=True)
+    # Create animation
+    anim = FuncAnimation(fig, update_frame, frames=int(len(T_right_hand_base_to_object_steps_in_sim)/5), interval=100)
 
-# Step 5: Compute transformation between robot_right_hand_base to robot_base in real world
-T_robot_right_hand_real_to_robot_steps, T_robot_base_to_right_hand_base_steps_sim = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)   
-if VIS_ANIM_HAND_APPROACH_OBJECT:
+    # Display the animation
+    plt.show(block=True)
+# Right until here
+#---------------------- Simulated world setup done----------------------#
+
+#---------------------- Start mapping real world to simulated world ----------------------#
+# Step 6: Locate the object in real world with respect to readable_real frame(icp or manually put object) assume that 
+# - the readable_real frame is the same as orientation the world frame in sim
+# - the object is located at sim world origin
+
+# When mapping the object in real world to the object in sim world, we need to consider the following:
+# - The object in real world is located at the pos translation to original readable_real frame and rotation for better appoach of robot arm machinism.
+
+# adaptor._locate_translation_object_in_readable_frame_in_real([0, 0, 0])
+# adaptor._locate_rotation_object_in_readable_frame_in_real(R.from_rotvec([0, 0, 0]).as_matrix())
+# adaptor.adjust_rotation_object_real_to_object_sim()
+
+
+
+# Step 7: Compute transformation between robot_right_hand_base to robot_base in real world
+adaptor._bridge_real_sim_with_object()
+T_right_hand_base_steps_to_object_in_real = adaptor._map_real_robot_action_to_sim(T_right_hand_base_to_object_steps_in_sim)
+T_right_hand_base_steps_to_robot_base_real = adaptor._compute_right_hand_base_steps_to_object_base_real(T_right_hand_base_steps_to_object_in_real)
+# T_robot_right_hand_real_to_robot_steps, T_robot_base_to_right_hand_base_steps_sim = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)   
+if VIS_ANIM_HAND_APPROACH_OBJECT_REAL:
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation
     from pytransform3d.transformations import plot_transform
@@ -177,7 +189,7 @@ if VIS_ANIM_HAND_APPROACH_OBJECT:
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
-        transformation = T_robot_right_hand_real_to_robot_steps[i]
+        transformation = T_right_hand_base_steps_to_object_in_real[i]
         # plot_transform(ax, A2B=transformation, s=0.1)  # s sets the size of the frame
         adaptor.frame_manager.update_transformation("right_hand_base_real", "object_real", transformation)
         # show the dynamic transformation of the object, right_hand_base_real, with respect to readable_real frame 
@@ -189,26 +201,29 @@ if VIS_ANIM_HAND_APPROACH_OBJECT:
                 ("right_hand_base_real", "robot_base_real"),
                 ("robot_base_real", "camera_real"),
             ], 
-            ax, block=False)
+            ax, block=False, 
+            limits=[[-0.5, 0.5],
+                    [-0.5, 0.5],
+                    [-0.5, 0.5]])
 
     # Create animation
-    anim = FuncAnimation(fig, update_frame, frames=int(len(T_robot_right_hand_real_to_robot_steps)/5), interval=100)
+    anim = FuncAnimation(fig, update_frame, frames=int(len(T_right_hand_base_steps_to_object_in_real)/5), interval=100)
 
     # Display the animation
     plt.show(block=True)
 
-# Step 5: Load the simulated trajectory and compute the object relative to the right hand base at first step
-T_right_hand_base_real_to_robot_base = adaptor.compute_constrained_object_relative_to_right_hand_base()
-adaptor.frame_manager.add_transformation("right_hand_base_step0_real", "robot_base_real", T_right_hand_base_real_to_robot_base)
-if VIS_HAND_OBJECT_RELATIVE:
-    adaptor.frame_manager.visualize_transformations([
-            # ('readable_real', 'calibration_board_real'),
-            # ('calibration_board_real', 'camera_real'),
-            # ('camera_real', 'robot_base_real'),
-            # ('robot_base_real', 'right_hand_base_real'),
-            ('readable_real', 'right_hand_base_step0_real'),
-            ('right_hand_base_step0_real', 'object_real')
-        ])
+# # Step 5: Load the simulated trajectory and compute the object relative to the right hand base at first step
+# T_right_hand_base_real_to_robot_base = adaptor.compute_constrained_object_relative_to_right_hand_base()
+# adaptor.frame_manager.add_transformation("right_hand_base_step0_real", "robot_base_real", T_right_hand_base_real_to_robot_base)
+# if VIS_HAND_OBJECT_RELATIVE:
+#     adaptor.frame_manager.visualize_transformations([
+#             # ('readable_real', 'calibration_board_real'),
+#             # ('calibration_board_real', 'camera_real'),
+#             # ('camera_real', 'robot_base_real'),
+#             # ('robot_base_real', 'right_hand_base_real'),
+#             ('readable_real', 'right_hand_base_step0_real'),
+#             ('right_hand_base_step0_real', 'object_real')
+#         ])
 
 
 
@@ -229,7 +244,7 @@ def transform_to_xyzrpy(transform):
 # T_robot_base_to_right_hand_base_steps_real = [concat(T, T_right_hand_base_sim_to_real) for T in T_robot_base_to_right_hand_base_steps_sim]
 # T_robot_base_to_right_hand_base_steps_real_xyzrpy = [transform_to_xyzrpy(T) for T in T_robot_base_to_right_hand_base_steps_real]
 
-T_robot_base_to_right_hand_base_steps_sim_xyzrpy = [transform_to_xyzrpy(T) for T in T_robot_base_to_right_hand_base_steps_sim]
+T_robot_base_to_right_hand_base_steps_sim_xyzrpy = [transform_to_xyzrpy(T) for T in T_right_hand_base_steps_to_robot_base_real]
 
 
 ### Create a npy dict
@@ -295,7 +310,7 @@ if VIS_HAND_IN_ROBOT_COORDINATE:
         # add a text
         print(f'grasp flag: {grasp_flag_sims[i]}')
         
-        transformation = T_robot_base_to_right_hand_base_steps_sim[i]
+        transformation = T_right_hand_base_steps_to_robot_base_real[i]
         # plot_transform(ax, A2B=transformation, s=0.1)  # s sets the size of the frame
         adaptor.frame_manager.update_transformation("robot_base_real", "right_hand_base_real", transformation)
         # show the dynamic transformation of the object, right_hand_base_real, with respect to readable_real frame 
@@ -309,7 +324,7 @@ if VIS_HAND_IN_ROBOT_COORDINATE:
             ax, block=False)
 
     # Create animation
-    anim = FuncAnimation(fig, update_frame, frames=int(len(T_robot_base_to_right_hand_base_steps_sim)/5), interval=100)
+    anim = FuncAnimation(fig, update_frame, frames=int(len(T_right_hand_base_steps_to_robot_base_real)/5), interval=100)
 
     # Display the animation
     plt.show(block=True)

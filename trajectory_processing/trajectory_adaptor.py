@@ -75,6 +75,8 @@ class TrajectoryAdaptor:
             "sim_world",
             "right_hand_base_sim",
             
+            # bridge sim and real by 'object_sim' and 'object_real'
+        
             ## from step 0 to step n    
             "right_hand_base_step0_real",
             
@@ -481,7 +483,93 @@ class TrajectoryAdaptor:
         # Got the relative pos between object and right hand base in sim at each step
         return T_right_hand_base_steps_to_object_in_sim
         
-    def compute_right_hand_base_to_object(self, right_hand_base_pose_sim):
+    # def _locate_translation_object_in_readable_frame_in_real(self, translation_object_in_readable=[0, 0, 0]):
+    #     """
+    #     Locate the object's position(xyz only, no orientation) in the real world by setting 
+    #     the object translate to the readable's origin(which is also the readable frame's origin).
+    #     """
+    #     # Assume the object is placed on the calibration board's origin        
+    #     # Register the translation between the object and the readable frame
+    #     tvec_object_in_readable = np.array(translation_object_in_readable)
+    #     return tvec_object_in_readable
+        
+    # def _locate_rotation_object_in_readable_frame_in_real(self, rmatrix_object_readable_in_world_readable):
+    #     """Q: given object_readable_in_world_readable, how to compute the rotation of object_sim_in_world_sim?"""
+    #     """Set object in real have same orientation as readable frame with no rotation for human readable."""
+    #     return rmatrix_object_readable_in_world_readable
+    
+    def _map_sim_to_real_hand_base(self):
+        """hand base relative to object in real should as same as in sim."""
+        
+        # got object in readable frame in real
+        
+        ## 
+        
+        
+        
+        
+    def _bridge_real_sim_with_object(self):
+        """What's mean mapping real objec to sim object?
+        if object in real rotate, the sim object should rotate with it, so that the hand base with also rotate with it to keep the relative pos.
+        """
+        # Using (object_real, object_sim) as bridge to mapping sim and real
+        self.frame_manager.add_transformation("object_real", "object_sim", np.eye(4))
+        
+    
+    def _map_real_robot_action_to_sim(self, T_right_hand_base_steps_to_object_in_sim):
+        """Map the real robot action to the simulator."""
+        # Given the relative pos of hand and object in sim, same relative pos in real should be kept. 
+        T_right_hand_base_steps_to_object_in_real = T_right_hand_base_steps_to_object_in_sim
+        return T_right_hand_base_steps_to_object_in_real
+        
+        # Compute right hand base to object in real world
+        
+        # # Adding a object readable in real to make object readable for human
+        
+        
+        
+        # # So that object in sim and object in real have different orientation.
+        # # object_sim in world_sim should same as object_real in readable_real after considered rotation of object_sim_local and object_real_local of rotation
+        # rmatrix_object_sim_to_world_sim = self.frame_manager.get_transformation("object_sim", "sim_world")[:3, :3]
+        
+        # # If the object axes is same as sim world
+        
+        # # Default(if object no rotation) object is same as sim world, since sim world is same as readable world so that object is readable for human too.
+        # rmatrix_object_sim_to_object_readable_real = rmatrix_object_sim_to_world_sim
+        
+        # rmatrix_object_readable_in_sim_world = rmatrix_object_readable_in_world_readable
+        # rmatrix_object_readable_to_sim_world = invert_transform(rmatrix_object_readable_in_sim_world)
+        
+        # # If rotate object in real world
+        # rmatrix_object_sim_to_world_sim = concat(rmatrix_object_sim_to_object_real, rmatrix_object_readable_to_sim_world)
+        
+        # Assume that sim world, readable frame in real and object_readable_in_real have same axes default direction.
+        # rmatrix_object_sim_to_object_real = rmatrix_object_sim_to_world_sim # so that object real is object sim rotate to 
+        
+        # got from input
+        # rmatrix_object_readable_real_to_world_readable_real = invert_transform(rotation_object_in_readable)
+        
+        
+    # def _map_real_to_sim_robot_base(self, translation_object_in_readable):
+    #     """What's mean mapping real objec to sim object
+    #     if object in real have translation or rotation, the robot should move or rotate to keep the relative pos.
+    #     """
+        
+        
+        
+    def _compute_right_hand_base_steps_to_object_base_real(self, T_right_hand_base_steps_to_object_in_real):
+        # Known the relative pos between object and right hand base at each step in real world
+        # Known the robot base relative to object_real
+        
+        
+        T_right_hand_base_to_object_at_initial_sim = self.frame_manager.get_transformation("right_hand_base_sim", "object_sim")
+        T_right_hand_base_to_object_at_initial_real = T_right_hand_base_to_object_at_initial_sim
+        # Compute the relative pos between right hand base and right arm base in real world
+        T_right_hand_base_steps_to_robot_base_real = [concat(T, T_right_hand_base_to_object_at_initial_real) for T in T_right_hand_base_steps_to_object_in_real]
+        return T_right_hand_base_steps_to_robot_base_real
+        
+        
+    def compute_right_hand_base_to_object(self, T_right_hand_base_steps_to_object_in_real):
         """Compute the transformation between the right hand base and the object in real world of num_steps 
         based on:
         - The relative pos of object to right hand base in simulator.
