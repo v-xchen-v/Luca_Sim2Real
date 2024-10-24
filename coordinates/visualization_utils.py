@@ -67,7 +67,7 @@ def visualize_frames(frames, frame_names, limits=None):
     _visualize_frames(ax, frame_name2matrix, limits)
     
     plt.title("3D Visualization of Coordinate Frames")
-    plt.show()
+    plt.show(block=True)
 
 def visualize_robot_with_objects(T_robot_base, T_camera, T_object_real, T_calibration_board, limits=None):
     """

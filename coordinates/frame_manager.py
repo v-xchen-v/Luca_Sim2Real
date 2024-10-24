@@ -41,8 +41,8 @@ class FrameManager:
         """Get the known transformation matrix between two frames. If the transformation is not known, return None.
         
         Parameters:
-        - from_frame_name: A string representing the source frame name.
-        - to_frame_name: A string representing the target frame name.
+        - from_frame_name(frame_a): A string representing the source frame name.
+        - to_frame_name(in_frame_b): A string representing the target frame name.
         
         Returns:
         - A 4x4 transformation matrix from the source frame to the target frame.
@@ -153,6 +153,7 @@ class FrameManager:
 
             if remaining_transform is not None:
                 # Concatenate transformations using pytransform3d's `concat`
+                # full_transform = concat(partial_transform, remaining_transform)
                 full_transform = concat(remaining_transform, partial_transform)
                 # self.add_transformation(from_frame, to_frame, full_transform)
                 return full_transform
@@ -220,7 +221,7 @@ class FrameManager:
         plt.title(f"Transformation: {from_frame} to {to_frame}")
         plt.show(block=True)
         
-    def visualize_transformations(self, frame_pairs, ax=None, block=True):
+    def visualize_transformations(self, frame_pairs, ax=None, block=True, limits=None, s=0.1):
         """Visualize a sequence of transformations between paired frames."""
         # Now working only from pairs' last frame is the next pair's first frame
         # Check the last from of previous pair is the first of the next pair
@@ -239,7 +240,7 @@ class FrameManager:
         current_transform = np.eye(4)
 
         # plot the first transfortion from np.eye(4) to the first frame
-        plot_transform(ax=ax, A2B=current_transform, name=frame_pairs[0][0], s=0.1)
+        plot_transform(ax=ax, A2B=current_transform, name=frame_pairs[0][0], s=s)
         
         # Iterate over the list of (from_frame, to_frame) pairs
         for from_frame, to_frame in frame_pairs:
@@ -262,9 +263,16 @@ class FrameManager:
             plot_transform(ax=ax, A2B=current_transform, name=to_frame, s=0.1)
 
         # Set plot limits and labels
-        ax.set_xlim([-1, 1])
-        ax.set_ylim([-1, 1])
-        ax.set_zlim([-1, 1])
+        ## Set custom axis limits if provided
+        if limits:
+            ax.set_xlim(limits[0])
+            ax.set_ylim(limits[1])
+            ax.set_zlim(limits[2])
+        else:
+            ax.set_xlim([-1, 1])
+            ax.set_ylim([-1, 1])
+            ax.set_zlim([-1, 1])
+    
         ax.set_xlabel("X-axis")
         ax.set_ylabel("Y-axis")
         ax.set_zlabel("Z-axis")
