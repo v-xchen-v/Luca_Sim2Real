@@ -50,7 +50,7 @@ def get_frame_data(i=0):
     return object_0_frame, right_hand_base_0_frame, right_hand_base_0_frame_in_real
 
 if VIS_OBJECT_COORDINATE_FRAME:
-    from coordinates.visualization import visualize_frame
+    from coordinates.visualization_utils import visualize_frame
     object_frame, _, _ = get_frame_data(0)
     visualize_frame(object_frame, "Object in the world")
 
