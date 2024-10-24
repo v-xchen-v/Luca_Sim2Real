@@ -26,21 +26,13 @@ def visualize_frame(T, name):
     plt.title(f"3D Visualization of {name} Frame")
     plt.show()
     
-    
-def visualize_frames(frames, frame_names, limits=None):
+def _visualize_frames(ax, frame_name2matrix: dict, limits=None):
+    """A helper function to visualize a set of coordinate frames in 3D space.
+    With ax as input parameter, this function can be used to plot multiple frames in the same figure or animate frames in the same figure.
     """
-    Visualize a set of coordinate frames in 3D space.
     
-    Parameters:
-    - frames: List of 4x4 transformation matrices for the frames to visualize.
-    - frame_names: List of names for the frames.
-    - limits: Tuple of (xlim, ylim, zlim) for axis limits, optional.
-    """
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
-    # Plot each frame in the list
-    for T, name in zip(frames, frame_names):
+     # Plot each frame in the list
+    for name, T in frame_name2matrix.items():
         plot_transform(ax=ax, A2B=T, name=name, s=0.2)
     
     # Set custom axis limits if provided
@@ -57,6 +49,22 @@ def visualize_frames(frames, frame_names, limits=None):
     ax.set_xlabel("X-axis")
     ax.set_ylabel("Y-axis")
     ax.set_zlabel("Z-axis")
+    
+def visualize_frames(frames, frame_names, limits=None):
+    """
+    Visualize a set of coordinate frames in 3D space.
+    
+    Parameters:
+    - frames: List of 4x4 transformation matrices for the frames to visualize.
+    - frame_names: List of names for the frames.
+    - limits: Tuple of (xlim, ylim, zlim) for axis limits, optional.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    #convert the frames and frame_names into a dictionary
+    frame_name2matrix = dict(zip(frame_names, frames))
+    _visualize_frames(ax, frame_name2matrix, limits)
     
     plt.title("3D Visualization of Coordinate Frames")
     plt.show()
@@ -106,6 +114,22 @@ def visualize_transformation(T, from_frame, to_frame):
     plt.title(f"Transformation: {from_frame} to {to_frame}")
     plt.show()
 
+# def visualize_transformations(frames, frame_names):
+#     """
+#     Visualize a set of transformations between coordinate frames.
+    
+#     Parameters:
+#     - frames: List of 4x4 transformation matrices for the transformations.
+#     - frame_names: List of names for the transformations.
+#     """
+#     fig = plt.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+    
+#     _visualize_frames(ax, frames, frame_names)
+    
+#     plt.title("3D Visualization of Coordinate Transformations")
+#     plt.show()
+    
 def visualize_robot_base_to_world(T_robot_base_real, T_robot_base_sim, T_world_real):
     """
     Visualize both the real and simulated robot base frames relative to the world frame.
