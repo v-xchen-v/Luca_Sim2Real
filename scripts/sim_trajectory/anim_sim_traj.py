@@ -66,9 +66,9 @@ if ANIM_HAND_RELATIVE_TO_OBJECT:
         ax = fig.add_subplot(111, projection='3d')
 
         # Set plot limits and labels
-        ax.set_xlim([-2, 2])
-        ax.set_ylim([-2, 2])
-        ax.set_zlim([0, 2])
+        ax.set_xlim([-0.5, 0.5])
+        ax.set_ylim([-0.5, 0.5])
+        ax.set_zlim([0, 0.5])
         ax.set_xlabel("X-axis")
         ax.set_ylabel("Y-axis")
         ax.set_zlabel("Z-axis")
@@ -79,9 +79,9 @@ if ANIM_HAND_RELATIVE_TO_OBJECT:
 
         def update_frame(i):
             ax.cla()  # Clear the current frame
-            ax.set_xlim([-2, 2])
-            ax.set_ylim([-2, 2])
-            ax.set_zlim([0, 2])
+            ax.set_xlim([-0.5, 0.5])
+            ax.set_ylim([-0.5, 0.5])
+            ax.set_zlim([0, 0.5])
             object_frame, right_hand_base_frame, right_hand_base_frame_in_real = get_frame_data(i)
             # plot_frames({"right_hand_base": right_hand_base_frame, "object": object_frame}, ax)
             plot_frames({"object": object_frame, "right_hand_base": right_hand_base_frame_in_real}, ax)
