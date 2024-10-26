@@ -384,10 +384,9 @@ class TrajectoryAdaptor:
         # right_hand_base_in_world_frame0 = transform_from_pq(right_hand_base_pos_0)
         # self.frame_manager.add_transformation("right_hand_base_sim", "sim_world", invert_transform(right_hand_base_in_world_frame0))
 
-        # # TODO: seems weird here.
         right_hand_base_in_world_frame0 = create_transformation_matrix(right_hand_base_pos_0[:3], R.from_quat(right_hand_base_pos_0[3:][[1, 2, 3, 0]]).as_matrix())
         # compute relative transformation between object and right hand base
-        T_right_hand_base_sim_to_object = concat(object_in_world_frame0, invert_transform(right_hand_base_in_world_frame0))
+        T_right_hand_base_sim_to_object = concat(invert_transform(right_hand_base_in_world_frame0), object_in_world_frame0)
         self.frame_manager.add_transformation("right_hand_base_sim", "object_sim", T_right_hand_base_sim_to_object)
         
         
@@ -503,14 +502,16 @@ class TrajectoryAdaptor:
         T_right_base_hand_to_world_sim = [invert_transform(T) for T in right_hand_base_in_world_sim]
         # compute relative transformation between each step with the first step
         T_right_hand_base_stepi_to_step0_in_sim = [
-            invert_transform(create_relative_transformation(T_right_base_hand_stepi_to_world, T_right_base_hand_to_world_sim[0]))
+            # X @ stepi_to_world  = stepi_to_world, then X = world_to_step0
+            # create_relative_transformation(T_right_base_hand_stepi_to_world, T_right_base_hand_to_world_sim[0])
+            concat(T_right_base_hand_stepi_to_world, invert_transform(T_right_base_hand_to_world_sim[0]))
             for T_right_base_hand_stepi_to_world in T_right_base_hand_to_world_sim]
         
         # Assume object is stable just as the first step, and the hand moves, computes the relative transformation between object and right hand base
         # The assumption is reasonable, because we are doing sim2real for an open loop rl, assumed the object is stable during approach and affordance.
         # T_right_hand_base_step0_to_object_in_sim = self.frame_manager.get_transformation("right_hand_base_sim", "object_sim")
         # T_right_hand_base_steps_to_object_in_sim = [concat(T_right_hand_base_to_object_sim_at_intial, T,) for T in T_right_hand_base_stepi_to_step0_in_sim]
-        T_right_hand_base_steps_to_object_in_sim = [concat(T_right_hand_base_to_object_sim_at_intial, T) for T in T_right_hand_base_stepi_to_step0_in_sim]
+        T_right_hand_base_steps_to_object_in_sim = [concat(T, T_right_hand_base_to_object_sim_at_intial) for T in T_right_hand_base_stepi_to_step0_in_sim]
         
         
         # Got the relative pos between object and right hand base in sim at each step

@@ -13,10 +13,11 @@ from pytransform3d.transformations import invert_transform
 VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
 VIS_OBJECT_IN_REAL = False # to adjust real object for grasp
-VIS_SIM_WORLD_SETUP = False
-VIS_ANIM_HAND_APPROACH_OBJECT_SIM = False
-VIS_ANIM_HAND_APPROACH_OBJECT_REAL = False
+VIS_SIM_WORLD_SETUP = True
+VIS_ANIM_HAND_APPROACH_OBJECT_SIM = True
+VIS_ANIM_HAND_APPROACH_OBJECT_REAL = True
 VIS_HAND_OBJECT_RELATIVE = False
+ANIM_HAND_TO_ROBOT_BASE_REAL = True
 VIS_HAND_XYZ_IN_ROBOT_COORDINATE = False
 VIS_HAND_IN_ROBOT_COORDINATE = False
 
@@ -80,8 +81,9 @@ T_object_to_readable = invert_transform(T_object_in_readable)
 adaptor.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)
 if VIS_OBJECT_IN_REAL:
     adaptor.frame_manager.visualize_transformations([
-        ('readable_real', 'calibration_board_real'),
-        ('calibration_board_real', 'object_real'),
+        # ('readable_real', 'calibration_board_real'),
+        # ('calibration_board_real', 'object_real'),
+        ('readable_real', 'object_real'),
     ], s=0.03)
 # Right until here
 #---------------------- Real world setup done----------------------#
@@ -106,7 +108,8 @@ if VIS_SIM_WORLD_SETUP:
     world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
     object_to_right_base = adaptor.frame_manager.get_transformation("object_sim", "right_hand_base_sim")
     visualize_frames(
-        [np.eye(4), world_to_object, world_to_object@object_to_right_base],
+        # wrong as :[np.eye(4), world_to_object, world_to_object@object_to_right_base],
+        [np.eye(4), world_to_object, object_to_right_base@world_to_object],
         ["sim_world", "Object in the world", "hand_in_world"])
 
 # Step 5: Build up 'object_sim', 'right_hand_base_sim' relative pos across steps
@@ -138,14 +141,14 @@ if VIS_ANIM_HAND_APPROACH_OBJECT_SIM:
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
         T_world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
-        transformation = invert_transform(T_right_hand_base_to_object_steps_in_sim[i])
+        transformation = T_right_hand_base_to_object_steps_in_sim[i]
 
         from coordinates.visualization_utils import _visualize_frames
         _visualize_frames(ax, {
             "sim_world": np.eye(4),
             "object_sim": T_world_to_object,
             # "right_hand_base_sim": invert_transform(concat(transformation, invert_transform(T_world_to_object)))
-            "right_hand_base_sim": T_world_to_object @ transformation
+            "right_hand_base_sim":  invert_transform(transformation) @ T_world_to_object
         }, limits=[[-0.5, 0.5],
                 [-0.5, 0.5],
                 [-0.5, 0.5]])
@@ -170,17 +173,15 @@ if VIS_ANIM_HAND_APPROACH_OBJECT_SIM:
 # adaptor._locate_rotation_object_in_readable_frame_in_real(R.from_rotvec([0, 0, 0]).as_matrix())
 # adaptor.adjust_rotation_object_real_to_object_sim()
 
-
-
 # Step 7: Compute transformation between robot_right_hand_base to robot_base in real world
 adaptor._bridge_real_sim_with_object()
 T_right_hand_base_steps_to_object_in_real = adaptor._map_real_robot_action_to_sim(T_right_hand_base_to_object_steps_in_sim)
 # T_right_hand_base_steps_to_robot_base_real = adaptor._compute_right_hand_base_steps_to_object_base_real(T_right_hand_base_steps_to_object_in_real)
 # T_robot_right_hand_real_to_robot_steps, T_robot_base_to_right_hand_base_steps_sim = adaptor.compute_right_hand_base_to_object(right_hand_base_pos_sim)
-if VIS_ANIM_HAND_APPROACH_OBJECT_REAL:
+
+def anim_hand_approach_object_in_real():
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation
-    from pytransform3d.transformations import plot_transform
     import matplotlib
     from coordinates.visualization_utils import _visualize_frames
     matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
@@ -209,23 +210,20 @@ if VIS_ANIM_HAND_APPROACH_OBJECT_REAL:
         # adaptor.frame_manager.update_transformation("right_hand_base_real", "object_real", transformation)
         # show the dynamic transformation of the object, right_hand_base_real, with respect to readable_real frame
         # and optional reference robot_base_real frame and camera_real frame
-        # adaptor.frame_manager.visualize_transformations(
-        #     [
-        #         ("readable_real", 'object_real'),
-        #         ('object_real',"right_hand_base_real"),
-        #         ("right_hand_base_real", "robot_base_real"),
-        #         ("robot_base_real", "camera_real"),
-        #     ],
-        #     ax, block=False,
-        #     limits=[[-0.5, 0.5],
-        #             [-0.5, 0.5],
-        #             [-0.5, 0.5]])
-        T_world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+        # T_world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+        T_world_to_object = adaptor.frame_manager.get_transformation("readable_real", "object_real") # or aka, T_object_world_to_object
+        T_world_to_robot_base = adaptor.frame_manager.get_transformation("readable_real", "robot_base_real")   
+        T_world_to_board = adaptor.frame_manager.get_transformation("readable_real", "calibration_board_real") 
+        T_board_to_camera = adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real") 
         T_object_to_right_hand = transformation
         _visualize_frames(
-            ax, {'sim_world': np.eye(4),
-                 'object_sim': T_world_to_object,
-                 'right_hand_base': T_world_to_object@T_object_to_right_hand}
+            ax, {
+                    'readable_real': np.eye(4),
+                    'object_real': T_world_to_object,
+                    'right_hand_base': T_world_to_object@T_object_to_right_hand,
+                    'robot_base_real': T_world_to_robot_base,
+                    "camera": T_world_to_camera
+                }
         )
 
     # Create animation
@@ -233,13 +231,23 @@ if VIS_ANIM_HAND_APPROACH_OBJECT_REAL:
 
     # Display the animation
     plt.show(block=True)
-
+if VIS_ANIM_HAND_APPROACH_OBJECT_REAL:
+    adaptor.frame_manager.visualize_transformations(
+    [('readable_real', 'calibration_board_real'),
+    ('calibration_board_real', 'camera_real'),
+    ('camera_real', 'robot_base_real')])
+    anim_hand_approach_object_in_real()
+    adaptor.frame_manager.visualize_transformations(
+    [('readable_real', 'calibration_board_real'),
+    ('calibration_board_real', 'camera_real'),
+    ('camera_real', 'robot_base_real')])
 # # Step 5: Load the simulated trajectory and compute the object relative to the right hand base at first step
 # T_right_hand_base_real_to_robot_base = adaptor.compute_constrained_object_relative_to_right_hand_base()
 
 T_object_real_to_robot_base = adaptor.frame_manager.get_transformation("object_real", "robot_base_real")
 T_right_hand_base_to_robot_base_steps_real = [concat(T_object_real_to_robot_base, T) for T in T_right_hand_base_steps_to_object_in_real]
-if True:
+anim_hand_approach_object_in_real()
+if ANIM_HAND_TO_ROBOT_BASE_REAL:
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation
     from pytransform3d.transformations import plot_transform
@@ -283,13 +291,14 @@ if True:
         #             [-0.5, 0.5]])
         transformation = T_right_hand_base_to_robot_base_steps_real[i]
         T_world_to_object = adaptor.frame_manager.get_transformation("readable_real", "object_real") # or aka, T_object_world_to_object
-        T_object_to_robot_base = adaptor.frame_manager.get_transformation("object_real", "robot_base_real")
+        T_world_to_robot_base = adaptor.frame_manager.get_transformation("object_real", "robot_base_real")
         T_robot_base_to_hand_base = invert_transform(transformation)
         _visualize_frames(
             ax, {'readable_real': np.eye(4),
                 'object_real': T_world_to_object,
-                'robot_base_real': T_world_to_object@T_object_to_robot_base,
-                'hand_base_real': T_world_to_object@T_object_to_robot_base@T_robot_base_to_hand_base}
+                'robot_base_real': T_world_to_robot_base,
+                'hand_base_real': T_world_to_robot_base@T_robot_base_to_hand_base
+                }
         )
 
     # Create animation
