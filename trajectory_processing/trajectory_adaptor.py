@@ -103,8 +103,8 @@ class TrajectoryAdaptor:
         ## List the frames that transformations between them should already known.
         transform_added_frames = ["calibration_board_real", "camera_real", "robot_base_real"] 
         ## Check the known transformations are computed
-        if not self.frame_manager.frames_connected(transform_added_frames):
-            raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
+        # if not self.frame_manager.frames_connected(transform_added_frames):
+        #     raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
     
     def object_setup(self):
         pass
@@ -153,12 +153,12 @@ class TrajectoryAdaptor:
         calibration_data = {}
         
         # load precomputed calibration data
-        mtx, dist, T_camera_to_robot_base = self._load_precomputed_calibration_data(calibration_data_dir)
+        mtx, dist, T_robot_base_to_camera = self._load_precomputed_calibration_data(calibration_data_dir)
         self.calibration_data['camera_intrinsic'] = {
             'mtx': mtx,
             'dist': dist
         }
-        self.calibration_data['T_camera_to_robot'] = invert_transform(T_camera_to_robot_base)
+        self.calibration_data['T_camera_to_robot'] = invert_transform(T_robot_base_to_camera)
         
         # check whether table calibration need to be computed
         table_calibration_data_exist = table_to_camera_extrinsics_exist(calibration_data_dir+"/table_to_camera")
@@ -201,8 +201,8 @@ class TrajectoryAdaptor:
             raise ValueError("Calibration data directory not found.")
         
         mtx, dist = load_camera_intrinsics_from_npy(calibration_data_dir + '/camera_intrinsics')
-        T_camera_to_robot_base = load_eyehand_extrinsics_from_npy(calibration_data_dir + '/camera_to_robot')
-        return mtx, dist, T_camera_to_robot_base
+        T_robot_base_to_camera = load_eyehand_extrinsics_from_npy(calibration_data_dir + '/camera_to_robot')
+        return mtx, dist, T_robot_base_to_camera
     
     def _compute_transformations_with_calibration_data(self):
         """
@@ -221,7 +221,15 @@ class TrajectoryAdaptor:
         
         # Register transformations between frames
         self.frame_manager.add_transformation("calibration_board_real", "camera_real", T_calibration_board_real_to_camera)
-        self.frame_manager.add_transformation("camera_real", "robot_base_real", T_camera_real_to_robot)
+        # self.frame_manager.add_transformation("camera_real", "robot_base_real", T_camera_real_to_robot) # wired, wrong
+        # self.frame_manager.add_transformation("calibration_board_real", "robot_base_real", T_calibration_board_real_to_camera @ T_camera_real_to_robot) # wired, right
+        T_calibration_board_to_robot_base = T_calibration_board_real_to_camera @ T_camera_real_to_robot
+        self.frame_manager.add_transformation(
+            "camera_real", 
+            "robot_base_real",
+            create_relative_transformation(T_calibration_board_real_to_camera, T_calibration_board_to_robot_base)
+        )
+        
         
         print("Transformations between calibration board, camera, robot base added with calibration data.")
     
@@ -551,8 +559,16 @@ class TrajectoryAdaptor:
         ## bind world so that object connect with rela pos, so that bind sim_world to 
         ## real_world frame which could be camera frame or calibration board or any frame known relative pos to object_real
         self.frame_manager.add_transformation("sim_world", "readable_real", np.eye(4))
-        T_object_sim_to_object_real = self.frame_manager.get_transformation("object_sim", "object_real")
+        T_real_world_to_object_real = self.frame_manager.get_transformation("readable_real", "object_real")
+        T_sim_world_to_object_sim = self.frame_manager.get_transformation("sim_world", "object_sim")
+        T_A_changed = create_relative_transformation(self.frame_manager.get_transformation("sim_world", "object_sim"), T_real_world_to_object_real)
         
+        T_right_hand_base_steps_to_object_in_real = [
+            create_relative_transformation(
+                T_A_changed @ invert_transform(T) @ T_sim_world_to_object_sim,
+                T_real_world_to_object_real)
+            for T in T_right_hand_base_steps_to_object_in_sim
+        ]
         # First convert transformation from local frame to global frame
         # T_local_sim = self.frame_manager.get_transformation("object_sim", "sim_world")
         # T_right_hand_base_steps_to_object_in_sim_global = [T_local_sim @ T for T in T_right_hand_base_steps_to_object_in_sim]
@@ -589,10 +605,10 @@ class TrajectoryAdaptor:
         
         # readable_real_to_object(real)*inverse(T_new) = world_to_object(sim)*inverse(T_now) 
         # T_new = (readable_real_to_object(real).T*(world_to_object(sim)*T_now.T)).T
-        T_right_hand_base_steps_to_object_in_real = self._map_real_robot_action_to_sim(
-            T_right_hand_base_steps_to_object_in_sim, 
-            T_object_sim_to_object_real, # A2B,
-            )
+        # T_right_hand_base_steps_to_object_in_real = self._map_real_robot_action_to_sim(
+        #     T_right_hand_base_steps_to_object_in_sim, 
+        #     T_object_sim_to_object_real, # A2B,
+        #     )
         
         
         return T_right_hand_base_steps_to_object_in_real
