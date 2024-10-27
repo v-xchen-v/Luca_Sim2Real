@@ -3,6 +3,7 @@ from pytransform3d.transformations import (
     transform, invert_transform, concat, plot_transform
 )
 from matplotlib import pyplot as plt
+from pytransform3d.transform_manager import TransformManager
 
 class FrameManager:
     """A class to manage coordinate frames used in this system
@@ -17,7 +18,9 @@ class FrameManager:
         self.frames = {} # keys: frame_name, values: 4x4 transformation matrix or None (default to None if unknown)
         
         # Store known transformation between frames in a dictionary
-        self.transformations = {} # keys: (source_frame, target_frame), values: 4x4 transformation matrix
+        # self.transformations = {} # keys: (source_frame, target_frame), values: 4x4 transformation matrix
+        
+        self.transform_manager = TransformManager()
 
     def initialize_frames(self, frame_names):
         """Initialize frames with known names."""
@@ -48,19 +51,21 @@ class FrameManager:
         - A 4x4 transformation matrix from the source frame to the target frame.
         """
         
-        # check if the transformation is known
-        if (from_frame_name, to_frame_name) in self.transformations:
-            return self.transformations[(from_frame_name, to_frame_name)]
-        else:
-            # check if the reverse transformation is known
-            if (to_frame_name, from_frame_name) in self.transformations:
-                return invert_transform(self.transformations[(to_frame_name, from_frame_name)])
-            else:
-                T = self.compute_transformation(from_frame_name, to_frame_name)
-                if T is not None:
-                    return T
-                else:
-                    return invert_transform(self.compute_transformation(to_frame_name, from_frame_name))
+        return self.transform_manager.get_transform(from_frame_name, to_frame_name)
+        
+        # # check if the transformation is known
+        # if (from_frame_name, to_frame_name) in self.transformations:
+        #     return self.transformations[(from_frame_name, to_frame_name)]
+        # else:
+        #     # check if the reverse transformation is known
+        #     if (to_frame_name, from_frame_name) in self.transformations:
+        #         return invert_transform(self.transformations[(to_frame_name, from_frame_name)])
+        #     else:
+        #         T = self.compute_transformation(from_frame_name, to_frame_name)
+        #         if T is not None:
+        #             return T
+        #         else:
+        #             return invert_transform(self.compute_transformation(to_frame_name, from_frame_name))
     
     # def update_frame(self, frame_name, matrix):
     #     """Update an existing frame with a new transformation matrix."""
@@ -71,19 +76,21 @@ class FrameManager:
 
     def add_transformation(self, from_frame, to_frame, matrix):
         """Add a transformation between two frames."""
-        if from_frame not in self.frames or to_frame not in self.frames:
-            raise ValueError(f"Both frames '{from_frame}' and '{to_frame}' must exist.")
+        self.transform_manager.add_transform(from_frame, to_frame, matrix)
         
-        # check if matrix is valid
-        if matrix.shape != (4, 4):
-            raise ValueError(f"Transformation matrix must be a 4x4 matrix.")
+        # if from_frame not in self.frames or to_frame not in self.frames:
+        #     raise ValueError(f"Both frames '{from_frame}' and '{to_frame}' must exist.")
         
-        if (from_frame, to_frame) in self.transformations:
-            print(f"Transformation from {from_frame} to {to_frame} already exists!")
-        elif (to_frame, from_frame) in self.transformations:
-            print(f"Transformation from {to_frame} to {from_frame} already exists!")
-        else:
-            self.transformations[(from_frame, to_frame)] = matrix
+        # # check if matrix is valid
+        # if matrix.shape != (4, 4):
+        #     raise ValueError(f"Transformation matrix must be a 4x4 matrix.")
+        
+        # if (from_frame, to_frame) in self.transformations:
+        #     print(f"Transformation from {from_frame} to {to_frame} already exists!")
+        # elif (to_frame, from_frame) in self.transformations:
+        #     print(f"Transformation from {to_frame} to {from_frame} already exists!")
+        # else:
+        #     self.transformations[(from_frame, to_frame)] = matrix
         
     # def compute_all_frames(self, reference_frame):
     #     """Compute the transformations of all frames relative to a reference frame."""
@@ -126,59 +133,60 @@ class FrameManager:
         
 
         
-    def compute_transformation(self, from_frame, to_frame):
-        """Compute the transformation between two frames if possible."""
-        if (from_frame, to_frame) in self.transformations:
-            return self.transformations[(from_frame, to_frame)]
-        elif (to_frame, from_frame) in self.transformations:
-            # Use the inverse if the reverse transformation is known
-            return invert_transform(self.transformations[(to_frame, from_frame)])
-        else:
-            # Attempt to find a path and compute the full transformation
-            return self._find_path_and_compute(from_frame, to_frame)
+    # def compute_transformation(self, from_frame, to_frame):
+    #     """Compute the transformation between two frames if possible."""
+    #     if (from_frame, to_frame) in self.transformations:
+    #         return self.transformations[(from_frame, to_frame)]
+    #     elif (to_frame, from_frame) in self.transformations:
+    #         # Use the inverse if the reverse transformation is known
+    #         return invert_transform(self.transformations[(to_frame, from_frame)])
+    #     else:
+    #         # Attempt to find a path and compute the full transformation
+    #         return self._find_path_and_compute(from_frame, to_frame)
 
-    def _find_path_and_compute(self, from_frame, to_frame, visited=None):
-        """Find a transformation path and compute it."""
-        if visited is None:
-            visited = set()
-        visited.add(from_frame)
+    # def _find_path_and_compute(self, from_frame, to_frame, visited=None):
+    #     """Find a transformation path and compute it."""
+    #     if visited is None:
+    #         visited = set()
+    #     visited.add(from_frame)
 
-        for next_frame in self._get_to_neighbors(from_frame):
-            if next_frame in visited:
-                continue
+    #     for next_frame in self._get_to_neighbors(from_frame):
+    #         if next_frame in visited:
+    #             continue
             
-            # Recursively find a path to the target frame
-            partial_transform = self.compute_transformation(from_frame, next_frame)
-            remaining_transform = self.compute_transformation(next_frame, to_frame)
+    #         # Recursively find a path to the target frame
+    #         partial_transform = self.compute_transformation(from_frame, next_frame)
+    #         remaining_transform = self.compute_transformation(next_frame, to_frame)
 
-            if remaining_transform is not None:
-                # Concatenate transformations using pytransform3d's `concat`
-                # full_transform = concat(partial_transform, remaining_transform)
-                full_transform = concat(remaining_transform, partial_transform)
-                # self.add_transformation(from_frame, to_frame, full_transform)
-                return full_transform
-        return None
+    #         if remaining_transform is not None:
+    #             # Concatenate transformations using pytransform3d's `concat`
+    #             # full_transform = concat(partial_transform, remaining_transform)
+    #             full_transform = concat(remaining_transform, partial_transform)
+    #             # self.add_transformation(from_frame, to_frame, full_transform)
+    #             return full_transform
+    #     return None
 
-    def _get_to_neighbors(self, frame):
-        """Get neighboring frames connected to a given frame."""
-        return {
-            to for (from_frame, to) in self.transformations if from_frame == frame
-        }
+    # def _get_to_neighbors(self, frame):
+    #     """Get neighboring frames connected to a given frame."""
+    #     return {
+    #         to for (from_frame, to) in self.transformations if from_frame == frame
+    #     }
 
-    def update_transformation(self, from_frame, to_frame, matrix, create_if_not_exists=True):
-        """Update an existing transformation."""
-        if (from_frame, to_frame) in self.transformations or create_if_not_exists:
-            self.transformations[(from_frame, to_frame)] = matrix
-        elif (to_frame, from_frame) in self.transformations or create_if_not_exists:
-            self.transformations[(to_frame, from_frame)] = invert_transform(matrix)
-        else:
-            if not create_if_not_exists:
-                print(f"Transformation from {from_frame} to {to_frame} not found!")
+    # def update_transformation(self, from_frame, to_frame, matrix, create_if_not_exists=True):
+    #     """Update an existing transformation."""
+    #     if (from_frame, to_frame) in self.transformations or create_if_not_exists:
+    #         self.transformations[(from_frame, to_frame)] = matrix
+    #     elif (to_frame, from_frame) in self.transformations or create_if_not_exists:
+    #         self.transformations[(to_frame, from_frame)] = invert_transform(matrix)
+    #     else:
+    #         if not create_if_not_exists:
+    #             print(f"Transformation from {from_frame} to {to_frame} not found!")
 
     def print_transformations(self):
         """Print all known transformations."""
-        for (from_frame, to_frame), matrix in self.transformations.items():
-            print(f"Transformation from {from_frame} to {to_frame}:\n{matrix}\n")
+        # for (from_frame, to_frame), matrix in self.transformations.items():
+        #     print(f"Transformation from {from_frame} to {to_frame}:\n{matrix}\n")
+        print(self.transform_manager.transforms())
 
     def print_frames(self):
         """Print all known frames."""
@@ -506,35 +514,35 @@ class FrameManager:
 
     #     plt.show(block=True)
             
-# Example usage
-if __name__ == "__main__":
-    manager = FrameManager()
+# # Example usage
+# if __name__ == "__main__":
+#     manager = FrameManager()
 
-    # Example transformations: homogeneous transformation matrices
-    T_A_to_B = np.array([[1, 0, 0, 1],
-                         [0, 1, 0, 2],
-                         [0, 0, 1, 3],
-                         [0, 0, 0, 1]])
+#     # Example transformations: homogeneous transformation matrices
+#     T_A_to_B = np.array([[1, 0, 0, 1],
+#                          [0, 1, 0, 2],
+#                          [0, 0, 1, 3],
+#                          [0, 0, 0, 1]])
 
-    T_B_to_C = np.array([[0, -1, 0, 0],
-                         [1, 0, 0, 1],
-                         [0, 0, 1, 1],
-                         [0, 0, 0, 1]])
+#     T_B_to_C = np.array([[0, -1, 0, 0],
+#                          [1, 0, 0, 1],
+#                          [0, 0, 1, 1],
+#                          [0, 0, 0, 1]])
 
-    manager.add_transformation("A", "B", T_A_to_B)
-    manager.add_transformation("B", "C", T_B_to_C)
+#     manager.add_transformation("A", "B", T_A_to_B)
+#     manager.add_transformation("B", "C", T_B_to_C)
 
-    # Compute transformation from A to C
-    T_A_to_C = manager.compute_transformation("A", "C")
-    print("Computed Transformation from A to C:")
-    print(T_A_to_C)
+#     # Compute transformation from A to C
+#     T_A_to_C = manager.compute_transformation("A", "C")
+#     print("Computed Transformation from A to C:")
+#     print(T_A_to_C)
 
-    # Update a transformation
-    T_A_to_B_new = np.array([[1, 0, 0, 2],
-                             [0, 1, 0, 3],
-                             [0, 0, 1, 4],
-                             [0, 0, 0, 1]])
-    manager.update_transformation("A", "B", T_A_to_B_new)
+#     # Update a transformation
+#     T_A_to_B_new = np.array([[1, 0, 0, 2],
+#                              [0, 1, 0, 3],
+#                              [0, 0, 1, 4],
+#                              [0, 0, 0, 1]])
+#     manager.update_transformation("A", "B", T_A_to_B_new)
 
-    # Print all transformations
-    manager.print_transformations()
+#     # Print all transformations
+#     manager.print_transformations()

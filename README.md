@@ -125,3 +125,4 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 ## Millestone
 ### Can locate the object pos in robot coordiate
 ### Can apply a sim2real a traj approach object and grasp it
+### Make sure object pointcloud is distinguish with ICP
