@@ -105,7 +105,7 @@ class TrajectoryAdaptor:
         ## Check the known transformations are computed
         # if not self.frame_manager.frames_connected(transform_added_frames):
         #     raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
-    
+
     def object_setup(self):
         pass
     
@@ -559,69 +559,31 @@ class TrajectoryAdaptor:
         ## bind world so that object connect with rela pos, so that bind sim_world to 
         ## real_world frame which could be camera frame or calibration board or any frame known relative pos to object_real
         self.frame_manager.add_transformation("sim_world", "readable_real", np.eye(4))
+        
+        # A stands for world_to_object, A' stands for world_to_object in real, and T_A_Ap is computed as below: 
+        T_A_changed = create_relative_transformation(
+            self.frame_manager.get_transformation("sim_world", "object_sim"), 
+            self.frame_manager.get_transformation("readable_real", "object_real"))
+        
+        # should same as T_right_hand_base_steps_to_object_in_real, but issue now
+        # # T_A_Ap * T_A_B * T_Ap_A = T_Ap_Bp
+        # T_right_hand_base_steps_to_object_in_real2 = [
+        #     invert_transform(
+        #     # T_A_changed @ invert_transform(T) @ invert_transform(T_A_changed))
+        #     invert_transform(T) @ invert_transform(T_A_changed))
+        #     for T in T_right_hand_base_steps_to_object_in_sim
+        # ]
+         
         T_real_world_to_object_real = self.frame_manager.get_transformation("readable_real", "object_real")
         T_sim_world_to_object_sim = self.frame_manager.get_transformation("sim_world", "object_sim")
-        T_A_changed = create_relative_transformation(self.frame_manager.get_transformation("sim_world", "object_sim"), T_real_world_to_object_real)
-        
         T_right_hand_base_steps_to_object_in_real = [
             create_relative_transformation(
                 T_A_changed @ invert_transform(T) @ T_sim_world_to_object_sim,
                 T_real_world_to_object_real)
             for T in T_right_hand_base_steps_to_object_in_sim
         ]
-        # First convert transformation from local frame to global frame
-        # T_local_sim = self.frame_manager.get_transformation("object_sim", "sim_world")
-        # T_right_hand_base_steps_to_object_in_sim_global = [T_local_sim @ T for T in T_right_hand_base_steps_to_object_in_sim]
         
-        
-        # Using (object_real, object_sim) as bridge to mapping sim and real
-        # self.frame_manager.add_transformation("object_real", "object_sim", np.eye(4)) # Can no assume object is same as sim object, since object in real could rotate.
-        
-        # Instead create a 'real_world' in real, with respect the relative pos of (sim_world, object_sim) and (real_world, object_real), so that the tf chain after 'real_world' is same as sim_world.
-        # T_object_sim_to_world_sim = self.frame_manager.get_transformation("object_sim", "sim_world")
-        # self.frame_manager.add_transformation("object_real", "real_world", T_object_sim_to_world_sim)
-        # Failed at: relative of obj and hand base kept, but object pos is changed in real world
-        
-        # Turn to: recompute relative pos of hand_base and object in real world, based on (sim_world, object_sim) and (readable_real, object_real)),
-        # readable_real could be a frame relative to calibration board or camera, so that object_readable_real is readable for human.
-        # # B
-        # T_world_sim_to_object_sim = self.frame_manager.get_transformation("sim_world", "object_sim")
-        # # B'
-        # T_readable_real_to_object_real = self.frame_manager.get_transformation("readable_real", "object_real")
-        
-        # # B'_to_B
-        # self.frame_manager.add_transformation("readable_real", "sim_world", np.eye(4)) # readable_real is same as sim_world
-        # T_object_sim_to_object_real = self.frame_manager.get_transformation("object_real", "object_real")
-
-        # T_real_to_sim = create_relative_transformation(T_readable_real_to_object_real, T_world_sim_to_object_sim)
-
-        # B2C is object_to_right_hand_base
-        # We want to keep same relative pos between object and right hand base in real and sim
-
-        
-        # right_hand_base_to_readable_real * T_readable_real_to_object_real = right_hand_base_to_world_sim * T_world_sim_to_object_sim
-        # (T_new * invert(T_readable_real_to_object_real)) * T_readable_real_to_object_real = (T_old*invert(T_world_sim_to_object_sim)) * T_world_sim_to_object_sim
-        # T_new * invert(T_readable_real_to_object_real)  = (T_old*invert(T_world_sim_to_object_sim)) * T_world_sim_to_object_sim * invert(T_readable_real_to_object_real)
-        
-        # readable_real_to_object(real)*inverse(T_new) = world_to_object(sim)*inverse(T_now) 
-        # T_new = (readable_real_to_object(real).T*(world_to_object(sim)*T_now.T)).T
-        # T_right_hand_base_steps_to_object_in_real = self._map_real_robot_action_to_sim(
-        #     T_right_hand_base_steps_to_object_in_sim, 
-        #     T_object_sim_to_object_real, # A2B,
-        #     )
-        
-        
-        return T_right_hand_base_steps_to_object_in_real
-        
-        
-        # Then check why not respect (readable, object_real)
-        # B        
-        # self.frame_manager.
-        # pass
-        # # will make readable_frame is not same as sim_world
-        # # TODO: fix it later
-        
-        
+        return T_right_hand_base_steps_to_object_in_real        
     
     def _map_real_robot_action_to_sim(self, T_right_hand_base_steps_to_object_in_sim, 
             T_object_sim_to_object_real, # B2B',
