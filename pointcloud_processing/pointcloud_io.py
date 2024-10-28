@@ -76,7 +76,7 @@ def _save_realsense_point_cloud(rs_points, rs_frames, color_image, save_dir: str
 #     save_point_cloud_from_realsense()
 
     
-def save_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
+def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
     """
     Capture a point cloud from the Intel RealSense D455 camera.
 
