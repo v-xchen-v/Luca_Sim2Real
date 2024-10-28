@@ -1,5 +1,10 @@
 """Precomputed camera intrinsic and camera to robot transformation, and capture a frame to compute table-to-camera transformation."""
 
+# TODO: add readable frame for human readable not same with calibration board or camera frame
+# TODO: check the eyehand transformation
+# TODO: clean code
+# TODO: more trajectory test
+
 import os, sys
 module_path = os.path.abspath(os.path.join('.'))
 if module_path not in sys.path:
@@ -15,7 +20,7 @@ ANIM_HAND_APPROACH_OBJECT_SIM = False
 
 VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
-VIS_OBJECT_IN_REAL = False # to adjust real object for grasp
+VIS_OBJECT_IN_REAL = True # to adjust real object for grasp
 VIS_ANIM_HAND_APPROACH_OBJECT_REAL = False
 VIS_HAND_OBJECT_RELATIVE = False
 ANIM_HAND_TO_ROBOT_BASE_REAL = True
@@ -27,7 +32,7 @@ adaptor = TrajectoryAdaptor()
 
 #---------------------- Simulated world setup ----------------------#
 # Step 4: Build up transform between 'sim_world', 'object_sim', 'right_hand_base_sim' frames
-sim_traj_object_name = "coka_can_1017" # "orange_1024"
+sim_traj_object_name = "orange_1024" # "orange_1024"
 sim_traj_file_basename = "step-0.npy"
 
 driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor.parse_sim_trajectory(
@@ -201,9 +206,10 @@ if VIS_READABLE_FRAME_SETUP:
 # Step 3: Object setup, Assume we put the object at the origin of readable_real frame
 # object_rot_vec = [0, 0, -np.pi/2]
 # object_rot_eular = [-np.pi/2, 0, 0]
-object_rot_eular = [np.pi/2, -np.pi/2, 0] # cokacola rotate on object x axis X to readable
+orange_upside_rot_eular = [-np.pi, 0, np.pi/2] # base on calibration board base coordinate
+coke_object_rot_eular = [np.pi/2, -np.pi/2, 0] # cokacola rotate on object x axis X to readable
 # object_rot_eular = [0, np.pi/2, -np.pi/2]
-T_object_in_readable = create_transformation_matrix([0, 0, -0.075], R.from_euler('XYZ', object_rot_eular).as_matrix())
+T_object_in_readable = create_transformation_matrix([0, 0, -0.055/2], R.from_euler('XYZ', orange_upside_rot_eular).as_matrix())
 T_object_to_readable = invert_transform(T_object_in_readable)
 # T_object_to_readable = create_transformation_matrix([0, 0, -0.075], R.from_rotvec(object_rot_vec).as_matrix())
 adaptor.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)

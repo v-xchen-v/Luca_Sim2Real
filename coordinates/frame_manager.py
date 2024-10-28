@@ -265,7 +265,7 @@ class FrameManager:
                 raise ValueError(f"No transformation found between {from_frame} and {to_frame}.")
 
             # Accumulate transformations
-            current_transform = np.dot(current_transform, T)
+            current_transform = np.dot(T, current_transform)
 
             # Plot the current frame
             plot_transform(ax=ax, A2B=current_transform, name=to_frame, s=0.1)
@@ -513,36 +513,3 @@ class FrameManager:
     #     ax.set_zlabel("Z-axis")
 
     #     plt.show(block=True)
-            
-# # Example usage
-# if __name__ == "__main__":
-#     manager = FrameManager()
-
-#     # Example transformations: homogeneous transformation matrices
-#     T_A_to_B = np.array([[1, 0, 0, 1],
-#                          [0, 1, 0, 2],
-#                          [0, 0, 1, 3],
-#                          [0, 0, 0, 1]])
-
-#     T_B_to_C = np.array([[0, -1, 0, 0],
-#                          [1, 0, 0, 1],
-#                          [0, 0, 1, 1],
-#                          [0, 0, 0, 1]])
-
-#     manager.add_transformation("A", "B", T_A_to_B)
-#     manager.add_transformation("B", "C", T_B_to_C)
-
-#     # Compute transformation from A to C
-#     T_A_to_C = manager.compute_transformation("A", "C")
-#     print("Computed Transformation from A to C:")
-#     print(T_A_to_C)
-
-#     # Update a transformation
-#     T_A_to_B_new = np.array([[1, 0, 0, 2],
-#                              [0, 1, 0, 3],
-#                              [0, 0, 1, 4],
-#                              [0, 0, 0, 1]])
-#     manager.update_transformation("A", "B", T_A_to_B_new)
-
-#     # Print all transformations
-#     manager.print_transformations()

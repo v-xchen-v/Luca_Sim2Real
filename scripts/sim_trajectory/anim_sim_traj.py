@@ -8,7 +8,7 @@ ANIM_HAND_RELATIVE_TO_OBJECT = True
 
 import numpy as np
 # traj_sim_data = np.load('/mnt/zl_dev/coke_can_1016/step-0.npy', allow_pickle=True)
-traj_sim_data = np.load('data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy', allow_pickle=True)
+traj_sim_data = np.load('data/trajectory_data/sim_trajectory/orange_1024/step-0.npy', allow_pickle=True)
 
 from coordinates.transformation_utils import create_transformation_matrix, create_relative_transformation
 from scipy.spatial.transform import Rotation as R
@@ -32,10 +32,10 @@ object_pos = object_pos.squeeze(axis=1) # [num_steps, 7]
 def get_frame_data(i=0):
     object_pos_0 = object_pos[i, :]
     object_pos_0_wxyz = object_pos_0[3:]
-    object_pos_0_xyzw = object_pos_0_wxyz[[1, 2, 3, 0]]
+    object_pos_0_xyzw = object_pos_0_wxyz[[1, 2, 3, 0]] # wxyz -> xyzw
     right_hand_base_pos_0 = right_hand_base_sim[i, :]
     right_hand_base_pos_0_wxyz = right_hand_base_pos_0[3:]
-    right_hand_base_pos_0_xyzw = right_hand_base_pos_0_wxyz[[1, 2, 3, 0]]
+    right_hand_base_pos_0_xyzw = right_hand_base_pos_0_wxyz[[1, 2, 3, 0]] # wxyz -> xyzw
 
     right_hand_base_0_frame = create_transformation_matrix(
         right_hand_base_pos_0[:3], 
@@ -84,7 +84,7 @@ if ANIM_HAND_RELATIVE_TO_OBJECT:
             ax.set_zlim([0, 0.5])
             object_frame, right_hand_base_frame, right_hand_base_frame_in_real = get_frame_data(i)
             # plot_frames({"right_hand_base": right_hand_base_frame, "object": object_frame}, ax)
-            plot_frames({"object": object_frame, "right_hand_base": right_hand_base_frame_in_real}, ax)
+            plot_frames({"object": object_frame, "right_hand_base": right_hand_base_frame}, ax)
         # Create animation
         anim = FuncAnimation(fig, update_frame, frames=120, interval=100)
 
