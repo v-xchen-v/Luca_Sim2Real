@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 from coordinates.visualization_utils import _visualize_frames
 
 VIS_HAND_IN_ROBOT_COORDINATE=True
-save_path = "/home/yichao/Documents/repos/Luca_Transformation/data/trajectory_data/real_trajectory/coka_can_1017/step-0.npy"
+save_path = "data/trajectory_data/real_trajectory/coka_can_1017/step-0.npy"
 
 def transform_xyzxyzw_to_matrix(xyzxyzw):
     T = np.eye(4)

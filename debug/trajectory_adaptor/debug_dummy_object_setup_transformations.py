@@ -10,19 +10,116 @@ import numpy as np
 from coordinates.transformation_utils import concat
 from pytransform3d.transformations import invert_transform
 
+VIS_SIM_WORLD_SETUP = False
+ANIM_HAND_APPROACH_OBJECT_SIM = False
+
 VIS_CALIBRATION_TRANSFORMATIONS = False
 VIS_READABLE_FRAME_SETUP = False
-VIS_OBJECT_IN_REAL = True # to adjust real object for grasp
-VIS_SIM_WORLD_SETUP = False
-VIS_ANIM_HAND_APPROACH_OBJECT_SIM = False
-VIS_ANIM_HAND_APPROACH_OBJECT_REAL = True
-VIS_HAND_OBJECT_RELATIVE = True
+VIS_OBJECT_IN_REAL = False # to adjust real object for grasp
+VIS_ANIM_HAND_APPROACH_OBJECT_REAL = False
+VIS_HAND_OBJECT_RELATIVE = False
 ANIM_HAND_TO_ROBOT_BASE_REAL = True
 VIS_HAND_XYZ_IN_ROBOT_COORDINATE = True
 VIS_HAND_IN_ROBOT_COORDINATE = True
 
 # Initialize the trajectory adaptor with pre-computed calibration data
 adaptor = TrajectoryAdaptor()
+
+#---------------------- Simulated world setup ----------------------#
+# Step 4: Build up transform between 'sim_world', 'object_sim', 'right_hand_base_sim' frames
+sim_traj_object_name = "coka_can_1017" # "orange_1024"
+sim_traj_file_basename = "step-0.npy"
+
+driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor.parse_sim_trajectory(
+    f"data/trajectory_data/sim_trajectory/{sim_traj_object_name}/{sim_traj_file_basename}")
+
+# Visualize to make sure that the 'world', 'object', 'hand_base' in sim is built correctly same as in Isaac Gym
+# Next is to built the actions in Isaac Gym
+
+if VIS_SIM_WORLD_SETUP:
+    # adaptor.frame_manager.visualize_transformations(
+    #     [
+    #         ("sim_world", "object_sim"),
+    #         ("object_sim", "right_hand_base_sim"),
+    #     ]
+    # )
+    from coordinates.visualization_utils import visualize_frames
+    world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+    object_to_right_base = adaptor.frame_manager.get_transformation("object_sim", "right_hand_base_sim")
+    visualize_frames(
+        # wrong as :[np.eye(4), world_to_object, world_to_object@object_to_right_base],
+        [np.eye(4), world_to_object, object_to_right_base@world_to_object],
+        ["sim_world", "object_in_world", "hand_in_world"],
+        limits=[[-0.5, 0.5],
+                [-0.5, 0.5],
+                [-0.5, 0.5]])
+
+# Step 5: Build up 'object_sim', 'right_hand_base_sim' relative pos across steps
+T_right_hand_base_to_object_steps_in_sim = adaptor.compute_right_hand_base_to_object_steps_in_sim(
+    right_hand_base_in_world_sim,
+    object_pos_in_world_sim)
+if ANIM_HAND_APPROACH_OBJECT_SIM:
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+    from pytransform3d.transformations import plot_transform
+    import matplotlib
+    from coordinates.transformation_utils import create_relative_transformation
+    matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
+    # Set up the plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    def update_frame(i):
+        ax.cla()  # Clear the current frame
+        ax.set_xlim([-1, 1])
+        ax.set_ylim([-1, 1])
+        ax.set_zlim([-1, 1])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        T_world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+        transformation = T_right_hand_base_to_object_steps_in_sim[i]
+        # print(f'x: {invert_transform(transformation)[:, 3][0]}')
+        # print(f'x f: {(invert_transform(transformation) @ T_world_to_object)[:, 3][0]}')
+        # print(f'x r: {(invert_transform(transformation) @ T_world_to_object)[:, 3][0] - T_world_to_object[:, 3][0]}')
+        # print(f'x g: {create_relative_transformation(T_world_to_object, invert_transform(transformation) @ T_world_to_object)[:, 3][0]}')
+        # print(f'y g: {create_relative_transformation(T_world_to_object, invert_transform(transformation) @ T_world_to_object)[:, 3][1]}')
+        # print(f'z g: {create_relative_transformation(T_world_to_object, invert_transform(transformation) @ T_world_to_object)[:, 3][2]}')
+        print(f'x f: {T_world_to_object[:,3][0]} to {(invert_transform(transformation) @ T_world_to_object)[:, 3][0]}')
+        print(f'y f: {T_world_to_object[:,3][1]} to {(invert_transform(transformation) @ T_world_to_object)[:, 3][1]}')
+        print(f'z f: {T_world_to_object[:,3][2]} to {(invert_transform(transformation) @ T_world_to_object)[:, 3][2]}')
+        from coordinates.visualization_utils import _visualize_frames
+        T_A_change = create_relative_transformation(T_world_to_object, np.eye(4)) # A->B, A changed to A', how to compute new B'? A->B = A'->B' . 
+        # didn't change, how A changed, B should changed same with it.
+        # T_W_B * T_A_A' = T_W_B'. why?
+        # does T_A_B * T_A_A' = T_A'_B'? no, why?
+        # T_A'_A * T_A_B * T_A_A' =  T_A'_B'
+        _visualize_frames(ax, {
+            "sim_world": np.eye(4),
+            "object_sim": np.eye(4),
+            # "right_hand_base_sim": invert_transform(concat(transformation, invert_transform(T_world_to_object)))
+            "right_hand_base_sim":  T_A_change @invert_transform(transformation) @ T_world_to_object
+            
+            # TODO: figure out why
+            # "object_sim": np.eye(4),
+            # "right_hand_base_sim": transformation do not respect the relative pos of object to hand?
+        }, limits=[[-0.5, 0.5],
+                [-0.5, 0.5],
+                [-0.5, 0.5]])
+
+    # Create animation
+    anim = FuncAnimation(fig, update_frame, frames=int(len(T_right_hand_base_to_object_steps_in_sim)/5), interval=100)
+
+    # Display the animation
+    plt.show(block=True)
+# Right until here
+#---------------------- Simulated world setup done----------------------#
 
 CAMERA = "camera1"
 CAPTURE_NEW_TABLE_CALIBRATION = False
@@ -119,91 +216,7 @@ if VIS_OBJECT_IN_REAL:
 # Right until here
 #---------------------- Real world setup done----------------------#
 
-#---------------------- Simulated world setup ----------------------#
-# Step 4: Build up 'sim_world', 'object_sim', 'right_hand_base_sim' frames #with respect to readable_real frame
-traj_name = "coka_can_1017" # "orange_1024"
-# adaptor._build_transformations_object_hand_world_at_initial(f'data/trajectory_data/sim_trajectory/{traj_name}/step-0.npy')
-driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor.parse_sim_trajectory(f'data/trajectory_data/sim_trajectory/{traj_name}/step-0.npy')
 
-# Visualize to make sure that the 'world', 'object', 'hand_base' in sim is built correctly same as in Isaac Gym
-# Next is to built the actions in Isaac Gym
-
-if VIS_SIM_WORLD_SETUP:
-    # adaptor.frame_manager.visualize_transformations(
-    #     [
-    #         ("sim_world", "object_sim"),
-    #         ("object_sim", "right_hand_base_sim"),
-    #     ]
-    # )
-    from coordinates.visualization_utils import visualize_frames
-    world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
-    object_to_right_base = adaptor.frame_manager.get_transformation("object_sim", "right_hand_base_sim")
-    visualize_frames(
-        # wrong as :[np.eye(4), world_to_object, world_to_object@object_to_right_base],
-        [np.eye(4), world_to_object, object_to_right_base@world_to_object],
-        ["sim_world", "Object in the world", "hand_in_world"])
-
-# Step 5: Build up 'object_sim', 'right_hand_base_sim' relative pos across steps
-T_right_hand_base_to_object_steps_in_sim = adaptor.compute_right_hand_base_to_object_steps_in_sim(
-    right_hand_base_in_world_sim,
-    object_pos_in_world_sim)
-if VIS_ANIM_HAND_APPROACH_OBJECT_SIM:
-    import matplotlib.pyplot as plt
-    from matplotlib.animation import FuncAnimation
-    from pytransform3d.transformations import plot_transform
-    import matplotlib
-    matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
-    # Set up the plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlim([-1, 1])
-    ax.set_ylim([-1, 1])
-    ax.set_zlim([-1, 1])
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-
-    def update_frame(i):
-        ax.cla()  # Clear the current frame
-        ax.set_xlim([-1, 1])
-        ax.set_ylim([-1, 1])
-        ax.set_zlim([-1, 1])
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("Z")
-        T_world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
-        transformation = T_right_hand_base_to_object_steps_in_sim[i]
-        # print(f'x: {invert_transform(transformation)[:, 3][0]}')
-        # print(f'x f: {(invert_transform(transformation) @ T_world_to_object)[:, 3][0]}')
-        # print(f'x r: {(invert_transform(transformation) @ T_world_to_object)[:, 3][0] - T_world_to_object[:, 3][0]}')
-        # print(f'x g: {create_relative_transformation(T_world_to_object, invert_transform(transformation) @ T_world_to_object)[:, 3][0]}')
-        # print(f'y g: {create_relative_transformation(T_world_to_object, invert_transform(transformation) @ T_world_to_object)[:, 3][1]}')
-        # print(f'z g: {create_relative_transformation(T_world_to_object, invert_transform(transformation) @ T_world_to_object)[:, 3][2]}')
-        print(f'x f: {T_world_to_object[:,3][0]} to {(invert_transform(transformation) @ T_world_to_object)[:, 3][0]}')
-        print(f'y f: {T_world_to_object[:,3][1]} to {(invert_transform(transformation) @ T_world_to_object)[:, 3][1]}')
-        print(f'z f: {T_world_to_object[:,3][2]} to {(invert_transform(transformation) @ T_world_to_object)[:, 3][2]}')
-        from coordinates.visualization_utils import _visualize_frames
-        T_A_change = create_relative_transformation(T_world_to_object, np.eye(4))
-        _visualize_frames(ax, {
-            "sim_world": np.eye(4),
-            "object_sim": np.eye(4),
-            # "right_hand_base_sim": invert_transform(concat(transformation, invert_transform(T_world_to_object)))
-            "right_hand_base_sim":  T_A_change @invert_transform(transformation) @ T_world_to_object
-            
-            # TODO: figure out why
-            # "object_sim": np.eye(4),
-            # "right_hand_base_sim": transformation do not respect the relative pos of object to hand?
-        }, limits=[[-0.5, 0.5],
-                [-0.5, 0.5],
-                [-0.5, 0.5]])
-
-    # Create animation
-    anim = FuncAnimation(fig, update_frame, frames=int(len(T_right_hand_base_to_object_steps_in_sim)/5), interval=100)
-
-    # Display the animation
-    plt.show(block=True)
-# Right until here
-#---------------------- Simulated world setup done----------------------#
 
 #---------------------- Start mapping real world to simulated world ----------------------#
 # Step 6: Locate the object in real world with respect to readable_real frame(icp or manually put object) assume that
@@ -392,8 +405,11 @@ def transform_to_xyzrpy(transform):
 # T_right_hand_base_sim_to_real = invert_transform(T_right_hand_base_real_to_sim)
 # T_robot_base_to_right_hand_base_steps_real = [concat(T, T_right_hand_base_sim_to_real) for T in T_robot_base_to_right_hand_base_steps_sim]
 # T_robot_base_to_right_hand_base_steps_real_xyzrpy = [transform_to_xyzrpy(T) for T in T_robot_base_to_right_hand_base_steps_real]
+T_robot_base_A_Ap = create_relative_transformation(
+    adaptor.frame_manager.get_transformation("readable_real", "robot_base_real"),
+    np.eye(4))# robot this -> np.eye(4), A->A'
 
-T_right_hand_base_in_robot_base_steps_real = [invert_transform(T) for T in T_right_hand_base_to_robot_base_steps_real]
+T_right_hand_base_in_robot_base_steps_real = [T_robot_base_A_Ap@invert_transform(T)@invert_transform(T_robot_base_A_Ap) for T in T_right_hand_base_to_robot_base_steps_real]
 T_robot_base_to_right_hand_base_steps_sim_xyzrpy = [transform_to_xyzrpy(T) for T in T_right_hand_base_in_robot_base_steps_real]
 
 
@@ -421,7 +437,7 @@ traj_real_data = np.concatenate([T_robot_base_to_right_hand_base_steps_sim_xyzrp
 
 # traj_real_data = np.concatenate([T_robot_base_to_right_hand_base_steps_real_xyzrpy, driven_hand_pos_sim, grasp_flag_sims], axis=1)
 
-save_path = f"data/trajectory_data/real_trajectory/{traj_name}/step-0.npy"
+save_path = f"data/trajectory_data/real_trajectory/{sim_traj_object_name}/step-0.npy"
 if not os.path.exists(os.path.dirname(save_path)):
     os.makedirs(os.path.dirname(save_path))
 np.save(save_path, traj_real_data)
