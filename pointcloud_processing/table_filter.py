@@ -16,6 +16,22 @@ def filter_point_outside_operation_area(points_in_table, x_range, y_range, z_ran
     y_min, y_max = y_range
     z_min, z_max = z_range
     
+    # handle x_max is None
+    if x_max is None:
+        x_max = points_in_table[:, 0].max()
+        
+    # handle x_min is None
+    if x_min is None:
+        x_min = points_in_table[:, 0].min()
+        
+    # handle y_max is None
+    if y_max is None:
+        y_max = points_in_table[:, 1].max()
+        
+    # handle y_min is None
+    if y_min is None:
+        y_min = points_in_table[:, 1].min()
+    
     # handle z_max is None
     if z_max is None:
         z_max = points_in_table[:, 2].max()

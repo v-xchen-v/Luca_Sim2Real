@@ -58,8 +58,14 @@ def get_calibration_data(calibration_data_dir, overwrite_if_exists=False, calibr
         'dist': dist
     }
     calibration_data['T_camera_to_robot'] = invert_transform(T_robot_base_to_camera)
+    calibration_data['T_table_to_camera'] = \
+        get_board_calibration_data(mtx, dist, 
+                                    calibration_data_dir, overwrite_if_exists, calibration_board_info, error_threshold)
     
-    # check whether table calibration need to be computed
+    return calibration_data
+
+def get_board_calibration_data(mtx, dist, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
+     # check whether table calibration need to be computed
     table_calibration_data_exist = table_to_camera_extrinsics_exist(calibration_data_dir+"/table_to_camera")
     if not table_calibration_data_exist or overwrite_if_exists:
         # check the calibration board information
@@ -84,13 +90,11 @@ def get_calibration_data(calibration_data_dir, overwrite_if_exists=False, calibr
     table_calibration_data_exist = table_to_camera_extrinsics_exist(calibration_data_dir+"/table_to_camera")
     if table_calibration_data_exist:
         T_table_to_camera = load_table_to_camera_extrinsics_from_npy(calibration_data_dir+"/table_to_camera")
-        calibration_data['T_table_to_camera'] = T_table_to_camera
         print(f"!!! Should check the table to camera translation are corrent in real setup: {T_table_to_camera[:3]}")
+        return T_table_to_camera
     else:
         raise ValueError("Table calibration data not found.")
     
-    return calibration_data
-
 def _show_calibration_image(calibration_data_dir):
     import cv2
     calibration_image_path = calibration_data_dir + "/corner_visualization.jpg"

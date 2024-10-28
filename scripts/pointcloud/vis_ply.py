@@ -2,7 +2,7 @@ import open3d as o3d
 
 def main():
     # Load the .ply file
-    ply_file_path = "data/debug_data/pointcloud_data/camera_captures/test.ply"
+    ply_file_path = "data/scene_data/test_scene_data/test_scene.ply"
     point_cloud = o3d.io.read_point_cloud(ply_file_path)
 
     # Visualize the point cloud 
