@@ -3,7 +3,7 @@ module_path = os.path.abspath(os.path.join('.'))
 if module_path not in sys.path:
     sys.path.append(module_path)
     
-from coordinates.frames import coordinate_frames
+from coordinates.frame_manager import FrameManager
 import matplotlib.pyplot as plt
 from pytransform3d.transformations import plot_transform
 
@@ -11,8 +11,9 @@ from pytransform3d.transformations import plot_transform
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
+frame_manager = FrameManager()
 # Plot all frames
-for name, T in coordinate_frames.items():
+for name, T in frame_manager.frames.items():
     plot_transform(ax=ax, A2B=T, name=name, s=0.3)
 
 # Customize plot limits and labels
