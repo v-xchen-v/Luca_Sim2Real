@@ -25,7 +25,7 @@ class ObjectLocatorBase:
         self.scene_data_save_dir = scene_data_save_dir
         self.scene_data_file_name = scene_data_file_name
         self.camera_intrinsics_data_dir = camera_intrinsics_data_dir
-        self.overwrite_if_exists = overwrite_if_exists,
+        self.overwrite_if_exists = overwrite_if_exists
         self.calibration_board_info = calibration_board_info
         self.report_dir = report_dir
         
@@ -80,8 +80,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
                     },
                  report_dir: str = None,
                  overwrite_if_exists: bool = False,
-                 vis_filtered_point_cloud: bool = False,
-                 vis_scene_point_cloud: bool = False
+                 vis_filtered_point_cloud_in_board_coord: bool = False,
+                 vis_scene_point_cloud_in_cam_coord: bool = False,
+                 vis_scene_point_cloud_in_board_coord: bool = False
                  ) -> None:
         super().__init__(scene_data_save_dir, 
                          scene_data_file_name, 
@@ -93,8 +94,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.scene_point_cloud_in_board_coord = None
         
         # configure visualization
-        self.vis_scene_point_cloud = vis_scene_point_cloud
-        self.vis_filtered_point_cloud = vis_filtered_point_cloud
+        self.vis_scene_point_cloud_in_camera_coord = vis_scene_point_cloud_in_cam_coord
+        self.vis_scene_point_cloud_in_board_coord = vis_scene_point_cloud_in_board_coord
+        self.vis_filtered_point_cloud = vis_filtered_point_cloud_in_board_coord
 
     def locate_object_position(self, 
                                x_range=[None, None], 
@@ -110,16 +112,39 @@ class ObjectPositionLocator(ObjectLocatorBase):
         # compute the object center position
         object_center = np.mean(self.filtered_scene_point_cloud_in_board_coord, axis=0)
         return object_center  
-        
+    
+    def _show_point_cloud_window(self, point_cloud: o3d.geometry.PointCloud):
+        # viewer = o3d.visualization.Visualizer()
+        # viewer.create_window()
+        # opt = viewer.get_render_option()
+        # pcd = o3d.geometry.PointCloud()
+        # pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        # viewer.add_geometry(pcd)
+        # opt.show_coordinate_frame = True
+        # opt.background_color = np.asarray([0, 0, 0])
+        # viewer.run()
+        # viewer.destroy_window()
+        axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        # Visualize the reloaded point cloud with coordinate axes
+        o3d.visualization.draw_geometries(
+                                    [pcd, axes],
+                                    window_name='Colored Point Cloud',
+                                    width=800, height=600,
+                                    left=0, top=1)
+                
     def _process_scene_pointcloud(self, x_range, y_range, z_range):
         self.scene_point_cloud_in_board_coord = \
             transform_point_cloud_from_camera_to_table(self.scene_point_cloud_in_camera_coord, 
-                                                       T_camera_to_table=invert_transform(self.T_calibration_board_to_camera))
+                                                       T_depthcam_to_rgbcam=np.load(r'calibration/calibration_data/camera1/depth_to_rgb/T_depth_to_rgb.npy'),
+                                                       T_rgbcam_to_table=invert_transform(self.T_calibration_board_to_camera))
         
-        if self.vis_scene_point_cloud:
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(self.scene_point_cloud_in_board_coord)
-            o3d.visualization.draw_geometries([pcd])
+        if self.vis_scene_point_cloud_in_camera_coord:
+            self._show_point_cloud_window(self.scene_point_cloud_in_camera_coord)
+            
+        if self.vis_scene_point_cloud_in_board_coord:
+            self._show_point_cloud_window(self.scene_point_cloud_in_board_coord)
             
         self.filtered_scene_point_cloud_in_board_coord = \
             filter_point_outside_operation_area(
@@ -129,9 +154,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
                 z_range=z_range)
         
         if self.vis_filtered_point_cloud:
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(self.filtered_scene_point_cloud_in_board_coord)
-            o3d.visualization.draw_geometries([pcd])
+            self._show_point_cloud_window(self.filtered_scene_point_cloud_in_board_coord)
         
 class ObjectPoseLocator(ObjectLocatorBase):
     """
