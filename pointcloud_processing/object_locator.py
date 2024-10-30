@@ -10,6 +10,8 @@ from calibration.calibrate_board_to_camera import compute_table_to_camera
 from pointcloud_processing.table_filter import filter_point_outside_operation_area
 from pointcloud_processing.transformations import transform_point_cloud_from_camera_to_table
 from pytransform3d.transformations import invert_transform
+import os
+from pointcloud_processing.icp_matching import align_source_to_target
 
 class ObjectLocatorBase:
     """Shared methods and attributes for ObjectPositionLocator and ObjectPoseLocator."""
@@ -78,6 +80,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
                      "pattern_size": (5, 8),
                      "square_size": 0.03
                     },
+                 object_modeling_file_path:str = None,
                  report_dir: str = None,
                  overwrite_if_exists: bool = False,
                  vis_filtered_point_cloud_in_board_coord: bool = False,
@@ -91,6 +94,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
                          calibration_board_info, 
                          report_dir, 
                          overwrite_if_exists)
+        # input arguments
+        self.object_modeling_file_path = object_modeling_file_path
+        
         # intermediate data
         self.scene_point_cloud_in_board_coord = None
         
@@ -123,15 +129,34 @@ class ObjectPositionLocator(ObjectLocatorBase):
         object_center = np.mean(self.filtered_scene_point_cloud_in_board_coord, axis=0)
         return object_center  
     
+    def _numpy_to_o3d(self, points: np.ndarray) -> o3d.geometry.PointCloud:
+        point_cloud = o3d.geometry.PointCloud()
+        point_cloud.points = o3d.utility.Vector3dVector(points)
+        return point_cloud
+
+    def _get_point_cloud_center(sekf, point_cloud: o3d.geometry.PointCloud) -> np.ndarray:
+        return np.mean(np.asarray(point_cloud.points), axis=0)
+
     def locate_object_position(self):
         """
         Locate the object position by matching the known the partial view point cloud of the object to 
         known fullview object model.
         """
         if self.filtered_scene_point_cloud_in_board_coord is None:
-            raise ValueError("No object point cloud is found after filtering.")
+            raise ValueError("Do object partial view computation first.")
+
+        if self.object_modeling_file_path is None or not os.path.exists(self.object_modeling_file_path):
+            raise ValueError("No object modeling file is provided.")
         
+        # Load point clouds 
+        object_model_points = np.load(self.object_modeling_file_path)
+        object_model_pcd = self._numpy_to_o3d(object_model_points)
         
+        # Align and restore point clouds
+        aligned_source, restored_target = align_source_to_target(object_model_pcd, 
+                                                                 self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord))
+        
+        return self._get_point_cloud_center(aligned_source)
     
     def _show_pcd_in_window(self, point_cloud: o3d.geometry.PointCloud):
         # viewer = o3d.visualization.Visualizer()
