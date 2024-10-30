@@ -1,6 +1,7 @@
 """Filters out points that are not on the table."""
+import numpy as np
 
-def filter_point_outside_operation_area(points_in_table, x_range, y_range, z_range):
+def filter_point_outside_operation_area(pcd_in_table, x_range, y_range, z_range):
     """Filters out points that are not on the table.
 
     Args:
@@ -12,21 +13,37 @@ def filter_point_outside_operation_area(points_in_table, x_range, y_range, z_ran
     Returns:
         np.ndarray: The filtered point cloud.
     """
+    
+    points_in_table = np.asarray(pcd_in_table.points)[:, :3] # Shape: (N, 6), N is the number of points, x, y, z, r, g, b
+    
     x_min, x_max = x_range
     y_min, y_max = y_range
     z_min, z_max = z_range
-    
-    # handle z_max is None
-    if z_max is None:
-        z_max = points_in_table[:, 2].max()
         
-    # handle z_min is None
-    if z_min is None:
-        z_min = points_in_table[:, 2].min()
+    # Helper function to get min or max with fallback for NaN
+    def get_bound(array, func, default):
+        value = func(array)
+        return value if not np.isnan(value) else default
+
+    # Define default min and max float values
+    min_default = np.finfo(np.float32).min
+    max_default = np.finfo(np.float32).max
+
+    # Set x, y, z ranges with appropriate fallbacks
+    x_min = get_bound(points_in_table[:, 0], np.min, min_default) if x_min is None else x_min
+    x_max = get_bound(points_in_table[:, 0], np.max, max_default) if x_max is None else x_max
+
+    y_min = get_bound(points_in_table[:, 1], np.min, min_default) if y_min is None else y_min
+    y_max = get_bound(points_in_table[:, 1], np.max, max_default) if y_max is None else y_max
+
+    z_min = get_bound(points_in_table[:, 2], np.min, min_default) if z_min is None else z_min
+    z_max = get_bound(points_in_table[:, 2], np.max, max_default) if z_max is None else z_max
+
+        
 
     # Filter out points that are not on the table
     x_mask = (points_in_table[:, 0] >= x_min) & (points_in_table[:, 0] <= x_max)
-    y_mask = (points_in_table[:, 1] >= y_min) & (points_in_table[:, 1] <= y_max)
+    y_mask = (points_in_table[:, 1] >= y_min) & (points_in_table[:, 1] <= y_max)     
     z_mask = (points_in_table[:, 2] >= z_min) & (points_in_table[:, 2] <= z_max)
     mask = x_mask & y_mask & z_mask
     # mask = (points_in_table[:, 0] >= x_min) & (points_in_table[:, 0] <= x_max) & \

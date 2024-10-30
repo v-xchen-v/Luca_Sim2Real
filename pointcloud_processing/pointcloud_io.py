@@ -16,17 +16,30 @@ def load_point_cloud(path: str) -> np.ndarray:
     - points: The loaded point cloud as a NumPy array.
     """
     point_cloud = o3d.io.read_point_cloud(path)
+    
+    return point_cloud
+        
+def load_point_cloud_as_numpy(path: str) -> np.ndarray:
+    """
+    Load the point cloud from the given path.
+
+    Args:
+    - path: The path to the point cloud file. The file must be in PCD format or PLY format.
+    
+    Returns:
+    - points: The loaded point cloud as a NumPy array.
+    """
+    point_cloud = o3d.io.read_point_cloud(path)
     points = np.asarray(point_cloud.points)
     
     return points
         
-        
-def _save_realsense_point_cloud(rs_points, rs_frames, color_image, save_dir: str, file_name: str, overwrite_if_exists=False) -> None:
+def _save_realsense_point_cloud(pcd, color_image, save_dir: str, file_name: str, overwrite_if_exists=False) -> None:
     """
     Save the point cloud captured from the Intel RealSense D455 camera. The point cloud is saved as a PCD file, and a PLY file.
     And the color image is saved as a PNG file for calibration task.
     """
-    exts = ['.pcd', '.ply']
+    exts = ['.pcd']
     
     # create the directory if it doesn't exist
     os.makedirs(save_dir, exist_ok=True)
@@ -40,25 +53,24 @@ def _save_realsense_point_cloud(rs_points, rs_frames, color_image, save_dir: str
     # # save the point cloud as a NumPy array
     # np.save(os.path.join(save_dir, file_name + '.npy'), point_cloud)
         
-    # save the point cloud as a PLY file
-    ## Create save_to_ply object
-    ply = rs.save_to_ply(f"{save_dir}/{file_name}.ply")
+    # # save the point cloud as a PLY file
+    # ## Create save_to_ply object
+    # ply = rs.save_to_ply(f"{save_dir}/{file_name}.ply")
 
-    ## Set options to the desired values
-    ## In this option settings, we'll generate a textual PLY with normals (mesh is already created by default)
-    ply.set_option(rs.save_to_ply.option_ply_binary, False)
-    ply.set_option(rs.save_to_ply.option_ply_normals, True)
+    # ## Set options to the desired values
+    # ## In this option settings, we'll generate a textual PLY with normals (mesh is already created by default)
+    # ply.set_option(rs.save_to_ply.option_ply_binary, False)
+    # ply.set_option(rs.save_to_ply.option_ply_normals, True)
 
-    print(f"Saving to {file_name}.ply...")
-    ## Apply the processing block to the frameset which contains the depth frame and the texture
-    ply.process(rs_frames)
-    print("Done")
+    # print(f"Saving to {file_name}.ply...")
+    # ## Apply the processing block to the frameset which contains the depth frame and the texture
+    # ply.process(rs_frames)
+    # print("Done")
     
     # save the point cloud as a PCD file
     ## read ply file and write to pcd file
     print(f"Saving to {file_name}.pcd...")
-    o3d.io.write_point_cloud(f"{save_dir}/{file_name}.pcd", 
-                             o3d.io.read_point_cloud(f"{save_dir}/{file_name}.ply"))
+    o3d.io.write_point_cloud(f"{save_dir}/{file_name}.pcd", pcd)
     print("Done")
     
     # save the color image
@@ -75,8 +87,49 @@ def _save_realsense_point_cloud(rs_points, rs_frames, color_image, save_dir: str
 #     """
 #     save_point_cloud_from_realsense()
 
+def _image_and_point_cloud_exists(save_dir: str, file_name: str) -> bool:
+    exts = ['.pcd', '.ply', '.png']
     
-def save_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
+    # check if at least one file with the ext already exists
+    for ext in exts:
+        path = os.path.join(save_dir, file_name + ext)
+        if not os.path.exists(path):
+            return False
+    
+    return True
+
+def _show_point_cloud_window(point_cloud: o3d.geometry.PointCloud):
+    viewer = o3d.visualization.Visualizer()
+    viewer.create_window()
+    opt = viewer.get_render_option()
+    pcd = o3d.geometry.PointCloud()
+    vtx = np.asanyarray(point_cloud)  # XYZ
+    flipy_points = vtx
+    # # flipy_points[:, 1] *= -1 
+    # # flipy_points[:, 2] *= -1 
+    # # flipy_points[:, 0] *= 0.001   
+    # R_x_90 = np.array([[1, 0, 0],
+    #                [0, 0, -1],
+    #                [0, 1, 0]])
+    # R_y_90 = np.array([[0, 0, 1],
+    #                [0, 1, 0],
+    #                [-1, 0, 0]])
+    # R_z_90 = np.array([[0, -1, 0],
+    #                [1, 0, 0],
+    #                [0, 0, 1]])
+    # flipy_points = flipy_points @ R_z_90.T
+    pcd.points = o3d.utility.Vector3dVector(flipy_points)
+    # viewer.add_geometry(pcd)
+    
+    # draw the point cloud with texture color
+    pcd.colors = point_cloud.colors
+    viewer.add_geometry(pcd)
+    opt.show_coordinate_frame = True
+    opt.background_color = np.asarray([0, 0, 0])
+    viewer.run()
+    viewer.destroy_window()
+      
+def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
     """
     Capture a point cloud from the Intel RealSense D455 camera.
 
@@ -84,60 +137,95 @@ def save_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_
     - points: The captured point cloud.
     - color_image: The corresponding color image.
     """
+    if overwrite_if_exists==False and _image_and_point_cloud_exists(save_dir, file_name):
+        return None, None
+    
     import pyrealsense2 as rs
     
-    # Declare pointcloud object, for calculating pointclouds and texture mappings
-    pc = rs.pointcloud()
-    # We want the points object to be persistent so we can display the last cloud when a frame drops
-    points = rs.points()
-
-    # Declare RealSense pipeline, encapsulating the actual device and sensors
-    pipe = rs.pipeline()
+    # Configure the RealSense pipeline
+    pipeline = rs.pipeline()
     config = rs.config()
-    # Enable depth stream
     config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-    # Enable color stream
     config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+    pipeline.start(config)
 
-    # Start streaming with chosen configuration
-    pipe.start(config)
 
-    # Create an align object
-    # rs.align allows us to perform alignment of depth frames to others (here to color frame)
-    align_to = rs.stream.color
-    align = rs.align(align_to)
-    
     try:
-        # Wait for the next set of frames from the camera
-        frames = pipe.wait_for_frames()
+        # Capture frames: depth and color
+        frames = pipeline.wait_for_frames()
+        depth_frame = frames.get_depth_frame()
+        color_frame = frames.get_color_frame()
+
         
-        # Align the depth frame to the color frame
-        aligned_frames = align.process(frames)
+        if not depth_frame or not color_frame:
+            raise RuntimeError("Failed to capture frames")
+
+        # Create point cloud object and map color to it
+        pc = rs.pointcloud()
+        pc.map_to(color_frame)
+        points = pc.calculate(depth_frame)
         
-        # Get aligned frames
-        aligned_depth_frame = aligned_frames.get_depth_frame()
-        color_frame = aligned_frames.get_color_frame()
-        
-        if not color_frame:
-            raise RuntimeError("Could not get color frame")
+        # Convert the point cloud to numpy arrays
+        vtx = np.asanyarray(points.get_vertices()).view(np.float32).reshape(-1, 3)  # Shape: (N, 3)
+        tex = np.asanyarray(points.get_texture_coordinates()).view(np.float32).reshape(-1, 2)  # Shape: (N, 2)
 
         # Convert images to numpy arrays
         color_image = np.asanyarray(color_frame.get_data())
         # cv2.imwrite(f"output/{args.filename}.png", color_image)
         
-        # Check if both frames are valid
-        if not aligned_depth_frame or not color_frame:
-            raise RuntimeError("Could not get aligned frames")
+        # Helper function to map texture coordinates to RGB colors
+        def get_rgb_from_tex(tex_coords, color_image):
+            """Convert normalized texture coordinates to RGB values."""
+            h, w, _ = color_image.shape
+            # Convert normalized coordinates to pixel indices
+            u = (tex_coords[:, 0] * w).astype(int)
+            v = (tex_coords[:, 1] * h).astype(int)
+            # Clamp the indices to ensure valid range
+            u = np.clip(u, 0, w - 1)
+            v = np.clip(v, 0, h - 1)
+            # Extract RGB values
+            rgb = color_image[v, u, :] / 255.0  # Normalize to [0, 1]
+            return rgb
+
+        # Map RGB colors to the vertices
+        colors = get_rgb_from_tex(tex, color_image)
+               
+        # x_min = 200
+        # x_max = 1000
+        # y_min = 100
+        # y_max = 600
+        # h, w, _ = color_image.shape
+        # vtx = vtx.reshape(h, w, 3)
+        # tex = tex.reshape(h, w, 2)
+        # roi_vtx = vtx[y_min:y_max, x_min:x_max, :]
+        # roi_tex = tex[y_min:y_max, x_min:x_max, :]
+        # roi_colors = roi_colors[y]
         
-        # Map the color frame to the point cloud
-        pc.map_to(color_frame)
+        # roi_vtx = vtx.reshape(-1, 3)
+        # roi_tex = tex.reshape(-1, 2)
+                  
+        # Create Open3D PointCloud object and assign points and colors
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(vtx)
+        pcd.colors = o3d.utility.Vector3dVector(colors)
         
-        # Calculate the point cloud with the aligned depth frame
-        points = pc.calculate(aligned_depth_frame)
-        
-        _save_realsense_point_cloud(points, frames, color_image, save_dir, file_name, overwrite_if_exists)
+        #  Create a coordinate frame (axes) centered at the origin
+        axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
+
+        # Visualize the point cloud and the coordinate axes
+        o3d.visualization.draw_geometries([pcd, axes])
+
+        # o3d.io.write_point_cloud(f"/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/test_scene_data/test_scene.pcd", pcd)
+
+
+        # points.export_to_ply('./point_cloud.ply', color_frame)
+        _save_realsense_point_cloud(pcd, color_image, save_dir, file_name, overwrite_if_exists)
         
         return points, color_image
+    except Exception as e:
+        raise RecursionError(f"Could not get aligned frames: {e}")
     finally:
-        pipe.stop()
+        pipeline.stop()
+        # raise RuntimeError("Could not get aligned frames")
         return None, None
+    

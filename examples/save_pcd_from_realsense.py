@@ -4,6 +4,6 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
     
-from pointcloud_processing.pointcloud_io import save_point_cloud_from_realsense
+from pointcloud_processing.pointcloud_io import save_image_and_point_cloud_from_realsense
 
-save_point_cloud_from_realsense('./data/debug_data/pointcloud_data/camera_captures', 'test', overwrite_if_exists=True)
+save_image_and_point_cloud_from_realsense('./data/debug_data/pointcloud_data/camera_captures', 'test', overwrite_if_exists=True)

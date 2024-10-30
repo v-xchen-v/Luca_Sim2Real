@@ -8,14 +8,14 @@ Pre-requesties:
 - A Calibration board on the scene and known or computed the T_calibration_board_to_camera.
 """
     
-from pointcloud_processing.pointcloud_io import save_point_cloud_from_realsense
+from pointcloud_processing.pointcloud_io import save_image_and_point_cloud_from_realsense
 from calibration.calibrate_board_to_camera import compute_table_to_camera
 from pointcloud_processing.table_filter import filter_point_outside_operation_area
 from pointcloud_processing.transformations import camera_to_calibration_board_frame
 import cv2
 
 # Save the point cloud from the realsense camera
-save_point_cloud_from_realsense('./data/debug_data/pointcloud_data/camera_captures', 'test', overwrite_if_exists=True)
+save_image_and_point_cloud_from_realsense('./data/debug_data/pointcloud_data/camera_captures', 'test', overwrite_if_exists=True)
 
 # load the point cloud
 from pointcloud_processing.pointcloud_io import load_point_cloud
