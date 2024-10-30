@@ -90,7 +90,7 @@ def icp_align(source, target, threshold=0.01, max_iterations=50):
         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
         # o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         o3d.pipelines.registration.ICPConvergenceCriteria(
-            max_iteration=2000,relative_fitness=1e-6, relative_rmse=1e-6))
+            max_iteration=3000,relative_fitness=1e-6, relative_rmse=1e-6))
 
     # # Apply ICP
     # reg_p2p = o3d.pipelines.registration.registration_icp(
