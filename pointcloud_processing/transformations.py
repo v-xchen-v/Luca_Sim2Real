@@ -3,6 +3,7 @@
 from pytransform3d.transformations import transform
 import numpy as np
 from pytransform3d.transformations import invert_transform, transform
+import open3d as o3d
 
 def _make_point_cloud_homogeneous(points):
     """Appends 1 to the points to make them homogeneous.
@@ -97,7 +98,7 @@ def transform_point_cloud(point_cloud, T_source_to_target):
     return transformed_points
 
 
-def transform_point_cloud_from_camera_to_table(points_in_depthcam, T_rgbcam_to_table, T_depthcam_to_rgbcam):
+def transform_point_cloud_from_camera_to_table(pc_in_depthcam, T_rgbcam_to_table, T_depthcam_to_rgbcam) -> o3d.geometry.PointCloud:
     """Transforms the point cloud from the camera coordinate system to the world coordinate system.
 
     Args:
@@ -107,6 +108,24 @@ def transform_point_cloud_from_camera_to_table(points_in_depthcam, T_rgbcam_to_t
     Returns:
         np.ndarray: The transformed point cloud in table coordinate system.
     """
+    import open3d as o3d
+    # pc = o3d.geometry.PointCloud()
+    # pc.points = o3d.utility.Vector3dVector(pc_in_depthcam)
+    pc_in_depthcam.transform(invert_transform(T_rgbcam_to_table @ T_depthcam_to_rgbcam))
+    
+    # for debugging purpose
+    if False:
+        # Visualize the transformed point cloud
+        axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
+        o3d.visualization.draw_geometries(
+                                [pc_in_depthcam, axes],
+                                window_name='Transformed Point Clou',
+                                width=800, height=600,
+                                left=0, top=1)
+
+    # Optionally save the transformed PCD to a new file
+    # o3d.io.write_point_cloud("transformed_pointcloud.pcd", pcd)
+
     # points_in_depthcam[:, 1]*=-1
     
     # make the points homogeneous
@@ -117,34 +136,40 @@ def transform_point_cloud_from_camera_to_table(points_in_depthcam, T_rgbcam_to_t
     
     # a 4x4 matrix of rotate 180 degree around x axis
     # o3d -> realsense
-    T_rot180_x = np.eye(4)
-    T_rot180_x[1, 1] = -1 # flip y
-    T_rot180_x[2, 2] = -1 # flip z
+    # T_rot180_x = np.eye(4)
+    # T_rot180_x[1, 1] = -1 # flip y
+    # T_rot180_x[2, 2] = -1 # flip z
     
-    # point_in_rgbcam_rotated = transform(T_rot180_x, points_in_depthcam)
-    # points_in_table = transform(T_rgbcam_to_table, points_in_depthcam)
-    # points_in_table = [T_rgbcam_to_table@T_depthcam_to_rgbcam@p for p in points_in_depthcam]
-    # points_in_table = [T_rgbcam_to_table@p for p in points_in_depthcam]
-    print(f'depthcam_to_rgbcam translation: {T_depthcam_to_rgbcam[:3, 3]}')
-    from scipy.spatial.transform import Rotation as R   
-    print(f'depthcam_to_rgbcam rotation: {R.from_matrix(T_depthcam_to_rgbcam[:3, :3]).as_euler("xyz", degrees=True)}')
-    # points_in_table = [invert_transform(T_rot180_x) @
-    #                    T_rgbcam_to_table@ T_depthcam_to_rgbcam @ T_rot180_x@p for p in points_in_depthcam]
+    # # point_in_rgbcam_rotated = transform(T_rot180_x, points_in_depthcam)
+    # # points_in_table = transform(T_rgbcam_to_table, points_in_depthcam)
+    # # points_in_table = [T_rgbcam_to_table@T_depthcam_to_rgbcam@p for p in points_in_depthcam]
+    # # points_in_table = [T_rgbcam_to_table@p for p in points_in_depthcam]
+    # print(f'depthcam_to_rgbcam translation: {T_depthcam_to_rgbcam[:3, 3]}')
+    # from scipy.spatial.transform import Rotation as R   
+    # print(f'depthcam_to_rgbcam rotation: {R.from_matrix(T_depthcam_to_rgbcam[:3, :3]).as_euler("xyz", degrees=True)}')
+    # # points_in_table = [invert_transform(T_rot180_x) @
+    # #                    T_rgbcam_to_table@ T_depthcam_to_rgbcam @ T_rot180_x@p for p in points_in_depthcam]
     
-    # points_in_table = transform(
-    #                         invert_transform(T_rot180_x) @ T_rgbcam_to_table@ invert_transform(T_depthcam_to_rgbcam) @ T_rot180_x,
-    #                         points_in_depthcam)
+    # # points_in_table = transform(
+    # #                         invert_transform(T_rot180_x) @ T_rgbcam_to_table@ invert_transform(T_depthcam_to_rgbcam) @ T_rot180_x,
+    # #                         points_in_depthcam)
     
-    # points_in_table = transform(
-    #                     invert_transform(T_rot180_x) @ T_rgbcam_to_table @ T_rot180_x,
-    #                     points_in_depthcam)
+    # # points_in_table = transform(
+    # #                     invert_transform(T_rot180_x) @ T_rgbcam_to_table @ T_rot180_x,
+    # #                     points_in_depthcam)
     
     # points_in_table = transform(
     #                     invert_transform(T_rot180_x) @ T_rgbcam_to_table@ T_depthcam_to_rgbcam @ T_rot180_x,
-    #                     points_in_depthcam)
+    #                     pc_in_depthcam)
     
-    points_in_table = transform_point_cloud(points_in_depthcam,
-                        invert_transform(T_rot180_x) @ T_rgbcam_to_table @ T_depthcam_to_rgbcam @ T_rot180_x,
-                        )
-    points_in_table = _make_point_cloud_xyz_array(points_in_table)
-    return points_in_table
+    # # points_in_table = transform_point_cloud(points_in_depthcam,
+    # #                     invert_transform(T_rot180_x) @ T_rgbcam_to_table @ T_rot180_x,
+    # #                     )
+    # points_in_table = _make_point_cloud_xyz_array(points_in_table)
+    # # T_rgbcam_to_table[:3, 1]*=-1
+    # p_tables = []
+    # for one_point in points_in_depthcam:
+    #     one_point = np.append(one_point, 1)
+    #     p_table = (T_rgbcam_to_table@T_depthcam_to_rgbcam@T_rot180_x@one_point)[:3]
+    #     p_tables.append(p_table)
+    return pc_in_depthcam

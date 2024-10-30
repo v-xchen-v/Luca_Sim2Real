@@ -7,7 +7,7 @@ if module_path not in sys.path:
 from pointcloud_processing.object_locator import ObjectPositionLocator
 
 CAMERA_NAME = "camera1"
-CAPTURE_NEW_TABLE_CALIBRATION = True
+CAPTURE_NEW_TABLE_CALIBRATION = False
 CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
 CALIBRATION_BOARD_SQUARE_SIZE = 0.02
 # CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
@@ -29,11 +29,11 @@ object_locator = ObjectPositionLocator(
     )
 
 object_center = object_locator.locate_object_position(
-    # x_range=[-0.3, 0],
-    # y_range=[0, 0.3],
+    x_range=[-0.15, 0],
+    y_range=[-0.05, 0.2],
+    z_range=[None, -0.02]
+    # x_range=[None, None],
+    # y_range=[None, None],
     # z_range=[None, 0]
-    x_range=[None, None],
-    y_range=[None, None],
-    z_range=[None, 0]
 )
 print(f"Object center position: {object_center}")

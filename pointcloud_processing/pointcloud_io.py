@@ -16,10 +16,23 @@ def load_point_cloud(path: str) -> np.ndarray:
     - points: The loaded point cloud as a NumPy array.
     """
     point_cloud = o3d.io.read_point_cloud(path)
+    
+    return point_cloud
+        
+def load_point_cloud_as_numpy(path: str) -> np.ndarray:
+    """
+    Load the point cloud from the given path.
+
+    Args:
+    - path: The path to the point cloud file. The file must be in PCD format or PLY format.
+    
+    Returns:
+    - points: The loaded point cloud as a NumPy array.
+    """
+    point_cloud = o3d.io.read_point_cloud(path)
     points = np.asarray(point_cloud.points)
     
     return points
-        
         
 def _save_realsense_point_cloud(pcd, color_image, save_dir: str, file_name: str, overwrite_if_exists=False) -> None:
     """
@@ -177,8 +190,19 @@ def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, ove
         # Map RGB colors to the vertices
         colors = get_rgb_from_tex(tex, color_image)
                
+        # x_min = 200
+        # x_max = 1000
+        # y_min = 100
+        # y_max = 600
         # h, w, _ = color_image.shape
-        # vtx.reshape(h, w, 3)[]
+        # vtx = vtx.reshape(h, w, 3)
+        # tex = tex.reshape(h, w, 2)
+        # roi_vtx = vtx[y_min:y_max, x_min:x_max, :]
+        # roi_tex = tex[y_min:y_max, x_min:x_max, :]
+        # roi_colors = roi_colors[y]
+        
+        # roi_vtx = vtx.reshape(-1, 3)
+        # roi_tex = tex.reshape(-1, 2)
                   
         # Create Open3D PointCloud object and assign points and colors
         pcd = o3d.geometry.PointCloud()
