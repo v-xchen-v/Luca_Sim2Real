@@ -29,8 +29,8 @@ object_locator = ObjectPositionLocator(
     )
 
 object_center = object_locator.locate_object_position(
-    x_range=[-0.15, 0],
-    y_range=[-0.05, 0.2],
+    x_range=[-0.13, 0],
+    y_range=[-0.05, 0.10],
     z_range=[None, -0.02]
     # x_range=[None, None],
     # y_range=[None, None],
