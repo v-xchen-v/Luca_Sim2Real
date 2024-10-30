@@ -23,9 +23,9 @@ def get_point_cloud_center(point_cloud: o3d.geometry.PointCloud) -> np.ndarray:
 # Example usage
 if __name__ == "__main__":
     # Load point clouds (replace with your paths)
-    target = np.load("/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/test_scene_data/test_scene_filtered_point_cloud.npy")
+    target = np.load("/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/orange_test_scene_data/test_scene_filtered_point_cloud.npy")
     target_pc = numpy_to_o3d(target)
-    source = np.load("data/pointcloud_data/candidiate_objects/coke_can.npy")
+    source = np.load("data/pointcloud_data/candidiate_objects/orange.npy")
     source_pc = numpy_to_o3d(source)
 
     
@@ -39,4 +39,4 @@ if __name__ == "__main__":
     print(f'center after align: {get_point_cloud_center(restored_target)}')
     
     # Visualize the result
-    o3d.visualization.draw_geometries([aligned_source, restored_target])
+    # o3d.visualization.draw_geometries([aligned_source, restored_target])
