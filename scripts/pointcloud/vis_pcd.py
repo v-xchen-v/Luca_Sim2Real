@@ -54,7 +54,7 @@ def _show_point_cloud_window(point_cloud: o3d.geometry.PointCloud):
         
 # Load and visualize the saved point cloud
 # pcd = o3d.io.read_point_cloud("data/scene_data/test_scene_data/test_scene.pcd")
-pcd = o3d.io.read_point_cloud("/home/yichao/Documents/repos/Luca_Transformation/point_cloud.pcd")
+pcd = o3d.io.read_point_cloud("/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/test_scene_data/test_scene_filtered_point_cloud.npy")
 # o3d.visualization.draw_geometries([pcd])
 # _show_point_cloud_window(pcd)
 # Create a coordinate frame centered at the origin

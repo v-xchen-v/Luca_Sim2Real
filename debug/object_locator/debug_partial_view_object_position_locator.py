@@ -28,7 +28,7 @@ object_locator = ObjectPositionLocator(
     vis_filtered_point_cloud_in_board_coord=True,
     )
 
-object_center = object_locator.locate_object_position(
+object_center = object_locator.locate_partial_view_object_position(
     x_range=[-0.13, 0],
     y_range=[-0.05, 0.10],
     z_range=[None, -0.02]

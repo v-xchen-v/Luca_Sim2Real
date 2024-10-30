@@ -100,10 +100,11 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.vis_filtered_point_cloud_in_board_coord = vis_filtered_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_cam_coord = vis_filtered_point_cloud_in_cam_coord
 
-    def locate_object_position(self, 
+    def locate_partial_view_object_position(self, 
                                x_range=[None, None], 
                                y_range=[None, None], 
-                               z_range=[None, None]):
+                               z_range=[None, None],
+                               save_filtered_point_cloud: bool = True) -> np.ndarray:
         self._capture_scene()
         self._load_scene()
         self._process_scene_image()
@@ -111,9 +112,26 @@ class ObjectPositionLocator(ObjectLocatorBase):
         if self.filtered_scene_point_cloud_in_board_coord is None:
             raise ValueError("No object point cloud is found after filtering.")
         
+        if save_filtered_point_cloud:
+            if len(self.filtered_scene_point_cloud_in_board_coord) == 0:
+                raise ValueError("No points to save.")
+            
+            np.save(f"{self.scene_data_save_dir}/{self.scene_data_file_name}_filtered_point_cloud.npy",
+                    self.filtered_scene_point_cloud_in_board_coord)
+            
         # compute the object center position
         object_center = np.mean(self.filtered_scene_point_cloud_in_board_coord, axis=0)
         return object_center  
+    
+    def locate_object_position(self):
+        """
+        Locate the object position by matching the known the partial view point cloud of the object to 
+        known fullview object model.
+        """
+        if self.filtered_scene_point_cloud_in_board_coord is None:
+            raise ValueError("No object point cloud is found after filtering.")
+        
+        
     
     def _show_pcd_in_window(self, point_cloud: o3d.geometry.PointCloud):
         # viewer = o3d.visualization.Visualizer()
@@ -139,16 +157,19 @@ class ObjectPositionLocator(ObjectLocatorBase):
     def _show_points_in_window(self, point_cloud: np.ndarray):
         if len(point_cloud) == 0:
             raise ValueError("No points to visualize.")
-        # viewer = o3d.visualization.Visualizer()
-        # viewer.create_window()
-        # opt = viewer.get_render_option()
-        # pcd = o3d.geometry.PointCloud()
-        # pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        # viewer.add_geometry(pcd)
-        # opt.show_coordinate_frame = True
-        # opt.background_color = np.asarray([0, 0, 0])
-        # viewer.run()
-        # viewer.destroy_window()
+        
+        # wrong visualization with displacement coordinate axis with unknown reason
+        # # viewer = o3d.visualization.Visualizer()
+        # # viewer.create_window()
+        # # opt = viewer.get_render_option()
+        # # pcd = o3d.geometry.PointCloud()
+        # # pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        # # viewer.add_geometry(pcd)
+        # # opt.show_coordinate_frame = True
+        # # opt.background_color = np.asarray([0, 0, 0])
+        # # viewer.run()
+        # # viewer.destroy_window()
+        
         axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
