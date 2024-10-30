@@ -212,8 +212,9 @@ def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, ove
         #  Create a coordinate frame (axes) centered at the origin
         axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
 
-        # Visualize the point cloud and the coordinate axes
-        o3d.visualization.draw_geometries([pcd, axes])
+        # debugging purpose of visualizing the point cloud and the coordinate axes
+        if False:
+            o3d.visualization.draw_geometries([pcd, axes])
 
         # o3d.io.write_point_cloud(f"/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/test_scene_data/test_scene.pcd", pcd)
 

@@ -40,3 +40,10 @@ if __name__ == "__main__":
     
     # Visualize the result
     # o3d.visualization.draw_geometries([aligned_source, restored_target])
+    
+# Example of orange
+# center before align: [-0.00043384  0.00034562 -0.00473993]
+# center before align: [-0.09760619 -0.00890814 -0.04871982]
+
+# center after align: [-0.10564639  0.0024461  -0.03722779]
+# center after align: [-0.09760619 -0.00890814 -0.04871982]
