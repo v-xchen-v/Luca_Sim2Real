@@ -9,6 +9,7 @@ from pytransform3d.transformations import (     transform_from_pq, pq_from_trans
 import os
 from trajectory_processing.trajectory_visualization_utils import animate_3d_transformation_over_steps
 from coordinates.visualization_utils import _visualize_frames
+from coordinates.visualization_utils import visualize_frames
 
 """
 Steps:
@@ -116,6 +117,7 @@ class TrajectoryAdaptor:
         # if not self.frame_manager.frames_connected(transform_added_frames):
         #     raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
 
+# ----------------- public interface of sim trajectory handling -----------------#
     def load_sim_traj_and_transform_hand_to_object(self, traj_npy_file):
         self.driven_hand_pos_sim, self.right_hand_base_in_world_sim, self.object_pos_in_world_sim, self.grasp_flag_sims = \
             self._parse_sim_trajectory(traj_npy_file)
@@ -161,7 +163,32 @@ class TrajectoryAdaptor:
             num_transformation_steps=num_steps, 
             visualization_func=_anim_hand_approach_object_in_sim,
         )
+# ----------------- public interface of sim trajectory handling -----------------#
+
+# ----------------- public interface of building transforms between robot(base and cam) and table -----------------#
+    def calculate_arm_table_robot_transform(self, 
+                                            calibration_data_dir: str, 
+                                            overwrite_if_exists: bool=False, 
+                                            calibration_board_info: dict=None):
+        self._get_calibration_data(
+            calibration_data_dir=calibration_data_dir,
+            overwrite_if_exists=overwrite_if_exists,
+            calibration_board_info=calibration_board_info
+        )
+        self._add_transfromations_with_calibration()
         
+    def visualize_arm_table_robot_transform(self):
+        visualize_frames(
+            [
+                np.eye(4), # assuming calibration board is np.eye(4)
+                self.frame_manager.get_transformation("calibration_board_real", "camera_real"),
+                # adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real") @ adaptor.frame_manager.get_transformation("camera_real", "robot_base_real"),
+                self.frame_manager.get_transformation("calibration_board_real", "robot_base_real"),
+                ], 
+            ["calibration_board_real", "camera_real", "robot_base_real"])
+        
+# ----------------- public interface of building transforms between robot(base and cam) and table -----------------#
+      
     def object_setup(self):
         pass
     
