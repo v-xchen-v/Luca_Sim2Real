@@ -14,7 +14,7 @@ from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
 from coordinates.transformation_utils import concat
 from pytransform3d.transformations import invert_transform
-from trajectory_processing.trajectory_visualization import plot_trajectory_xyz_over_steps
+from trajectory_processing.trajectory_visualization_utils import plot_trajectory_xyz_over_steps
 from coordinates.transformation_utils import matrix_to_xyz_quaternion
 
 VIS_SIM_WORLD_SETUP = False
@@ -37,7 +37,7 @@ adaptor = TrajectoryAdaptor()
 sim_traj_object_name = "orange_1024" # "orange_1024"
 sim_traj_file_basename = "step-0.npy"
 
-driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor.parse_sim_trajectory(
+driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor._parse_sim_trajectory(
     f"data/trajectory_data/sim_trajectory/{sim_traj_object_name}/{sim_traj_file_basename}")
 
 # Visualize to make sure that the 'world', 'object', 'hand_base' in sim is built correctly same as in Isaac Gym
@@ -62,7 +62,7 @@ if VIS_SIM_WORLD_SETUP:
                 [-0.5, 0.5]])
 
 # Step 5: Build up 'object_sim', 'right_hand_base_sim' relative pos across steps
-T_right_hand_base_to_object_steps_in_sim = adaptor.compute_right_hand_base_to_object_steps_in_sim(
+T_right_hand_base_to_object_steps_in_sim = adaptor._compute_right_hand_base_to_object_steps_in_sim(
     right_hand_base_in_world_sim,
     object_pos_in_world_sim)
 if ANIM_HAND_APPROACH_OBJECT_SIM:

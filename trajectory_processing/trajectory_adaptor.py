@@ -7,6 +7,8 @@ from scipy.spatial.transform import Rotation as R
 from pytransform3d.transformations import concat, invert_transform
 from pytransform3d.transformations import (     transform_from_pq, pq_from_transform, concat )
 import os
+from trajectory_processing.trajectory_visualization_utils import animate_3d_transformation_over_steps
+from coordinates.visualization_utils import _visualize_frames
 
 """
 Steps:
@@ -93,7 +95,13 @@ class TrajectoryAdaptor:
         self.camera_intrinsic = self.calibration_data.get("camera_intrinsic")
         self.T_camera_to_robot = np.array(self.calibration_data.get("T_camera_to_robot"))
         self.T_table_to_camera = None  # To be computed in dynamic calibration
-
+        
+        # store intermediate transformation
+        ## sim trajectory transformation
+        self.driven_hand_pos_sim, self.right_hand_base_in_world_sim, self.object_pos_in_world_sim, self.grasp_flag_sims = None, None, None, None
+        self.T_right_hand_base_to_object_steps_in_sim = None
+        
+        
     def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
         from calibration.calibration_data_utils import get_calibration_data
         self.calibration_data = get_calibration_data(calibration_data_dir, overwrite_if_exists, calibration_board_info, error_threshold)
@@ -108,6 +116,52 @@ class TrajectoryAdaptor:
         # if not self.frame_manager.frames_connected(transform_added_frames):
         #     raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
 
+    def load_sim_traj_and_transform_hand_to_object(self, traj_npy_file):
+        self.driven_hand_pos_sim, self.right_hand_base_in_world_sim, self.object_pos_in_world_sim, self.grasp_flag_sims = \
+            self._parse_sim_trajectory(traj_npy_file)
+        self.T_right_hand_base_to_object_steps_in_sim = self._compute_right_hand_base_to_object_steps_in_sim(
+            self.right_hand_base_in_world_sim,
+            self.object_pos_in_world_sim
+        )
+        
+    def visualize_sim_world_object_hand_initial_step_transformation(self):
+        from coordinates.visualization_utils import visualize_frames
+        world_to_object = self.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+        object_to_right_base = self.frame_manager.get_transformation("object_sim", "right_hand_base_sim")
+        visualize_frames(
+            # wrong as :[np.eye(4), world_to_object, world_to_object@object_to_right_base],
+            [np.eye(4), world_to_object, object_to_right_base@world_to_object],
+            ["sim_world", "object_in_world", "hand_in_world"],
+            limits=[[-0.5, 0.5],
+                    [-0.5, 0.5],
+                    [-0.5, 0.5]])
+    
+    def animate_sim_hand_approach_object(self, first_n_steps: int=None):
+        def _anim_hand_approach_object_in_sim(ax, step: int):
+            T_world_to_object = self.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+            transformation = self.T_right_hand_base_to_object_steps_in_sim[step]
+
+            _visualize_frames(ax, {
+                "sim_world": np.eye(4),
+                "object_sim": T_world_to_object,
+                "right_hand_base_sim":  invert_transform(transformation) @ T_world_to_object
+                
+                # TODO: figure out why
+                # "object_sim": np.eye(4),
+                # "right_hand_base_sim": transformation do not respect the relative pos of object to hand?
+            }, limits=[[-0.5, 0.5],
+                    [-0.5, 0.5],
+                    [-0.5, 0.5]])
+            
+        if first_n_steps is None:
+            num_steps = int(len(self.T_right_hand_base_to_object_steps_in_sim))
+        else:
+            num_steps = int(first_n_steps)
+        animate_3d_transformation_over_steps(
+            num_transformation_steps=num_steps, 
+            visualization_func=_anim_hand_approach_object_in_sim,
+        )
+        
     def object_setup(self):
         pass
     
@@ -317,7 +371,7 @@ class TrajectoryAdaptor:
         self.frame_manager.add_transformation("sim_world", "right_hand_base_sim", right_hand_base_in_world_frame0)
         pass
         
-    def parse_sim_trajectory(self, traj_npy_file):
+    def _parse_sim_trajectory(self, traj_npy_file):
         """Parse the trajectory from the simulator and compute the relative transformation between the object to right hand base.
         
         Build up:
@@ -343,38 +397,38 @@ class TrajectoryAdaptor:
         # Return the relative transformation
         return driven_hand_joint_pos_sim, right_hand_base_in_world_sim, object_pos, grasp_flag_sim
 
-    def compute_constrained_object_relative_to_right_hand_base(self):
-        """
-        Aim to compute the right hand base to robot base transformation in real world.
+    # def compute_constrained_object_relative_to_right_hand_base(self):
+    #     """
+    #     Aim to compute the right hand base to robot base transformation in real world.
         
-        Map sim to real by containing the transformation between object and right_hand_base the same in both simulator and real world.
-        Known the transformation between the object and the right-hand base in the simulator and object to robot base in real world. 
-        Compute the right hand base position in real world constrained to maintain the same relative position between the object and the right-hand base in both real and simulated worlds.
+    #     Map sim to real by containing the transformation between object and right_hand_base the same in both simulator and real world.
+    #     Known the transformation between the object and the right-hand base in the simulator and object to robot base in real world. 
+    #     Compute the right hand base position in real world constrained to maintain the same relative position between the object and the right-hand base in both real and simulated worlds.
         
-        Parameters:
-        - T_object_to_right_hand_base: 4x4 matrix of simulator's right hand base relative to object.
+    #     Parameters:
+    #     - T_object_to_right_hand_base: 4x4 matrix of simulator's right hand base relative to object.
         
-        Returns:
-        - T_right_hand_base_real_to_robot_base: 4x4 matrix of real world's right hand base relative to robot base.
-        """
-        # # check the should known transformations
-        # if self.frame_manager.get_transformation("object_real", "real_world") is None:
-        #     raise ValueError("Object to real world transformation not found. Perform object setup first.")
+    #     Returns:
+    #     - T_right_hand_base_real_to_robot_base: 4x4 matrix of real world's right hand base relative to robot base.
+    #     """
+    #     # # check the should known transformations
+    #     # if self.frame_manager.get_transformation("object_real", "real_world") is None:
+    #     #     raise ValueError("Object to real world transformation not found. Perform object setup first.")
         
-        # if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
-        #     raise ValueError("Right hand base to object transformation in simulator not found.")
+    #     # if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
+    #     #     raise ValueError("Right hand base to object transformation in simulator not found.")
         
-        # check the input transformation
-        T_right_hand_base_sim_to_object = self.frame_manager.get_transformation("right_hand_base_sim", "object_sim")
-        if T_right_hand_base_sim_to_object is None:
-            raise ValueError("Transformation between right hand base and object in simulator is required.")
+    #     # check the input transformation
+    #     T_right_hand_base_sim_to_object = self.frame_manager.get_transformation("right_hand_base_sim", "object_sim")
+    #     if T_right_hand_base_sim_to_object is None:
+    #         raise ValueError("Transformation between right hand base and object in simulator is required.")
         
-        self.frame_manager.add_transformation("right_hand_base_step0_real", "object_real", T_right_hand_base_sim_to_object)
-        T_right_hand_base_real_to_robot_base = self.frame_manager.get_transformation("right_hand_base_step0_real", "robot_base_real")
-        if T_right_hand_base_real_to_robot_base is None:
-            raise ValueError("Right hand base to robot base transformation in real world not found.")
+    #     self.frame_manager.add_transformation("right_hand_base_step0_real", "object_real", T_right_hand_base_sim_to_object)
+    #     T_right_hand_base_real_to_robot_base = self.frame_manager.get_transformation("right_hand_base_step0_real", "robot_base_real")
+    #     if T_right_hand_base_real_to_robot_base is None:
+    #         raise ValueError("Right hand base to robot base transformation in real world not found.")
         
-        return T_right_hand_base_real_to_robot_base
+    #     return T_right_hand_base_real_to_robot_base
         
         # if self.T_table_to_camera is None:
         #     raise ValueError("Table-to-Camera transformation not set. Perform calibration first.")
@@ -387,7 +441,7 @@ class TrajectoryAdaptor:
         # T_sim_to_real = T_table_to_robot @ T_sim_world_to_table
         # return T_sim_to_real
 
-    def compute_right_hand_base_to_object_steps_in_sim(self, right_hand_base_in_world_sim, object_pos):
+    def _compute_right_hand_base_to_object_steps_in_sim(self, right_hand_base_in_world_sim, object_pos):
         """
         Known the relative pos between object and right hand base at initial in simulator, 
         And Given the right hand base positions on world coordinate in simulator,
@@ -402,7 +456,7 @@ class TrajectoryAdaptor:
         
         # _, right_hand_base_in_world_sim, object_pos, _ = self._parse_sim_trajectory_file(traj_npy_file)
          
-        def compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, step_i):
+        def _compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, step_i):
             # In the first step, compute relative transformation of object to right hand base
             object_pos_0 = object_pos[0, :]
             right_hand_base_in_world_frame0 = right_hand_base_in_world_sim[step_i, :]
@@ -418,7 +472,10 @@ class TrajectoryAdaptor:
             # T_right_hand_base_sim_to_object = concat(invert_transform(right_hand_base_in_world_frame0), object_in_world_frame0)
             return T_right_hand_base_sim_to_object
             
-        T_right_hand_base_steps_to_object_in_sim = [compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, i) for i in range(len(right_hand_base_in_world_sim))]
+        T_right_hand_base_steps_to_object_in_sim = [_compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, i) for i in range(len(right_hand_base_in_world_sim))]
+        
+        # store the intermediate transformation in the class
+        self.T_right_hand_base_steps_to_object_in_sim = T_right_hand_base_steps_to_object_in_sim
         return T_right_hand_base_steps_to_object_in_sim
             
         
