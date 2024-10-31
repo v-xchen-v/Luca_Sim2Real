@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pytransform3d.transformations import plot_transform, concat
+from scipy.spatial.transform import Rotation as R
 
 # Helper function to create a 4x4 transformation matrix
 def create_transformation_matrix(translation, rotation_matrix=None):
@@ -72,3 +73,32 @@ def create_relative_transformation(source_matrix, target_matrix):
 #     """
 #     T_source_inv = np.linalg.inv(T_source)
 #     return T_source_inv @ T_target
+
+
+def matrix_to_xyz_quaternion(matrix, quaternion_order="xyzw"):
+    """
+    Convert a 4x4 transformation matrix to a 7-element vector [x, y, z, qx, qy, qz, qw].
+
+    Parameters:
+    - matrix: A 4x4 homogeneous transformation matrix.
+
+    Returns:
+    - xyzxyzw: A 7-element vector representing the translation and rotation of the matrix.
+    """
+    # Extract the translation vector from the last column of the matrix.
+    translation = matrix[:3, 3]
+
+    # Extract the rotation matrix from the top-left 3x3 submatrix.
+    rotation_matrix = matrix[:3, :3]
+
+    # Convert the rotation matrix to a quaternion using pytransform3d.
+    quaternion = R.from_matrix(rotation_matrix).as_quat()
+
+    if quaternion_order == "wxyz":
+        quaternion = quaternion[[3, 0, 1, 2]]
+        
+    # Combine the translation and quaternion into a single 7-element vector.
+    xyzq = np.concatenate([translation, quaternion])
+
+    # Return the resulting 7-element vector.
+    return xyzq
