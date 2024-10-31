@@ -399,12 +399,6 @@ if ANIM_HAND_TO_ROBOT_BASE_REAL:
 
 # Step 5: Save the executable trajectory in real world
 ## Save the transformation between robot_right_hand_base to robot_base in real world and joint angles of hand
-
-# T_right_hand_base_real_to_sim = np.eye(4)
-# T_right_hand_base_real_to_sim[:3, :3] = R.from_rotvec([np.pi/2, 0, 0]).as_matrix()
-# T_right_hand_base_sim_to_real = invert_transform(T_right_hand_base_real_to_sim)
-# T_robot_base_to_right_hand_base_steps_real = [concat(T, T_right_hand_base_sim_to_real) for T in T_robot_base_to_right_hand_base_steps_sim]
-# T_robot_base_to_right_hand_base_steps_real_xyzrpy = [transform_to_xyzrpy(T) for T in T_robot_base_to_right_hand_base_steps_real]
 T_robot_base_A_Ap = create_relative_transformation(
     adaptor.frame_manager.get_transformation("readable_real", "robot_base_real"),
     np.eye(4))# robot this -> np.eye(4), A->A'
