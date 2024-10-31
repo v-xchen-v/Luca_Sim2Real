@@ -1,5 +1,4 @@
 import numpy as np
-import json
 from pytransform3d.transformations import plot_transform
 import matplotlib.pyplot as plt
 from coordinates.frame_manager import FrameManager
@@ -7,6 +6,8 @@ from coordinates.transformation_utils import create_transformation_matrix, creat
 from scipy.spatial.transform import Rotation as R
 from pytransform3d.transformations import concat, invert_transform
 from pytransform3d.transformations import (     transform_from_pq, pq_from_transform, concat )
+import os
+
 """
 Steps:
     1. Load pre-computed calibration data
@@ -36,7 +37,8 @@ Map simulator transformations to real-world coordinates by setting the transform
 and calibration_board_real as the identity matrix.
 1. 
 """
-# Dummy logic of trajectory adaptor
+
+# TODO: put the configs here as input parameters
 class TrajectoryAdaptor:
     def __init__(self):
         """
@@ -96,7 +98,7 @@ class TrajectoryAdaptor:
         from calibration.calibration_data_utils import get_calibration_data
         self.calibration_data = get_calibration_data(calibration_data_dir, overwrite_if_exists, calibration_board_info, error_threshold)
     
-    def add_transfromations_with_calibration(self):
+    def _add_transfromations_with_calibration(self):
         self._compute_transformations_with_calibration_data()
         
         # check the transformation based on calibration data is computed
@@ -113,8 +115,12 @@ class TrajectoryAdaptor:
         """Load simulated trajectory contraints and apply to real world"""
         pass
         
-    def save_adapted_trajectory(self):
-        pass
+    def save_executable_trajectory(self, adapted_trajectory_save_path: str, adapted_trajectory: np.ndarray):
+        # TODO: add trajectory data shape check here
+        
+        if not os.path.exists(os.path.dirname(adapted_trajectory_save_path)):
+            os.makedirs(os.path.dirname(adapted_trajectory_save_path))
+        np.save(adapted_trajectory_save_path, adapted_trajectory)
                 
     def _compute_transformations_with_calibration_data(self):
         """
