@@ -115,7 +115,7 @@ def restore_point_cloud(pcd, centroid):
     pcd.translate(centroid)  # Move back to the original position
     return pcd
 
-def align_source_to_target(source, target):
+def align_source_to_target(source, target, vis_debug=False):
     """Aligns the source point cloud to the target point cloud."""
     # source is modeling fullview point cloud, and target is paritial view in world
     
@@ -139,7 +139,7 @@ def align_source_to_target(source, target):
     restored_target = restore_point_cloud(target_centered, target_centroid)
 
     # debugging visualization for visual centered source and target
-    if False:
+    if vis_debug:
         o3d.visualization.draw_geometries([aligned_source, restored_target])
     
     return aligned_source, restored_target

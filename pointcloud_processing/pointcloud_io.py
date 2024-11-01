@@ -5,6 +5,19 @@ import os
 import pyrealsense2 as rs
 import cv2
 
+def load_npy_file_as_point_cloud(path: str) -> o3d.geometry.PointCloud:
+    """
+    Load the point cloud from the given path.
+
+    Args:
+    - path: The path to the point cloud file. The file must be in NumPy format.
+    """
+    point_cloud = np.load(path)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(point_cloud)
+    
+    return pcd
+
 def load_point_cloud(path: str) -> np.ndarray:
     """
     Load the point cloud from the given path.
