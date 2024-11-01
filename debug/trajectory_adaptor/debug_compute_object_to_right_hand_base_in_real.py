@@ -40,7 +40,7 @@ adaptor.frame_manager.print_transformations()
 # adaptor.frame_manager.visualize_transformations_starting_from(from_frame="object_real")
 
 
-T_right_hand_base_sim_to_object, _, _, _ = adaptor.parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
+T_right_hand_base_sim_to_object, _, _, _ = adaptor._parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
 adaptor.compute_constrained_object_relative_to_right_hand_base(T_right_hand_base_sim_to_object)
 adaptor.frame_manager.add_frame("right_hand_base_real", np.eye(4))
 adaptor.frame_manager.visualize_transformations_starting_from(from_frame="right_hand_base_real")

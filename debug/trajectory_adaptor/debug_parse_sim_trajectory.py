@@ -18,7 +18,7 @@ adaptor = TrajectoryAdaptor()
 (T_object_to_right_hand_base, 
  driven_hand_joint_pos, 
  right_hand_base_pos, 
- grasp_flag) = adaptor.parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
+ grasp_flag) = adaptor._parse_sim_trajectory(r'data/trajectory_data/sim_trajectory/coka_can_1017/step-0.npy')
 
 # Visualize the first step, relative transformation between the object and right hand base
 adaptor.frame_manager.visualize_transformation("object_sim", "right_hand_base_sim")

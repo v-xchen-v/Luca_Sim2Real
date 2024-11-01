@@ -7,6 +7,10 @@ from scipy.spatial.transform import Rotation as R
 from pytransform3d.transformations import concat, invert_transform
 from pytransform3d.transformations import (     transform_from_pq, pq_from_transform, concat )
 import os
+from trajectory_processing.trajectory_visualization_utils import animate_3d_transformation_over_steps
+from coordinates.visualization_utils import _visualize_frames
+from coordinates.visualization_utils import visualize_frames
+from coordinates.transformation_utils import matrix_to_xyz_quaternion
 
 """
 Steps:
@@ -93,7 +97,20 @@ class TrajectoryAdaptor:
         self.camera_intrinsic = self.calibration_data.get("camera_intrinsic")
         self.T_camera_to_robot = np.array(self.calibration_data.get("T_camera_to_robot"))
         self.T_table_to_camera = None  # To be computed in dynamic calibration
-
+        
+        # store intermediate transformation
+        ## sim trajectory transformation
+        self.driven_hand_pos_sim, self.right_hand_base_in_world_sim, self.object_pos_in_world_sim, self.grasp_flag_sims = None, None, None, None
+        self.T_right_hand_base_to_object_steps_in_sim = None
+        
+        ## sim2real mapping
+        self.T_right_hand_base_steps_to_object_in_real = None
+        
+        ## mapped real trajectory
+        self.T_right_hand_base_to_robot_base_steps_real = None
+        self.T_hand_to_robotbase_with_robotbase_ref = None
+        
+        
     def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
         from calibration.calibration_data_utils import get_calibration_data
         self.calibration_data = get_calibration_data(calibration_data_dir, overwrite_if_exists, calibration_board_info, error_threshold)
@@ -108,19 +125,297 @@ class TrajectoryAdaptor:
         # if not self.frame_manager.frames_connected(transform_added_frames):
         #     raise ValueError("Transformations between calibration board, camera, robot base not computed. Compute them first.")
 
+# ----------------- public interface of sim trajectory handling -----------------#
+    def load_sim_traj_and_transform_hand_to_object(self, traj_npy_file):
+        self.driven_hand_pos_sim, self.right_hand_base_in_world_sim, self.object_pos_in_world_sim, self.grasp_flag_sims = \
+            self._parse_sim_trajectory(traj_npy_file)
+        self.T_right_hand_base_to_object_steps_in_sim = self._compute_right_hand_base_to_object_steps_in_sim(
+            self.right_hand_base_in_world_sim,
+            self.object_pos_in_world_sim
+        )
+        
+    def visualize_sim_world_object_hand_initial_step_transformation(self):
+        from coordinates.visualization_utils import visualize_frames
+        world_to_object = self.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+        object_to_right_base = self.frame_manager.get_transformation("object_sim", "right_hand_base_sim")
+        visualize_frames(
+            # wrong as :[np.eye(4), world_to_object, world_to_object@object_to_right_base],
+            [np.eye(4), world_to_object, object_to_right_base@world_to_object],
+            ["sim_world", "object_in_world", "hand_in_world"],
+            limits=[[-0.5, 0.5],
+                    [-0.5, 0.5],
+                    [-0.5, 0.5]])
+    
+    def animate_sim_hand_approach_object(self, first_n_steps: int=None):
+        def _anim_hand_approach_object_in_sim(ax, step: int):
+            T_world_to_object = self.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
+            transformation = self.T_right_hand_base_to_object_steps_in_sim[step]
+
+            _visualize_frames(ax, {
+                "sim_world": np.eye(4),
+                "object_sim": T_world_to_object,
+                "right_hand_base_sim":  invert_transform(transformation) @ T_world_to_object
+                
+                # TODO: figure out why
+                # "object_sim": np.eye(4),
+                # "right_hand_base_sim": transformation do not respect the relative pos of object to hand?
+            }, limits=[[-0.5, 0.5],
+                    [-0.5, 0.5],
+                    [-0.5, 0.5]])
+            
+        if first_n_steps is None:
+            num_steps = int(len(self.T_right_hand_base_to_object_steps_in_sim))
+        else:
+            num_steps = int(first_n_steps)
+        animate_3d_transformation_over_steps(
+            num_transformation_steps=num_steps, 
+            visualization_func=_anim_hand_approach_object_in_sim,
+        )
+# ----------------- public interface of sim trajectory handling -----------------#
+
+# ----------------- public interface of building transforms between robot(base and cam) and table -----------------#
+    def calculate_arm_table_robot_transform(self, 
+                                            calibration_data_dir: str, 
+                                            overwrite_if_exists: bool=False, 
+                                            calibration_board_info: dict=None):
+        self._get_calibration_data(
+            calibration_data_dir=calibration_data_dir,
+            overwrite_if_exists=overwrite_if_exists,
+            calibration_board_info=calibration_board_info
+        )
+        self._add_transfromations_with_calibration()
+        
+    def visualize_arm_table_robot_transform(self):
+        visualize_frames(
+            [
+                np.eye(4), # assuming calibration board is np.eye(4)
+                self.frame_manager.get_transformation("calibration_board_real", "camera_real"),
+                # adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real") @ adaptor.frame_manager.get_transformation("camera_real", "robot_base_real"),
+                self.frame_manager.get_transformation("calibration_board_real", "robot_base_real"),
+                ], 
+            ["calibration_board_real", "camera_real", "robot_base_real"])
+        
+# ----------------- public interface of building transforms between robot(base and cam) and table -----------------#
+     
+# --------------------------public interface of object pose locating --------------------------#
+    def locate_object_in_calibration_board_coords(self, 
+                                                  scene_data_save_dir, 
+                                                  scene_data_file_name,
+                                                  x_keep_range, 
+                                                  y_keep_range, 
+                                                  z_keep_range,
+                                                  object_modeling_file_path,
+                                                  overwrite_scene_table_calib_data_if_exists=False, 
+                                                  calibration_board_info = None,
+                                                  camera_intrinsics_data_dir=None,
+                                                  T_calibration_board_to_camera=None,
+                                                  euler_xyz=None,
+                                                  vis_scene_point_cloud_in_cam_coord=True,
+                                                  vis_scene_point_cloud_in_board_coord=True,
+                                                  vis_filtered_point_cloud_in_board_coord=True,
+                                                  ):
+        if euler_xyz is None:
+            # TODO: use ICP to got the ori
+            raise ValueError("Euler angles for object pose in real world are required.")
+        
+        self._setup_readable_frame() # TODO: readable frame is a TODO feature for human readable, now it's same as calibration board frame.
+        
+        if T_calibration_board_to_camera is None:
+            # then, should use the new grab scene rgb image to compute the T_calibration_board_to_camera
+            if camera_intrinsics_data_dir is None or calibration_board_info is None:
+                raise ValueError("Calibration board info and camera intrinsics data are required to compute T_calibration_board_to_camera.")
+            
+        object_xyz = self._locating_object_position_with_point_cloud(
+            scene_data_save_dir=scene_data_save_dir,
+            scene_data_file_name=scene_data_file_name,
+            x_keep_range=x_keep_range,
+            y_keep_range=y_keep_range,
+            z_keep_range=z_keep_range,
+            object_modeling_file_path=object_modeling_file_path,
+            overwrite_table_calib_data_if_exists=overwrite_scene_table_calib_data_if_exists,
+            calibration_board_info=calibration_board_info,
+            camera_intrinsics_data_dir=camera_intrinsics_data_dir,
+            T_calibration_board_to_camera=T_calibration_board_to_camera,
+            vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
+            vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
+            vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
+        )
+        
+        T_board_to_object = create_transformation_matrix(object_xyz, R.from_euler("XYZ", euler_xyz).as_matrix())
+        T_object_in_readable = T_board_to_object
+        T_object_to_readable = invert_transform(T_object_in_readable)
+        self.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)
+      
+    def visualize_object_in_real(self):
+        from coordinates.visualization_utils import visualize_frames
+        T_readable_real_to_object_real = self.frame_manager.get_transformation("readable_real", "object_real") # or aka, T_object_world_to_object
+        visualize_frames(
+            [np.eye(4), T_readable_real_to_object_real],
+            ["readable_real", "object_real"],
+            limits=[[-0.5, 0.5],
+                    [-0.5, 0.5],
+                    [-0.5, 0.5]])
+# --------------------------public interface of object pose locating --------------------------#
+
+
+# --------------------------public interface of sim2real mapping --------------------------#
+    def map_sim_to_real_handbase_object(self):
+        if self.T_right_hand_base_to_object_steps_in_sim is None:
+            raise ValueError("Simulator trajectory not loaded. Load the simulator trajectory first.")
+
+        self.T_right_hand_base_steps_to_object_in_real = self._bridge_real_sim_with_object(self.T_right_hand_base_to_object_steps_in_sim)
+
+    def animate_hand_approach_object_in_real(self, first_n_steps: int=None):
+        def _anim_hand_approach_object_in_real(ax, step: int):
+            transformation = self.T_right_hand_base_to_object_steps_in_sim[step]
+            T_world_to_robot_base = self.frame_manager.get_transformation("readable_real", "robot_base_real")   
+            T_object_to_right_hand = invert_transform(transformation)
+            T_real_world_to_object_real = self.frame_manager.get_transformation("readable_real", "object_real")
+            T_A_changed = create_relative_transformation(self.frame_manager.get_transformation("sim_world", "object_sim"), T_real_world_to_object_real)
+            
+            T_readable_to_right_hand_base = T_A_changed @ T_object_to_right_hand  @ self.frame_manager.get_transformation("sim_world", "object_sim")
+            # T_right_hand_base_to_robot_base_stepi_real = create_relative_transformation(
+            #     T_readable_to_right_hand_base,
+            #     T_world_to_robot_base
+            # )
+            
+            
+            _visualize_frames(
+                ax, {
+                        # 'world_real': np.eye(4),
+                        "readable_real": np.eye(4),
+                        'object_real': T_real_world_to_object_real,
+                        'right_hand_base':T_readable_to_right_hand_base,
+                        'robot_base_real': T_world_to_robot_base,
+                    }
+            )
+        
+        if first_n_steps is None:
+            num_steps = int(len(self.T_right_hand_base_to_object_steps_in_sim))
+        else:
+            num_steps = int(first_n_steps)
+        animate_3d_transformation_over_steps(num_steps, _anim_hand_approach_object_in_real)
+# --------------------------public interface of sim2real mapping --------------------------#
+           
+# -----------------------public interface of computing transform in mapped real-----------------------#
+    def compute_mapped_real_hand_to_robot_base_transform(self):
+        T_object_real_to_robot_base = self.frame_manager.get_transformation("object_real", "robot_base_real")
+        self.T_right_hand_base_to_robot_base_steps_real = [concat(T, T_object_real_to_robot_base) 
+                                                           for T in self.T_right_hand_base_steps_to_object_in_real]
+
+    def animate_hand_to_base_in_real(self, first_n_steps: int=None):
+        def _anim_hand_to_base_in_real(ax, i):
+            transformation = self.T_right_hand_base_to_robot_base_steps_real[i]
+            T_world_to_object = self.frame_manager.get_transformation("readable_real", "object_real") # or aka, T_object_world_to_object
+            T_world_to_robot_base = self.frame_manager.get_transformation("readable_real", "robot_base_real")
+            T_robot_base_to_hand_base = invert_transform(transformation)
+            _visualize_frames(
+                ax, {
+                        'readable_real': np.eye(4),
+                        'object_real': T_world_to_object,
+                        'robot_base_real': T_world_to_robot_base,
+                        'hand_base_real': T_robot_base_to_hand_base@T_world_to_robot_base
+                    }
+            )
+            
+        if first_n_steps is None:
+            num_steps = int(len(self.T_right_hand_base_to_robot_base_steps_real))
+        else:
+            num_steps = int(first_n_steps)
+        animate_3d_transformation_over_steps(num_steps, _anim_hand_to_base_in_real)
+        
+    def get_hand_to_robotbase_transform_with_robotbase_reference(self):
+        """Using the robot base as np.eye(4) to get the hand to robot base transformation,
+        which is the setting when executating trajectory by inverse kinematic in URDF which
+        use robot base as first frame."""
+        
+        # Save the transformation between robot_right_hand_base to robot_base in real world and joint angles of hand
+        T_robot_base_A_Ap = create_relative_transformation(
+            self.frame_manager.get_transformation("readable_real", "robot_base_real"),
+            np.eye(4))# robot base -> np.eye(4), A->A'
+
+        self.T_hand_to_robotbase_with_robotbase_ref = [T_robot_base_A_Ap@invert_transform(T)@invert_transform(T_robot_base_A_Ap) 
+                                                    for T in self.T_right_hand_base_to_robot_base_steps_real]
+
+# -----------------------public interface of computing transform in mapped real-----------------------#
+
+    def _setup_readable_frame(self):
+        # TODO: now readable_real is same as calibration board coordinate, it could be some world coordinate later when we have more frames.
+        calibration_board_frame = np.array([[1, 0, 0, 0],
+                                            [0, 1, 0, 0],
+                                            [0, 0, 1, 0],
+                                            [0, 0, 0, 1]])
+        readable_real_frame = np.eye(4)
+        from coordinates.transformation_utils import create_relative_transformation, create_transformation_matrix
+        from scipy.spatial.transform import Rotation as R
+        T_readable_real_to_calibration_board = create_relative_transformation(readable_real_frame, calibration_board_frame)
+        self.frame_manager.add_transformation("readable_real", "calibration_board_real", T_readable_real_to_calibration_board)
+         
+    
+    def _locating_object_position_with_point_cloud(self, 
+                                          scene_data_save_dir, 
+                                          scene_data_file_name,
+                                          x_keep_range, 
+                                          y_keep_range, 
+                                          z_keep_range,
+                                          object_modeling_file_path,
+                                          overwrite_table_calib_data_if_exists, 
+                                          calibration_board_info, 
+                                          camera_intrinsics_data_dir,
+                                          T_calibration_board_to_camera,
+                                            vis_filtered_point_cloud_in_board_coord,
+                                            vis_scene_point_cloud_in_board_coord,
+                                            vis_scene_point_cloud_in_cam_coord):
+        # using point cloud to locate the position of object in real world
+        t_board_to_object = None
+        from pointcloud_processing.object_locator import ObjectPositionLocator
+        object_locator = ObjectPositionLocator(
+            scene_data_save_dir=scene_data_save_dir,
+            scene_data_file_name=scene_data_file_name,
+            camera_intrinsics_data_dir=camera_intrinsics_data_dir,
+            calibration_board_info=calibration_board_info,
+            report_dir=scene_data_save_dir,
+            object_modeling_file_path=object_modeling_file_path,
+            overwrite_if_exists=overwrite_table_calib_data_if_exists,
+            vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
+            vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
+            vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
+            T_calibration_board_to_camera=T_calibration_board_to_camera
+            )
+
+        object_center = object_locator.locate_partial_view_object_position(
+            x_range=x_keep_range,
+            y_range=y_keep_range,
+            z_range=z_keep_range,
+        )
+        print(f"Object center position: {object_center}")
+        fine_object_center = fine_object_center = object_locator.locate_object_position()
+        print(f'Fine object center position: {fine_object_center}')
+        t_board_to_object = fine_object_center
+        return t_board_to_object
+        
+        
     def object_setup(self):
         pass
-    
-    def map_sim_to_real(self):
-        """Load simulated trajectory contraints and apply to real world"""
-        pass
+
         
-    def save_executable_trajectory(self, adapted_trajectory_save_path: str, adapted_trajectory: np.ndarray):
-        # TODO: add trajectory data shape check here
+    def save_executable_trajectory(self, adapted_trajectory_save_path: str):
+        T_robot_base_to_right_hand_base_steps_real_xyzq = [matrix_to_xyz_quaternion(T) for 
+                                                     T in self.T_hand_to_robotbase_with_robotbase_ref]
+
+        
+        # concat 
+        ## T_robot_right_hand_real_to_robot_step [num_steps, 7]
+        ## driven_hand_pos_sim [num_steps, 6]
+        ## and grasp grasp_flag_sims [num_steps, 1]
+        adapted_real_trajectory_data = np.concatenate([T_robot_base_to_right_hand_base_steps_real_xyzq, 
+                                         self.driven_hand_pos_sim, 
+                                         self.grasp_flag_sims], axis=1)
+
         
         if not os.path.exists(os.path.dirname(adapted_trajectory_save_path)):
             os.makedirs(os.path.dirname(adapted_trajectory_save_path))
-        np.save(adapted_trajectory_save_path, adapted_trajectory)
+        np.save(adapted_trajectory_save_path, adapted_real_trajectory_data)
                 
     def _compute_transformations_with_calibration_data(self):
         """
@@ -317,7 +612,7 @@ class TrajectoryAdaptor:
         self.frame_manager.add_transformation("sim_world", "right_hand_base_sim", right_hand_base_in_world_frame0)
         pass
         
-    def parse_sim_trajectory(self, traj_npy_file):
+    def _parse_sim_trajectory(self, traj_npy_file):
         """Parse the trajectory from the simulator and compute the relative transformation between the object to right hand base.
         
         Build up:
@@ -343,38 +638,38 @@ class TrajectoryAdaptor:
         # Return the relative transformation
         return driven_hand_joint_pos_sim, right_hand_base_in_world_sim, object_pos, grasp_flag_sim
 
-    def compute_constrained_object_relative_to_right_hand_base(self):
-        """
-        Aim to compute the right hand base to robot base transformation in real world.
+    # def compute_constrained_object_relative_to_right_hand_base(self):
+    #     """
+    #     Aim to compute the right hand base to robot base transformation in real world.
         
-        Map sim to real by containing the transformation between object and right_hand_base the same in both simulator and real world.
-        Known the transformation between the object and the right-hand base in the simulator and object to robot base in real world. 
-        Compute the right hand base position in real world constrained to maintain the same relative position between the object and the right-hand base in both real and simulated worlds.
+    #     Map sim to real by containing the transformation between object and right_hand_base the same in both simulator and real world.
+    #     Known the transformation between the object and the right-hand base in the simulator and object to robot base in real world. 
+    #     Compute the right hand base position in real world constrained to maintain the same relative position between the object and the right-hand base in both real and simulated worlds.
         
-        Parameters:
-        - T_object_to_right_hand_base: 4x4 matrix of simulator's right hand base relative to object.
+    #     Parameters:
+    #     - T_object_to_right_hand_base: 4x4 matrix of simulator's right hand base relative to object.
         
-        Returns:
-        - T_right_hand_base_real_to_robot_base: 4x4 matrix of real world's right hand base relative to robot base.
-        """
-        # # check the should known transformations
-        # if self.frame_manager.get_transformation("object_real", "real_world") is None:
-        #     raise ValueError("Object to real world transformation not found. Perform object setup first.")
+    #     Returns:
+    #     - T_right_hand_base_real_to_robot_base: 4x4 matrix of real world's right hand base relative to robot base.
+    #     """
+    #     # # check the should known transformations
+    #     # if self.frame_manager.get_transformation("object_real", "real_world") is None:
+    #     #     raise ValueError("Object to real world transformation not found. Perform object setup first.")
         
-        # if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
-        #     raise ValueError("Right hand base to object transformation in simulator not found.")
+    #     # if self.frame_manager.get_transformation("right_hand_base_sim", "object_sim") is None:
+    #     #     raise ValueError("Right hand base to object transformation in simulator not found.")
         
-        # check the input transformation
-        T_right_hand_base_sim_to_object = self.frame_manager.get_transformation("right_hand_base_sim", "object_sim")
-        if T_right_hand_base_sim_to_object is None:
-            raise ValueError("Transformation between right hand base and object in simulator is required.")
+    #     # check the input transformation
+    #     T_right_hand_base_sim_to_object = self.frame_manager.get_transformation("right_hand_base_sim", "object_sim")
+    #     if T_right_hand_base_sim_to_object is None:
+    #         raise ValueError("Transformation between right hand base and object in simulator is required.")
         
-        self.frame_manager.add_transformation("right_hand_base_step0_real", "object_real", T_right_hand_base_sim_to_object)
-        T_right_hand_base_real_to_robot_base = self.frame_manager.get_transformation("right_hand_base_step0_real", "robot_base_real")
-        if T_right_hand_base_real_to_robot_base is None:
-            raise ValueError("Right hand base to robot base transformation in real world not found.")
+    #     self.frame_manager.add_transformation("right_hand_base_step0_real", "object_real", T_right_hand_base_sim_to_object)
+    #     T_right_hand_base_real_to_robot_base = self.frame_manager.get_transformation("right_hand_base_step0_real", "robot_base_real")
+    #     if T_right_hand_base_real_to_robot_base is None:
+    #         raise ValueError("Right hand base to robot base transformation in real world not found.")
         
-        return T_right_hand_base_real_to_robot_base
+    #     return T_right_hand_base_real_to_robot_base
         
         # if self.T_table_to_camera is None:
         #     raise ValueError("Table-to-Camera transformation not set. Perform calibration first.")
@@ -387,7 +682,7 @@ class TrajectoryAdaptor:
         # T_sim_to_real = T_table_to_robot @ T_sim_world_to_table
         # return T_sim_to_real
 
-    def compute_right_hand_base_to_object_steps_in_sim(self, right_hand_base_in_world_sim, object_pos):
+    def _compute_right_hand_base_to_object_steps_in_sim(self, right_hand_base_in_world_sim, object_pos):
         """
         Known the relative pos between object and right hand base at initial in simulator, 
         And Given the right hand base positions on world coordinate in simulator,
@@ -402,7 +697,7 @@ class TrajectoryAdaptor:
         
         # _, right_hand_base_in_world_sim, object_pos, _ = self._parse_sim_trajectory_file(traj_npy_file)
          
-        def compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, step_i):
+        def _compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, step_i):
             # In the first step, compute relative transformation of object to right hand base
             object_pos_0 = object_pos[0, :]
             right_hand_base_in_world_frame0 = right_hand_base_in_world_sim[step_i, :]
@@ -418,7 +713,10 @@ class TrajectoryAdaptor:
             # T_right_hand_base_sim_to_object = concat(invert_transform(right_hand_base_in_world_frame0), object_in_world_frame0)
             return T_right_hand_base_sim_to_object
             
-        T_right_hand_base_steps_to_object_in_sim = [compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, i) for i in range(len(right_hand_base_in_world_sim))]
+        T_right_hand_base_steps_to_object_in_sim = [_compute_right_hand_base_to_object_stepi_in_sim(right_hand_base_in_world_sim, object_pos, i) for i in range(len(right_hand_base_in_world_sim))]
+        
+        # store the intermediate transformation in the class
+        self.T_right_hand_base_steps_to_object_in_sim = T_right_hand_base_steps_to_object_in_sim
         return T_right_hand_base_steps_to_object_in_sim
             
         

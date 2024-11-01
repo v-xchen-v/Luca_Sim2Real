@@ -14,9 +14,9 @@ from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
 from coordinates.transformation_utils import concat
 from pytransform3d.transformations import invert_transform
-from trajectory_processing.trajectory_visualization import plot_trajectory_xyz_over_steps
+from trajectory_processing.trajectory_visualization_utils import plot_trajectory_xyz_over_steps
 from coordinates.transformation_utils import matrix_to_xyz_quaternion
-from trajectory_processing.trajectory_visualization import animate_3d_transformation_over_steps
+from trajectory_processing.trajectory_visualization_utils import animate_3d_transformation_over_steps
 from coordinates.transformation_utils import create_relative_transformation
 from coordinates.visualization_utils import _visualize_frames
 
@@ -40,7 +40,7 @@ adaptor = TrajectoryAdaptor()
 sim_traj_object_name = "orange_1024" # "orange_1024"
 sim_traj_file_basename = "step-0.npy"
 
-driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor.parse_sim_trajectory(
+driven_hand_pos_sim, right_hand_base_in_world_sim, object_pos_in_world_sim, grasp_flag_sims = adaptor._parse_sim_trajectory(
     f"data/trajectory_data/sim_trajectory/{sim_traj_object_name}/{sim_traj_file_basename}")
 
 # Visualize to make sure that the 'world', 'object', 'hand_base' in sim is built correctly same as in Isaac Gym
@@ -65,11 +65,11 @@ if VIS_SIM_WORLD_SETUP:
                 [-0.5, 0.5]])
 
 # Step 5: Build up 'object_sim', 'right_hand_base_sim' relative pos across steps
-T_right_hand_base_to_object_steps_in_sim = adaptor.compute_right_hand_base_to_object_steps_in_sim(
+T_right_hand_base_to_object_steps_in_sim = adaptor._compute_right_hand_base_to_object_steps_in_sim(
     right_hand_base_in_world_sim,
     object_pos_in_world_sim)
+
 if ANIM_HAND_APPROACH_OBJECT_SIM:
-    
     def anim_hand_approach_object_in_sim(ax, step: int):
         T_world_to_object = adaptor.frame_manager.get_transformation("sim_world", "object_sim") # or aka, T_object_world_to_object
         transformation = T_right_hand_base_to_object_steps_in_sim[step]
@@ -141,7 +141,7 @@ if VIS_CALIBRATION_TRANSFORMATIONS:
         ], 
     ["calibration_board_real", "camera_real", "robot_base_real"])
     
-    
+# Step 3: Locate object in real world   
 # adaptor.frame_manager.add_transformation("calibration_board_real", "robot_base") = 
 # Optional Step: Add a readable frame at same position but different orientation with calibration_board_real instead align with world coordinate axes for better visualization for debugging.
 calibration_board_frame = np.array([[1, 0, 0, 0],
