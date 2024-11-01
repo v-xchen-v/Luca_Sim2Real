@@ -22,6 +22,7 @@ class ObjectLocatorBase:
                  calibration_board_info: dict,
                  report_dir: str,
                  overwrite_if_exists: bool,
+                 T_calibration_board_to_camera: np.ndarray = None,
                  ) -> None:
         # store input arguments
         self.scene_data_save_dir = scene_data_save_dir
@@ -30,6 +31,7 @@ class ObjectLocatorBase:
         self.overwrite_if_exists = overwrite_if_exists
         self.calibration_board_info = calibration_board_info
         self.report_dir = report_dir
+        self.T_calibration_board_to_camera = T_calibration_board_to_camera
         
         # store intermediate data
         self.scene_image = None # BGR image
@@ -49,6 +51,12 @@ class ObjectLocatorBase:
         self.scene_point_cloud_in_camera_coord = load_point_cloud(
             f"{self.scene_data_save_dir}/{self.scene_data_file_name}.pcd")
     
+    def _get_transform_table_to_camera(self, T_calibration_board_to_camera: np.ndarray) -> np.ndarray:
+        if T_calibration_board_to_camera is None:
+            self.T_calibration_board_to_camera = self._process_scene_image()
+        else:
+            self.T_calibration_board_to_camera = T_calibration_board_to_camera
+        
     def _process_scene_image(self):
         """Find calibration board and do table """
         if self.scene_image is None:
@@ -63,6 +71,7 @@ class ObjectLocatorBase:
                                     dist=dist,
                                     report_dir=self.report_dir,
                                     error_threshold=0.15)
+        return self.T_calibration_board_to_camera
     
 class ObjectPositionLocator(ObjectLocatorBase):
     """
@@ -70,6 +79,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
     the ObjectPositionLocator will compute the object center position(xyz).
     
     Some object is same for grasp after rotation, so that only need locating position, not rotation.
+    
+    Table to camera calibration could do each time or used previous setup value at very initial time. Once the table is 
+    moved relative to camera, the calibration should be done again.
     """
     
     def __init__(self, 
@@ -87,14 +99,16 @@ class ObjectPositionLocator(ObjectLocatorBase):
                  vis_scene_point_cloud_in_cam_coord: bool = False,
                  vis_scene_point_cloud_in_board_coord: bool = False,
                  vis_filtered_point_cloud_in_cam_coord: bool = False,
+                 T_calibration_board_to_camera: np.ndarray = None
                  ) -> None:
         super().__init__(scene_data_save_dir, 
                          scene_data_file_name, 
                          camera_intrinsics_data_dir, 
                          calibration_board_info, 
                          report_dir, 
-                         overwrite_if_exists)
-        # input arguments
+                         overwrite_if_exists,
+                         T_calibration_board_to_camera)
+        # custom input arguments
         self.object_modeling_file_path = object_modeling_file_path
         
         # intermediate data
@@ -113,7 +127,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
                                save_filtered_point_cloud: bool = True) -> np.ndarray:
         self._capture_scene()
         self._load_scene()
-        self._process_scene_image()
+        self._get_transform_table_to_camera(self.T_calibration_board_to_camera)
         self._process_scene_pointcloud(x_range, y_range, z_range) # [num_points, 3]
         if self.filtered_scene_point_cloud_in_board_coord is None:
             raise ValueError("No object point cloud is found after filtering.")
@@ -122,6 +136,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
             if len(self.filtered_scene_point_cloud_in_board_coord) == 0:
                 raise ValueError("No points to save.")
             
+            # create directory if not exists
             np.save(f"{self.scene_data_save_dir}/{self.scene_data_file_name}_filtered_point_cloud.npy",
                     self.filtered_scene_point_cloud_in_board_coord)
             

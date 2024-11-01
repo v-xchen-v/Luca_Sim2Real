@@ -131,7 +131,7 @@ def align_source_to_target(source, target):
 
     # debugging visualization for visual centered source and target
     # visual centered source and target
-    if True:
+    if False:
         o3d.visualization.draw_geometries([source_centered, target_centered])
     
     # Restore both point clouds to their original positions
@@ -139,7 +139,7 @@ def align_source_to_target(source, target):
     restored_target = restore_point_cloud(target_centered, target_centroid)
 
     # debugging visualization for visual centered source and target
-    if True:
+    if False:
         o3d.visualization.draw_geometries([aligned_source, restored_target])
     
     return aligned_source, restored_target

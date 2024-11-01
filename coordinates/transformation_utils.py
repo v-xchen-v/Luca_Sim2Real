@@ -1,7 +1,6 @@
 # Transformation Matrices between frames
 
 import numpy as np
-import matplotlib.pyplot as plt
 from pytransform3d.transformations import plot_transform, concat
 from scipy.spatial.transform import Rotation as R
 
