@@ -3,6 +3,7 @@ Uses ICP to align and match the point cloud to the closest object from a list of
 """
 import open3d as o3d
 import numpy as np
+import os
 
 # TODO: put all candidates here, and do test
 candidate_pcbs = [
@@ -115,7 +116,7 @@ def restore_point_cloud(pcd, centroid):
     pcd.translate(centroid)  # Move back to the original position
     return pcd
 
-def align_source_to_target(source, target, vis_debug=False):
+def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=False, save_aligned_pcd_path=None):
     """Aligns the source point cloud to the target point cloud."""
     # source is modeling fullview point cloud, and target is paritial view in world
     
@@ -139,9 +140,20 @@ def align_source_to_target(source, target, vis_debug=False):
     restored_target = restore_point_cloud(target_centered, target_centroid)
 
     # debugging visualization for visual centered source and target
-    if vis_debug:
+    if vis_aligned:
         o3d.visualization.draw_geometries([aligned_source, restored_target])
     
+    if save_aligned_pcd:
+        combined_pcd = aligned_source + restored_target
+        # if save path is not provided, save to default path
+        if save_aligned_pcd_path is None:
+            save_aligned_pcd_path = 'combined_aligned_pcd.pcd'
+        
+        # if save folder not exist, create it
+        if not os.path.exists(os.path.dirname(save_aligned_pcd_path)):
+            os.makedirs(os.path.dirname(save_aligned_pcd_path))
+        o3d.io.write_point_cloud(save_aligned_pcd_path, combined_pcd)
+        print(f"Aligned point cloud saved to {save_aligned_pcd_path}")        
     return aligned_source, restored_target
 
 def align_and_restore(source, target):

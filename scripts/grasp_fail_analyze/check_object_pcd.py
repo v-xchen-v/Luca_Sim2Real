@@ -14,6 +14,7 @@ pcd_files = [
     "data/scene_data/orange_test_scene_data_1031_004_success/test_scene_filtered_point_cloud.npy",
     "data/scene_data/orange_test_scene_data_1031_005_success/test_scene_filtered_point_cloud.npy",
     "data/scene_data/orange_test_scene_data_1031_006_fail/test_scene_filtered_point_cloud.npy",
+    "data/scene_data/orange_test_scene_data_1031_007_fail/test_scene_filtered_point_cloud.npy",
     # Add more PCD files as needed
 ]
 
@@ -27,7 +28,8 @@ for i, pcd_file in enumerate(pcd_files):
 # For example: translate pcd2 along the x-axis
 pcd_fail_list = [
     pcd_list[0], 
-    pcd_list[5]
+    pcd_list[5],
+    pcd_list[6]
 ]
 for i, pcd in enumerate(pcd_list):
     pcd.translate((i, 0, 0))  # Adjust the translation as needed
