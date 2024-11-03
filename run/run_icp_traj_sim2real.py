@@ -67,9 +67,22 @@ scene_data_save_dir = [
     f"data/scene_data/orange_test_scene_data_{date_tip}",
     f"data/scene_data/coke_test_scene_data_{date_tip}",
     f"data/scene_data/realsense_box_test_scene_data_{date_tip}",
+    # "data/scene_data/realsense_box_test_scene_data_ver_1024"
 ]
 
-object_idx=1
+icp_rot_euler = [
+    False,
+    False,
+    True,
+]
+
+icp_rot_euler_limits = [
+    None,
+    None,
+    180,
+]
+
+object_idx=2
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
@@ -122,6 +135,8 @@ object_pos = real_traj_adaptor.locate_object_in_calibration_board_coords(
     z_keep_range=z_keep_range,
     T_calibration_board_to_camera=None,
     euler_xyz=euler_xyz,
+    locate_rot_by_icp=icp_rot_euler[object_idx],
+    icp_rot_euler_limit=icp_rot_euler_limits[object_idx]
 )
 real_traj_adaptor.visualize_object_in_real()
 
