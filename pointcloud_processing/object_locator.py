@@ -12,6 +12,7 @@ from pointcloud_processing.transformations import transform_point_cloud_from_cam
 from pytransform3d.transformations import invert_transform
 import os
 from pointcloud_processing.icp_matching import align_source_to_target
+from scipy.spatial.transform import Rotation as R   
 
 class ObjectLocatorBase:
     """Shared methods and attributes for ObjectPositionLocator and ObjectPoseLocator."""
@@ -113,6 +114,10 @@ class ObjectPositionLocator(ObjectLocatorBase):
         
         # intermediate data
         self.scene_point_cloud_in_board_coord = None
+        self.aligned_source = None
+        self.source_to_algined_rotation_matrix = None
+        
+        self.object_model_pcd = None
         
         # configure visualization
         self.vis_scene_point_cloud_in_camera_coord = vis_scene_point_cloud_in_cam_coord
@@ -152,6 +157,16 @@ class ObjectPositionLocator(ObjectLocatorBase):
     def _get_point_cloud_center(sekf, point_cloud: o3d.geometry.PointCloud) -> np.ndarray:
         return np.mean(np.asarray(point_cloud.points), axis=0)
 
+    def _load_object_model(self):
+        # Load point clouds 
+        object_model_points = np.load(self.object_modeling_file_path)
+        self.object_model_pcd = self._numpy_to_o3d(object_model_points)
+        
+    def _icp(self):
+        # Align and restore point clouds
+        self.aligned_source, restored_target, self.source_to_algined_rotation_matrix = align_source_to_target(self.object_model_pcd, 
+                                                                 self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord))
+    
     def locate_object_position(self):
         """
         Locate the object position by matching the known the partial view point cloud of the object to 
@@ -163,15 +178,13 @@ class ObjectPositionLocator(ObjectLocatorBase):
         if self.object_modeling_file_path is None or not os.path.exists(self.object_modeling_file_path):
             raise ValueError("No object modeling file is provided.")
         
-        # Load point clouds 
-        object_model_points = np.load(self.object_modeling_file_path)
-        object_model_pcd = self._numpy_to_o3d(object_model_points)
+        if self.object_model_pcd is None:
+            self._load_object_model()
         
-        # Align and restore point clouds
-        aligned_source, restored_target = align_source_to_target(object_model_pcd, 
-                                                                 self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord))
+        if self.aligned_source is None:
+            self._icp()
         
-        return self._get_point_cloud_center(aligned_source)
+        return self._get_point_cloud_center(self.aligned_source)
     
     def _show_pcd_in_window(self, point_cloud: o3d.geometry.PointCloud):
         # viewer = o3d.visualization.Visualizer()
@@ -243,7 +256,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
         if self.vis_filtered_point_cloud_in_board_coord:
             self._show_points_in_window(self.filtered_scene_point_cloud_in_board_coord)
         
-class ObjectPoseLocator(ObjectLocatorBase):
+class ObjectPoseLocator(ObjectPositionLocator):
     """
     Given a image and point cloud of scene include a table, a calibration board attach on table and a object on table,
     the ObjectPositionLocator will compute the object center position(xyz) and the rotation(xyzw) of object from 
@@ -254,16 +267,191 @@ class ObjectPoseLocator(ObjectLocatorBase):
                  scene_data_save_dir: str, 
                  scene_data_file_name: str, 
                  camera_intrinsics_data_dir: str,
-                 object_modeling_file_path:str,
-                 overwrite_if_exists: bool = False) -> None:
-        super().__init__(scene_data_save_dir, scene_data_file_name, camera_intrinsics_data_dir, overwrite_if_exists)
+                 R_calibration_board_to_object_placed_face_robot: np.ndarray,
+                 calibration_board_info: dict = {
+                     "pattern_size": (5, 8),
+                     "square_size": 0.03
+                    },
+                 object_modeling_file_path:str = None,
+                 report_dir: str = None,
+                 overwrite_if_exists: bool = False,
+                 vis_filtered_point_cloud_in_board_coord: bool = False,
+                 vis_scene_point_cloud_in_cam_coord: bool = False,
+                 vis_scene_point_cloud_in_board_coord: bool = False,
+                 vis_filtered_point_cloud_in_cam_coord: bool = False,
+                 T_calibration_board_to_camera: np.ndarray = None,
+                 ) -> None:
+        super().__init__(scene_data_save_dir,
+                        scene_data_file_name,
+                        camera_intrinsics_data_dir,
+                        calibration_board_info,
+                        object_modeling_file_path,
+                        report_dir,
+                        overwrite_if_exists,
+                        vis_filtered_point_cloud_in_board_coord,
+                        vis_scene_point_cloud_in_cam_coord,
+                        vis_scene_point_cloud_in_board_coord,
+                        vis_filtered_point_cloud_in_cam_coord,
+                        T_calibration_board_to_camera,)
 
+        """For a rotation matrix that transforms coordinates from an object’s model frame (likely
+        in a virtual or CAD-based environment) to its actual orientation in the real world (specifically 
+        when the object is positioned on a table, facing a robot)"""
+        self.R_calibration_board_to_object_placed_face_robot = R_calibration_board_to_object_placed_face_robot
+
+        # store itermediate data
+        self.R_object_placed_face_robot_to_current = None
     
-    def _load_object_model(self):
-        pass
+    # def _process_scene_pointcloud(self):
+    #     pass
+    def _process_rotation_object_modeling_to_scene(self):
+        """Object modeling coordinate is same as in isaac gym(not rotation at initial pose), so that
+        rotation from object modeling to object in scene is same as object in sim to object in real."""
+        
+        """Already known the rotation from calibration board to object in real when put on table and face 
+        to robot's eye.
+        """
+        
+        """object model -> rotate to place face to robot eye -> then rotate to CURRENT real object pose in world(np.eye(4)), 
+        the rotate to real object pose is what we want to know. named them A, B, C.
+        W->A->B->C, then known:
+        R_W_to_A = np.eye(3), assume putting object modeling in world without rotation.
+        R_W_to_B = R_calibration_board_to_object_placed_face_robot, when calibration board treat as first frame (np.eye(4)).
+        R_A_to_C = self.source_to_algined_rotation_matrix
+        We want to know R_B_to_C.
+        R_B_to_C = R_B_to_W * R_W_to_C = R_B_to_W * R_W_to_A * R_A_to_C 
+        
+        """
+        # R_B_to_C                                   R_A_to_C                                 
+        self.R_object_placed_face_robot_to_current = self.source_to_algined_rotation_matrix @ \
+                                                     np.linalg.inv(self.R_calibration_board_to_object_placed_face_robot) # R_B_to_W
     
-    def _process_scene_pointcloud(self):
-        pass
+    def _determine_B_axis_align_A_z(self, R_A_to_B: np.ndarray):
+        # Get the third column of R, representing A's z-axis in terms of B's coordinates
+        A_z_in_B = R_A_to_B[:, 2]
+
+        # Threshold for dominance (set to 0.9 for now)
+        threshold = 0.9
+
+        # Determine which axis of B aligns with A's z-axis
+        if abs(A_z_in_B[0]) > threshold:
+            # B\'s x-axis or negative to B\'s x-axis
+            aligned_axis = 'x' if A_z_in_B[0] > 0 else '-x'
+            # return 'x'
+        elif abs(A_z_in_B[1]) > threshold:
+            aligned_axis = 'y' if A_z_in_B[1] > 0 else '-y'
+            # return 'y'
+        elif abs(A_z_in_B[2]) > threshold:
+            aligned_axis = 'z' if A_z_in_B[2] > 0 else '-z'
+            # return 'z'
+        else:
+            aligned_axis = 'no single dominant axis alignment'
+            return None
+
+        print(f"A's z-axis aligns most closely with B': {aligned_axis}")
+        return aligned_axis
+
+    def _isolate_rotation_axis(self, R_A_to_B, axis='z'):
+        """
+        Zero out rotations around all axes except the specified one.
+        Parameters:
+            R (np.ndarray): Original 3x3 rotation matrix
+            axis (str): Axis to keep ('x', 'y', or 'z')
+        Returns:
+            np.ndarray: Modified 3x3 rotation matrix with rotation isolated to the specified axis
+        """
+        R_new = np.zeros_like(R_A_to_B)  # Start with a zero matrix
+        
+        if axis == 'x' or axis == '-x':
+            # Keep only the rotation around the x-axis
+            R_new[0, 0] = R_A_to_B[0, 0]
+            R_new[1, 1] = R_A_to_B[1, 1]
+            R_new[1, 2] = R_A_to_B[1, 2]
+            R_new[2, 1] = R_A_to_B[2, 1]
+            R_new[2, 2] = R_A_to_B[2, 2]
+            
+        elif axis == 'y' or axis == '-y':
+            # Keep only the rotation around the y-axis
+            R_new[0, 0] = R_A_to_B[0, 0]
+            R_new[0, 2] = R_A_to_B[0, 2]
+            R_new[1, 1] = R_A_to_B[1, 1]
+            R_new[2, 0] = R_A_to_B[2, 0]
+            R_new[2, 2] = R_A_to_B[2, 2]
+            
+        elif axis == 'z' or axis == '-z':
+            # Keep only the rotation around the z-axis
+            R_new[0, 0] = R_A_to_B[0, 0]
+            R_new[0, 1] = R_A_to_B[0, 1]
+            R_new[1, 0] = R_A_to_B[1, 0]
+            R_new[1, 1] = R_A_to_B[1, 1]
+            R_new[2, 2] = R_A_to_B[2, 2]
+            
+        else:
+            raise ValueError("Axis must be 'x', 'y', or 'z'")
+            
+        return R_new
+
+    def _limit_rotation_to_axis(self, rotation_matrix, axis, limit=90):
+        """Assume the object is rotation invariant around the z-axis every 90 degrees."""
+        xyz = R.from_matrix(rotation_matrix).as_euler('xyz', degrees=True)
+        def _limit_rotation_angle(angle, limit):
+            # if angle is positive, +360
+            if angle < 0:
+                angle += 360
+            
+            # if angle is greater than limit, %limit
+            if angle > limit:
+                angle %= limit
+                
+            return angle
+        
+        limit_dimension = {'x': 0, 'y': 1, 'z': 2}
+                        #    '-x': 0, '-y': 1, '-z': 2}
+        if axis in ['-x', '-y', '-z']:
+            axis = axis[1:]
+            xyz[limit_dimension[axis]] = -xyz[limit_dimension[axis]]
+        xyz[limit_dimension[axis]] = _limit_rotation_angle(xyz[limit_dimension[axis]], limit)
+        print(f"Continue rotation to {xyz[limit_dimension[axis]]} degrees around the {axis}-axis, \n\
+              or {xyz[limit_dimension[axis]]-limit} degrees around the -{axis} axis, \n\
+              after place object face to robot, then got current pose")
+        
+        return R.from_euler('xyz', xyz, degrees=True).as_matrix()
+        
+    def _locate_object_orientation(self):
+        self._process_rotation_object_modeling_to_scene()
+        
+        # if we only care the rotation across world(table, calibration board)'s z axis from place to current
+        # z_in_world = np.array([0, 0, 1])
+        R_world_to_placed_object = self.R_calibration_board_to_object_placed_face_robot
+        # z_placed_object = R_world_to_placed_object @ z_in_world
+        
+        aligned_axis = self._determine_B_axis_align_A_z(R_world_to_placed_object)
+        
+        if aligned_axis is None:
+            raise ValueError("No single dominant axis alignment. Please check the R_object_placed_face_robot_to_calibration_board.")
+        
+        R_worldz_object_placed_face_robot_to_current = self._isolate_rotation_axis(
+            self.R_object_placed_face_robot_to_current,
+            axis=aligned_axis)
+        
+        R_limited_worldz_object_placed_face_robot_to_current = self._limit_rotation_to_axis(
+            R_worldz_object_placed_face_robot_to_current, axis=aligned_axis, limit=90)
+        R_board_to_object_current = R_limited_worldz_object_placed_face_robot_to_current @ R_world_to_placed_object
+        return R_board_to_object_current
     
     def locate_object_pose(self):
-        pass
+        # locate object position first
+        self.locate_partial_view_object_position()
+        translation = self.locate_object_pose()
+        
+        if self.source_to_algined_rotation_matrix is None:
+            raise ValueError("No rotation matrix is computed.")
+
+        orientation = self._locate_object_orientation()
+        
+        pose = np.eye(4)
+        pose[:3, :3] = orientation
+        pose[:3, 3] = translation
+        return pose
+        
+        
