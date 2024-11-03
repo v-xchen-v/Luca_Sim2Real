@@ -213,6 +213,8 @@ class TrajectoryAdaptor:
                                                   vis_scene_point_cloud_in_cam_coord=True,
                                                   vis_scene_point_cloud_in_board_coord=True,
                                                   vis_filtered_point_cloud_in_board_coord=True,
+                                                  locate_rot_by_icp=False,
+                                                  icp_rot_euler_limit=None,
                                                   ):
         if euler_xyz is None:
             # TODO: use ICP to got the ori
@@ -225,23 +227,44 @@ class TrajectoryAdaptor:
             if camera_intrinsics_data_dir is None or calibration_board_info is None:
                 raise ValueError("Calibration board info and camera intrinsics data are required to compute T_calibration_board_to_camera.")
             
-        object_xyz = self._locating_object_position_with_point_cloud(
-            scene_data_save_dir=scene_data_save_dir,
-            scene_data_file_name=scene_data_file_name,
-            x_keep_range=x_keep_range,
-            y_keep_range=y_keep_range,
-            z_keep_range=z_keep_range,
-            object_modeling_file_path=object_modeling_file_path,
-            overwrite_table_calib_data_if_exists=overwrite_scene_table_calib_data_if_exists,
-            calibration_board_info=calibration_board_info,
-            camera_intrinsics_data_dir=camera_intrinsics_data_dir,
-            T_calibration_board_to_camera=T_calibration_board_to_camera,
-            vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
-            vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
-            vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
-        )
-        
-        T_board_to_object = create_transformation_matrix(object_xyz, R.from_euler("XYZ", euler_xyz).as_matrix())
+        if locate_rot_by_icp is False:
+            object_xyz = self._locating_object_position_with_point_cloud(
+                scene_data_save_dir=scene_data_save_dir,
+                scene_data_file_name=scene_data_file_name,
+                x_keep_range=x_keep_range,
+                y_keep_range=y_keep_range,
+                z_keep_range=z_keep_range,
+                object_modeling_file_path=object_modeling_file_path,
+                overwrite_table_calib_data_if_exists=overwrite_scene_table_calib_data_if_exists,
+                calibration_board_info=calibration_board_info,
+                camera_intrinsics_data_dir=camera_intrinsics_data_dir,
+                T_calibration_board_to_camera=T_calibration_board_to_camera,
+                vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
+                vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
+                vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
+            )
+            
+            T_board_to_object = create_transformation_matrix(object_xyz, R.from_euler("XYZ", euler_xyz).as_matrix())
+        else:
+            R_board_to_object_placed = R.from_euler("XYZ", euler_xyz).as_matrix()
+            T_board_to_object = self._locate_object_pose_with_point_cloud(
+                scene_data_save_dir=scene_data_save_dir,
+                scene_data_file_name=scene_data_file_name,
+                x_keep_range=x_keep_range,
+                y_keep_range=y_keep_range,
+                z_keep_range=z_keep_range,
+                object_modeling_file_path=object_modeling_file_path,
+                overwrite_table_calib_data_if_exists=overwrite_scene_table_calib_data_if_exists,
+                calibration_board_info=calibration_board_info,
+                camera_intrinsics_data_dir=camera_intrinsics_data_dir,
+                T_calibration_board_to_camera=T_calibration_board_to_camera,
+                vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
+                vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
+                vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
+                R_calibration_board_to_object_placed_face_robot=R_board_to_object_placed,
+                icp_rot_euler_limit = icp_rot_euler_limit,
+            )
+            
         T_object_in_readable = T_board_to_object
         T_object_to_readable = invert_transform(T_object_in_readable)
         self.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)
@@ -392,9 +415,51 @@ class TrajectoryAdaptor:
         fine_object_center = fine_object_center = object_locator.locate_object_position()
         print(f'Fine object center position: {fine_object_center}')
         t_board_to_object = fine_object_center
+        
+        
         return t_board_to_object
         
-        
+    def _locate_object_pose_with_point_cloud(self,
+                                             scene_data_save_dir, 
+                                            scene_data_file_name,
+                                            x_keep_range, 
+                                            y_keep_range, 
+                                            z_keep_range,
+                                            object_modeling_file_path,
+                                            overwrite_table_calib_data_if_exists, 
+                                            calibration_board_info, 
+                                            camera_intrinsics_data_dir,
+                                            T_calibration_board_to_camera,
+                                            vis_filtered_point_cloud_in_board_coord,
+                                            vis_scene_point_cloud_in_board_coord,
+                                            vis_scene_point_cloud_in_cam_coord,
+                                            R_calibration_board_to_object_placed_face_robot,
+                                            icp_rot_euler_limit):
+        # using point cloud to locate the position of object in real world
+        T_board_to_object = None
+        from pointcloud_processing.object_locator import ObjectPoseLocator
+        object_locator = ObjectPoseLocator(
+            scene_data_save_dir=scene_data_save_dir,
+            scene_data_file_name=scene_data_file_name,
+            camera_intrinsics_data_dir=camera_intrinsics_data_dir,
+            calibration_board_info=calibration_board_info,
+            report_dir=scene_data_save_dir,
+            object_modeling_file_path=object_modeling_file_path,
+            overwrite_if_exists=overwrite_table_calib_data_if_exists,
+            vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
+            vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
+            vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
+            T_calibration_board_to_camera=T_calibration_board_to_camera,
+            R_calibration_board_to_object_placed_face_robot=R_calibration_board_to_object_placed_face_robot,
+            icp_rot_euler_limit=icp_rot_euler_limit,
+            )
+
+        T_board_to_object = object_locator.locate_object_pose(
+            x_range=x_keep_range,
+            y_range=y_keep_range,
+            z_range=z_keep_range)
+        return T_board_to_object
+    
     def object_setup(self):
         pass
 
