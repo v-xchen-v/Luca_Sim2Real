@@ -442,7 +442,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
     def locate_object_pose(self):
         # locate object position first
         self.locate_partial_view_object_position()
-        translation = self.locate_object_pose()
+        translation = self.locate_object_position()
         
         if self.source_to_algined_rotation_matrix is None:
             raise ValueError("No rotation matrix is computed.")
