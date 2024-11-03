@@ -12,7 +12,7 @@ real_traj_adaptor = TrajectoryAdaptor()
 import numpy as np
 orange_upside_rot_eular = [-np.pi, 0, np.pi/2] # base on calibration board base coordinate
 # coke_object_rot_eular = [np.pi/2, -np.pi/2, 0] # for coke_1023
-coke_object_rot_eular = [-np.pi/2, np.pi/2, 0] # for coke_1030
+coke_object_rot_eular = [-np.pi/2, np.pi/2-np.pi/4, 0] # for coke_1030
 cube_rot_euler = [np.pi, 0, -np.pi/2] # 
 realsense_box_rot_euler = [np.pi, 0, np.pi/2]
 
@@ -33,7 +33,7 @@ real_traj_adaptor.calculate_arm_table_robot_transform(
         "square_size": CALIBRATION_BOARD_SQUARE_SIZE
     }
 )
-real_traj_adaptor.visualize_arm_table_robot_transform()
+# real_traj_adaptor.visualize_arm_table_robot_transform()
 # --------------------------------------------------------- #
 
 # ------------------- ICP sim2real ------------------- #
@@ -82,7 +82,7 @@ icp_rot_euler_limits = [
     180,
 ]
 
-object_idx=2
+object_idx=1
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
@@ -113,7 +113,7 @@ CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = True
 
 x_keep_range=[-0.45, -0.1]
 y_keep_range=[-0.05, 0.25]
-z_keep_range=[-1.0, 0.073]
+z_keep_range=[-0.5, 0.073]
 # euler_xyz = coke_object_rot_eular
 
 # locate object relative to calibration board
@@ -139,7 +139,7 @@ object_pos = real_traj_adaptor.locate_object_in_calibration_board_coords(
     icp_rot_euler_limit=icp_rot_euler_limits[object_idx]
 )
 print(f'object position: {object_pos[:, 3]}')
-# real_traj_adaptor.visualize_object_in_real()
+real_traj_adaptor.visualize_object_in_real()
 
 ## -------------------- Mapping Sim2Real with handbase to object transform -------------------- ##
 # sim2real
