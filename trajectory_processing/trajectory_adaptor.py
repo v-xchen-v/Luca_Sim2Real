@@ -268,7 +268,8 @@ class TrajectoryAdaptor:
         T_object_in_readable = T_board_to_object
         T_object_to_readable = invert_transform(T_object_in_readable)
         self.frame_manager.add_transformation("object_real", "readable_real", T_object_to_readable)
-      
+        return T_object_in_readable
+    
     def visualize_object_in_real(self):
         from coordinates.visualization_utils import visualize_frames
         T_readable_real_to_object_real = self.frame_manager.get_transformation("readable_real", "object_real") # or aka, T_object_world_to_object

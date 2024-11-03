@@ -19,12 +19,12 @@ realsense_box_rot_euler = [np.pi, 0, np.pi/2]
 
 # ------------------- Robot table setup ------------------- #
 # setup robot and table
-CAMERA_NAME = "camera1"
-CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS = False
-# CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
-# CALIBRATION_BOARD_SQUARE_SIZE = 0.02
-CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
-CALIBRATION_BOARD_SQUARE_SIZE = 0.03
+CAMERA_NAME = "camera2"
+CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS = True
+CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
+CALIBRATION_BOARD_SQUARE_SIZE = 0.02
+# CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
+# CALIBRATION_BOARD_SQUARE_SIZE = 0.03
 real_traj_adaptor.calculate_arm_table_robot_transform(
     calibration_data_dir=f"calibration/calibration_data/{CAMERA_NAME}",
     overwrite_if_exists=CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS, # Please overwrite if table is moved relative to camera
@@ -33,7 +33,7 @@ real_traj_adaptor.calculate_arm_table_robot_transform(
         "square_size": CALIBRATION_BOARD_SQUARE_SIZE
     }
 )
-# real_traj_adaptor.visualize_arm_table_robot_transform()
+real_traj_adaptor.visualize_arm_table_robot_transform()
 # --------------------------------------------------------- #
 
 # ------------------- ICP sim2real ------------------- #
@@ -106,14 +106,14 @@ real_traj_adaptor.load_sim_traj_and_transform_hand_to_object(sim_traj_filepath)
 scene_data_file_name = "test_scene"
 camera_intrinsics_data_dir = f"calibration/calibration_data/{CAMERA_NAME}/camera_intrinsics"
 # object_modeling_file_path = r'data/pointcloud_data/candidiate_objects/cube_055.npy'
-CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = False
-x_keep_range = [-0.13, 0]
-y_keep_range = [-0.05, 0.10]
-z_keep_range = [None, -0.011]
+CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = True
+# x_keep_range = [-0.13, 0]
+# y_keep_range = [-0.05, 0.10]
+# z_keep_range = [None, -0.011]
 
-# x_keep_range=[-0.20, 0]
-# y_keep_range=[-0.05, 0.10]
-# z_keep_range=[None, -0.02]
+x_keep_range=[-0.45, -0.1]
+y_keep_range=[-0.05, 0.25]
+z_keep_range=[-1.0, 0.073]
 # euler_xyz = coke_object_rot_eular
 
 # locate object relative to calibration board
@@ -128,7 +128,7 @@ object_pos = real_traj_adaptor.locate_object_in_calibration_board_coords(
     overwrite_scene_table_calib_data_if_exists=CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS,
     vis_scene_point_cloud_in_cam_coord=False,
     vis_scene_point_cloud_in_board_coord=False,
-    vis_filtered_point_cloud_in_board_coord=False,
+    vis_filtered_point_cloud_in_board_coord=True,
     object_modeling_file_path=object_modeling_file_path,
     x_keep_range=x_keep_range,
     y_keep_range=y_keep_range,
@@ -138,7 +138,8 @@ object_pos = real_traj_adaptor.locate_object_in_calibration_board_coords(
     locate_rot_by_icp=icp_rot_euler[object_idx],
     icp_rot_euler_limit=icp_rot_euler_limits[object_idx]
 )
-real_traj_adaptor.visualize_object_in_real()
+print(f'object position: {object_pos[:, 3]}')
+# real_traj_adaptor.visualize_object_in_real()
 
 ## -------------------- Mapping Sim2Real with handbase to object transform -------------------- ##
 # sim2real
@@ -148,7 +149,7 @@ real_traj_adaptor.map_sim_to_real_handbase_object()
 
 ## -------------------- Necessary transform computation in mapped real traj -------------------- ##
 real_traj_adaptor.compute_mapped_real_hand_to_robot_base_transform()
-real_traj_adaptor.animate_hand_to_base_in_real(first_n_steps=200/5)
+# real_traj_adaptor.animate_hand_to_base_in_real(first_n_steps=200/5)
 real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference()
 
 ## --------------------save real traj data-------------------- ##
