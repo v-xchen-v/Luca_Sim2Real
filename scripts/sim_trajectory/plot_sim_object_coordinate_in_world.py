@@ -13,7 +13,7 @@ from scipy.spatial.transform import Rotation as R
 from pytransform3d.transformations import invert_transform
 # import cv2
 
-traj_sim_data = np.load('data/trajectory_data/sim_trajectory/orange_1024/step-0.npy', allow_pickle=True)
+traj_sim_data = np.load('data/trajectory_data/sim_trajectory/cube_1023/step-0.npy', allow_pickle=True)
 # traj_sim_video = cv2.VideoCapture('data/trajectory_data/sim_trajectory/coka_can_1017/rl-video-step-0.mp4')
 
 # Extract the object position from the trajectory

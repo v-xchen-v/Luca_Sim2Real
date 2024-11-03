@@ -153,8 +153,10 @@ def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=F
         if not os.path.exists(os.path.dirname(save_aligned_pcd_path)):
             os.makedirs(os.path.dirname(save_aligned_pcd_path))
         o3d.io.write_point_cloud(save_aligned_pcd_path, combined_pcd)
-        print(f"Aligned point cloud saved to {save_aligned_pcd_path}")        
-    return aligned_source, restored_target
+        print(f"Aligned point cloud saved to {save_aligned_pcd_path}") 
+               
+    source_to_aligned_rotation_matrix = transformation[:3, :3]
+    return aligned_source, restored_target, source_to_aligned_rotation_matrix
 
 def align_and_restore(source, target):
     # Step 1: Center both point clouds at the origin
