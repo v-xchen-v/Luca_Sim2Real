@@ -1,0 +1,33 @@
+# Note: install miniconda insteal of conda to avoid pinocchio installation issue
+
+cd /tmp
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash ./Minixxx
+
+# Optional
+nano ~/.bashrc
+alias conda='~/miniconda3/bin/conda'
+
+conda update conda
+#conda create -n py310 python=3.10
+conda create -n py38 python=3.8
+
+conda install conda-forge::pinocchio
+conda install pyyaml # no module yaml
+conda install scipy # no scipy related
+conda install rospkg # no rospky module
+conda install casadi
+conda install empy # no module name em
+
+# Optional
+# rm project/devel project/build
+
+### RuntimeError: module compiled against API version 0xf but this version of numpy is 0xe
+pip install --upgrade numpy # a dependent package depend on a high verison of numpy
+catkin_make DPYTHON_EXECUTABLE='~/miniconda3/envs/py38/bin/python'
+source /opt/ros/noetic/setup.bash # no package rospy
+source ~/devel/setup.bash
+
+pip install catkin_pkg # ImportError: No module named catkin_pkg.packages
+
+# And you can continue pip install the dependent packages in ../setup.py
