@@ -1,0 +1,3 @@
+[submodule "MSRA_SRobot_core"]
+	path = MSRA_SRobot_core
+	url = git@github.com:chlxydl/MSRA_SRobot_core.git
