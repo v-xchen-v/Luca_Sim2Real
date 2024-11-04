@@ -122,7 +122,7 @@ icp_rot_euler_limits = [
     360,
 ]
 
-object_idx=7
+object_idx=-1
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
