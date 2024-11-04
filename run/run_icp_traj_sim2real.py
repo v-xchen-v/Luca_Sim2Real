@@ -13,12 +13,12 @@ import numpy as np
 orange_upside_rot_eular = [-np.pi, 0, np.pi/2] # base on calibration board base coordinate
 # coke_object_rot_eular = [np.pi/2, -np.pi/2, 0] # for coke_1023
 coke_object_rot_eular = [-np.pi/2, np.pi/2-np.pi/4, 0] # for coke_1030
-cube_rot_euler = [np.pi, 0, -np.pi/2] # 
+cube_rot_euler = [np.pi, 0, np.pi/2] # 
 realsense_box_rot_euler = [np.pi, 0, np.pi/2]
 cube_rot_euler = [-np.pi, 0, 0] # for cube_1023
 bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
 sunscreen_rot_euler = [np.pi/2, 0, 0] # for sunscreen_1101
-# bleach_cleanser_rot_euler = [0, -np.pi/2, 0] # for bleach_cleanser_1030
+bleach_cleanser_rot_euler = [0, -np.pi/2, 0] # for bleach_cleanser_1030
 hammer_rot_euler = [np.pi/2, 0, 0] # for hammer_1102
 
 
@@ -48,7 +48,7 @@ sim_traj_object_names = [
     'orange_1024', # worked
     'coke_can_1030',
     'realsense_box_1024',
-    'cube_1023',
+    'cube_055_1103',
     'bottle_coconut_1101',
     'sunscreen_1101',
     # "bleach_cleanser_1030",
@@ -123,7 +123,7 @@ icp_rot_euler_limits = [
 ]
 
 # The cleanser is hard to do icp since the poor object point cloud quality
-object_idx=-2
+object_idx=3
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
