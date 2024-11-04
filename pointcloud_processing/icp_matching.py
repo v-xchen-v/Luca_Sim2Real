@@ -156,7 +156,7 @@ def icp_align(source, target, threshold=0.01, max_iterations=50):
     print("ICP Fitness:", reg_p2p.fitness)
     print("ICP Transformation:\n", reg_p2p.transformation)
 
-    return reg_p2p.transformation
+    return reg_p2p.transformation, reg_p2p.fitness, reg_p2p.inlier_rmse
 
 def restore_point_cloud(pcd, centroid):
     """Restores the point cloud to its original position."""
@@ -172,7 +172,7 @@ def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=F
     target_centered, target_centroid = center_point_cloud(target)
 
     # Perform ICP alignment on centered point clouds
-    transformation = icp_align(source_centered, target_centered)
+    transformation, fitness, rmse = icp_align(source_centered, target_centered)
 
     # Apply transformation to the original (non-centered) source
     source_centered.transform(transformation)
@@ -211,7 +211,7 @@ def align_and_restore(source, target):
     target_centered, target_centroid = center_point_cloud(target)
 
     # Step 2: Perform ICP alignment on centered point clouds
-    transformation = icp_align(source_centered, target_centered)
+    transformation, fitness, rmse = icp_align(source_centered, target_centered)
 
     # Step 3: Apply transformation to the original (non-centered) source
     source_centered.transform(transformation)

@@ -33,7 +33,7 @@ pcd_fail_list = [
 ]
 
 
-from pointcloud_processing.icp_matching import icp_align, align_source_to_target
+from pointcloud_processing.icp_matching import align_source_to_target
 object_modeling_file_path = r'data/pointcloud_data/candidiate_objects/orange.npy'
 object_fullview_pcd = load_npy_file_as_point_cloud(object_modeling_file_path)
 
