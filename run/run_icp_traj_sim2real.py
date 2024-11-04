@@ -15,16 +15,21 @@ orange_upside_rot_eular = [-np.pi, 0, np.pi/2] # base on calibration board base 
 coke_object_rot_eular = [-np.pi/2, np.pi/2-np.pi/4, 0] # for coke_1030
 cube_rot_euler = [np.pi, 0, -np.pi/2] # 
 realsense_box_rot_euler = [np.pi, 0, np.pi/2]
+cube_rot_euler = [-np.pi, 0, 0] # for cube_1023
+bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
+sunscreen_rot_euler = [np.pi/2, 0, 0] # for sunscreen_1101
+# bleach_cleanser_rot_euler = [0, -np.pi/2, 0] # for bleach_cleanser_1030
+hammer_rot_euler = [np.pi/2, 0, 0] # for hammer_1102
 
 
 # ------------------- Robot table setup ------------------- #
 # setup robot and table
-CAMERA_NAME = "camera2"
+CAMERA_NAME = "camera1"
 CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS = True
-CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
-CALIBRATION_BOARD_SQUARE_SIZE = 0.02
-# CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
-# CALIBRATION_BOARD_SQUARE_SIZE = 0.03
+# CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
+# CALIBRATION_BOARD_SQUARE_SIZE = 0.02
+CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
+CALIBRATION_BOARD_SQUARE_SIZE = 0.03
 real_traj_adaptor.calculate_arm_table_robot_transform(
     calibration_data_dir=f"calibration/calibration_data/{CAMERA_NAME}",
     overwrite_if_exists=CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS, # Please overwrite if table is moved relative to camera
@@ -43,11 +48,21 @@ sim_traj_object_names = [
     'orange_1024', # worked
     'coke_can_1030',
     'realsense_box_1024',
+    'cube_1023',
+    'bottle_coconut_1101',
+    'sunscreen_1101',
+    # "bleach_cleanser_1030",
+    'hammer_1102',
 ]
 
 sim_traj_file_basenames = [
     'step-0.npy',
     'step-0.npy',
+    'step-0.npy',
+    'step-0.npy',
+    'step-0.npy',
+    'step-0.npy',
+    # 'step-0.npy',
     'step-0.npy',
 ]
 
@@ -55,24 +70,44 @@ euler_object_places  = [
     orange_upside_rot_eular,
     coke_object_rot_eular,
     realsense_box_rot_euler,
+    cube_rot_euler,
+    bottle_coconut_rot_euler,
+    sunscreen_rot_euler,
+    # bleach_cleanser_rot_euler,
+    hammer_rot_euler,
 ]
 object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/orange.npy',
     r'data/pointcloud_data/candidiate_objects/coke_can.npy',
-    r'data/pointcloud_data/candidiate_objects/realsense_box.npy'
+    r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
+    r'data/pointcloud_data/candidiate_objects/cube_055.npy',
+    r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
+    r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
+    # r"data/pointcloud_data/candidiate_objects/bleach_cleanser.npy",
+    r'data/pointcloud_data/candidiate_objects/hammer.npy',
 ]
 
-date_tip=1103
+date_tip=1104
 scene_data_save_dir = [
     f"data/scene_data/orange_test_scene_data_{date_tip}",
     f"data/scene_data/coke_test_scene_data_{date_tip}",
     f"data/scene_data/realsense_box_test_scene_data_{date_tip}",
-    # "data/scene_data/realsense_box_test_scene_data_ver_1024"
+    # "data/scene_data/realsense_box_test_scene_data_ver_1024",
+    f"data/scene_data/cube_test_scene_data_{date_tip}",
+    f"data/scene_data/bottle_coconut_test_scene_data_{date_tip}",
+    f"data/scene_data/sunscreen_test_scene_data_{date_tip}",
+    # f"data/scene_data/bleach_cleanser_test_scene_data_{date_tip}",
+    f'data/scene_data/hammer_test_scene_data_{date_tip}',
 ]
 
 icp_rot_euler = [
     False,
     False,
+    True,
+    True,
+    True,
+    True,
+    # True,
     True,
 ]
 
@@ -80,9 +115,15 @@ icp_rot_euler_limits = [
     None,
     None,
     180,
+    90,
+    360,
+    360,
+    # 360,
+    360,
 ]
 
-object_idx=1
+# The cleanser is hard to do icp since the poor object point cloud quality
+object_idx=-2
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
@@ -107,13 +148,15 @@ scene_data_file_name = "test_scene"
 camera_intrinsics_data_dir = f"calibration/calibration_data/{CAMERA_NAME}/camera_intrinsics"
 # object_modeling_file_path = r'data/pointcloud_data/candidiate_objects/cube_055.npy'
 CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = True
-# x_keep_range = [-0.13, 0]
-# y_keep_range = [-0.05, 0.10]
-# z_keep_range = [None, -0.011]
+# for 11f table
+x_keep_range = [-0.30, 0]
+y_keep_range = [-0.05, 0.15]
+z_keep_range = [None, -0.011]
 
-x_keep_range=[-0.45, -0.1]
-y_keep_range=[-0.05, 0.25]
-z_keep_range=[-0.5, 0.073]
+# # for 2f table
+# x_keep_range=[-0.45, -0.1]
+# y_keep_range=[-0.05, 0.25]
+# z_keep_range=[-0.5, 0.073]
 # euler_xyz = coke_object_rot_eular
 
 # locate object relative to calibration board

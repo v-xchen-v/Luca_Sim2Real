@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 from coordinates.visualization_utils import _visualize_frames
 
 VIS_HAND_IN_ROBOT_COORDINATE=True
-save_path = "data/trajectory_data/real_trajectory/orange_1024/step-0.npy"
+save_path = "data/scene_data/realsense_box_test_scene_data_ver_1024/step-0.npy"
 
 def transform_xyzxyzw_to_matrix(xyzxyzw):
     T = np.eye(4)

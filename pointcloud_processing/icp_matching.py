@@ -25,6 +25,50 @@ def preprocess_point_cloud(pcd, voxel_size):
     )
     return pcd_down, fpfh
 
+def icp_align_with_multiple_rotations(source, target, threshold=0.01, max_iterations=50):
+    best_transformation = None
+    best_fitness = 0
+    best_rmse = float('inf')
+
+    rotations = np.array([
+        [0, 0, 0],
+        [np.pi / 2, 0, 0],
+        [np.pi, 0, 0],
+        [0, np.pi / 2, 0],
+        [0, np.pi, 0],
+        [0, 0, np.pi / 2],
+        [0, 0, np.pi]
+    ])
+    max_correspondence_distance = 0.1
+    for rotation in rotations:
+        # Create initial transformation matrix with rotation
+        rotation_matrix = o3d.geometry.get_rotation_matrix_from_xyz(rotation)
+        initial_transformation = np.eye(4)
+        initial_transformation[:3, :3] = rotation_matrix
+
+        # Run ICP with this initial guess
+        # icp_result = o3d.pipelines.registration.registration_icp(
+        #     source, target, max_correspondence_distance,
+        #     init=initial_transformation,
+        #     criteria=o3d.pipelines.registration.ICPConvergenceCriteria(
+        #         max_iteration=1000
+        #     )
+        # )
+        icp_result = o3d.pipelines.registration.registration_icp(
+            source, target, max_correspondence_distance, initial_transformation,
+            o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+            # o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+            o3d.pipelines.registration.ICPConvergenceCriteria(
+                max_iteration=2000,relative_fitness=1e-4, relative_rmse=1e-4))
+
+        # Check if this result is better than previous ones
+        if icp_result.fitness > best_fitness or (icp_result.fitness == best_fitness and icp_result.inlier_rmse < best_rmse):
+            best_transformation = icp_result.transformation
+            best_fitness = icp_result.fitness
+            best_rmse = icp_result.inlier_rmse
+
+    return best_transformation, best_fitness, best_rmse
+    
 def icp_align(source, target, threshold=0.01, max_iterations=50):
     """Performs ICP alignment on two centered point clouds."""
     
@@ -74,20 +118,23 @@ def icp_align(source, target, threshold=0.01, max_iterations=50):
 
     # Seems point_to_point is better than point_to_plane
     print("Coarse ICP...")
+    # TODO: some object rely on good initial transform, multiple init trans here, and choose the best one
     threshold = 0.1  # Larger threshold for coarse alignment
-    reg_p2p_coarse = o3d.pipelines.registration.registration_icp(
-        source, target_filtered, threshold, init_transformation,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(),
-        # o3d.pipelines.registration.TransformationEstimationPointToPlane(),
-        o3d.pipelines.registration.ICPConvergenceCriteria(
-            max_iteration=2000,relative_fitness=1e-4, relative_rmse=1e-4))
-
+    # reg_p2p_coarse = o3d.pipelines.registration.registration_icp(
+    #     source, target_filtered, threshold, init_transformation,
+    #     o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+    #     # o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+    #     o3d.pipelines.registration.ICPConvergenceCriteria(
+    #         max_iteration=2000,relative_fitness=1e-4, relative_rmse=1e-4))
+    coarse_transformation, _, _ = icp_align_with_multiple_rotations(source, target_filtered, threshold, max_iterations)
+    
     # Use the result as the initial guess for fine alignment
     print("Fine ICP...")
     ## TODO: very important to set threshold_fine, 0.01 is fine for orange, but not for noise coke.
     threshold_fine = 0.01  # Smaller threshold for refinement
     reg_p2p = o3d.pipelines.registration.registration_icp(
-        source, target_filtered, threshold_fine, reg_p2p_coarse.transformation,
+        source, target_filtered, threshold_fine, 
+        coarse_transformation, # reg_p2p_coarse.transformation,
         o3d.pipelines.registration.TransformationEstimationPointToPoint(),
         # o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         o3d.pipelines.registration.ICPConvergenceCriteria(
