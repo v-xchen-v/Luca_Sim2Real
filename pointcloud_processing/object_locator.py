@@ -165,7 +165,8 @@ class ObjectPositionLocator(ObjectLocatorBase):
     def _icp(self):
         # Align and restore point clouds
         self.aligned_source, restored_target, self.source_to_algined_rotation_matrix = align_source_to_target(self.object_model_pcd, 
-                                                                 self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord))
+                                                                 self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord),
+                                                                 vis_aligned=True)
     
     def locate_object_position(self):
         """
@@ -233,6 +234,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
                                     window_name='Point Cloud',
                                     width=800, height=600,
                                     left=0, top=1)
+        
+        # destroy the window, when close
+        # o3d.visualization.draw_geometries([pcd, axes])        
                 
     def _process_scene_pointcloud(self, x_range, y_range, z_range):
         if self.vis_scene_point_cloud_in_camera_coord:
@@ -324,13 +328,27 @@ class ObjectPoseLocator(ObjectPositionLocator):
         R_B_to_C = R_B_to_W * R_W_to_C = R_B_to_W * R_W_to_A * R_A_to_C 
         
         """
-        # R_B_to_C                                   R_A_to_C                                 
+        # self.source_to_algined_rotation_matr = T_place_to_current?
+        # R_calibration_board_to_object_placed_face_robot * source_to_algined_rotation_mat = T_board_to_current??
+        # T_place_to_current = T_board_to_place placet_current
+        # R_B_to_C                                   R_A_to_C  
+        
+        
+        # R_source_to_place *place_to_currnet = R_source_to_current
+        # place_to_currnet = R_source_to_place.T *  R_source_to_current
+        # calibration board base coordinate how to represent modeling to placed.                               
         self.R_object_placed_face_robot_to_current = self.source_to_algined_rotation_matrix @ \
                                                      np.linalg.inv(self.R_calibration_board_to_object_placed_face_robot) # R_B_to_W
+                                                     
+        #                                                      # R_B_to_C                                   R_A_to_C                                 
+        # self.R_object_placed_face_robot_to_current = np.linalg.inv(self.R_calibration_board_to_object_placed_face_robot) @ self.source_to_algined_rotation_matrix
+        #                                               # R_B_to_W
+        pass
     
     def _determine_B_axis_align_A_z(self, R_A_to_B: np.ndarray):
         # Get the third column of R, representing A's z-axis in terms of B's coordinates
-        A_z_in_B = R_A_to_B[:, 2]
+        # A_z_in_B = R_A_to_B[:, 2]
+        A_z_in_B = np.array([0, 0, 1])@R_A_to_B
 
         # Threshold for dominance (set to 0.9 for now)
         threshold = 0.9
@@ -397,7 +415,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
         """Assume the object is rotation invariant around the z-axis every 90 degrees."""
         # should be 'xyz', rot z->rot y->rot x, to avoid guess of x, y, since we known
         # it have only rot on z-axis
-        xyz = R.from_matrix(rotation_matrix).as_euler('xyz', degrees=True)
+        zyx = R.from_matrix(rotation_matrix).as_euler('ZYX', degrees=True)
         def _limit_rotation_angle(angle, limit):
             # if angle is positive, +360
             if angle < 0:
@@ -409,24 +427,28 @@ class ObjectPoseLocator(ObjectPositionLocator):
                 
             return angle
         
-        limit_dimension = {'x': 0, 'y': 1, 'z': 2,
-                           '-x': 0, '-y': 1, '-z': 2}
-        xyz[0] = 0
-        xyz[1] = 0
-        xyz[limit_dimension[axis]] = _limit_rotation_angle(xyz[limit_dimension[axis]], limit)
+        limit_dimension = {'x': 2, 'y': 1, 'z': 0}
+        # xyz[0] = 0
+        # xyz[1] = 0
+        # the other two axis should be 0
+        # for other_axis in np.delete(np.array([0, 1, 2]), [limit_dimension[axis]]):
+        #     xyz[other_axis] = 0
+        zyx[limit_dimension[axis]] = _limit_rotation_angle(zyx[limit_dimension[axis]], limit)
         
         # hope it rot to the -z of calibration board, so that easy to operate by right arm
-        if axis in ['-x', '-y', '-z']:
-            pass 
-            # axis = axis[1:]
-        else:
-            xyz[limit_dimension[axis]] -= limit 
+        # if axis in ['-x', '-y', '-z']:
+        #     xyz[limit_dimension[axis]] = -xyz[limit_dimension[axis]]
+        #     pass 
+        #     # axis = axis[1:]
+        # else:
+        if limit < 360:
+            zyx[limit_dimension[axis]] -= limit 
         
-        print(f"Continue rotation to {xyz[limit_dimension[axis]]} degrees around the object's {axis}-axis, \n\
-              or {xyz[limit_dimension[axis]]-limit} degrees around the object's -{axis} axis, \n\
+        print(f"Continue rotation to {zyx[limit_dimension[axis]]} degrees around the board's {axis}-axis, \n\
+              or {-zyx[limit_dimension[axis]]} degrees around the board's -{axis} axis, \n\
               after place object face to robot, then got current pose")
         
-        return R.from_euler('xyz', xyz, degrees=True).as_matrix()
+        return R.from_euler('ZYX', zyx, degrees=True).as_matrix()
         
     def _locate_object_orientation(self):
         self._process_rotation_object_modeling_to_scene()
@@ -441,15 +463,50 @@ class ObjectPoseLocator(ObjectPositionLocator):
         if aligned_axis is None:
             raise ValueError("No single dominant axis alignment. Please check the R_object_placed_face_robot_to_calibration_board.")
         
+        # if aligned_axis in ['-x', '-y', '-z']:
+        #     aligned_axis = '-z'
+        # elif aligned_axis in ['x', 'y', 'z']:
+        #     aligned_axis = 'z'
+        # aligned_axis = 'z'
+        
+        
         R_worldz_object_placed_face_robot_to_current = self._isolate_rotation_axis(
             self.R_object_placed_face_robot_to_current,
-            axis=aligned_axis)
+            axis='z')
         
         print("icp_rot_euler_limit: ", self.icp_rot_euler_limit)
         R_limited_worldz_object_placed_face_robot_to_current = self._limit_rotation_to_axis(
-            R_worldz_object_placed_face_robot_to_current, axis=aligned_axis, limit=self.icp_rot_euler_limit)
-        R_board_to_object_current = R_limited_worldz_object_placed_face_robot_to_current @ R_world_to_placed_object
-        return R_board_to_object_current
+            R_worldz_object_placed_face_robot_to_current, axis='z', limit=self.icp_rot_euler_limit)
+        z_degree = R.from_matrix(R_limited_worldz_object_placed_face_robot_to_current).as_euler('xyz', degrees=True)[2]
+        print(f'z_degree: {z_degree}')
+        
+        dimension = {'x': 0, 'y': 1, 'z': 2,
+                     '-x': 0, '-y': 1, '-z': 2}
+        if aligned_axis in ['-x', '-y', '-z']:
+            euler_degrees = [0, 0, 0]
+            euler_degrees[dimension[aligned_axis]] = -z_degree
+            aligned_axis = aligned_axis[1:]
+            # euler_degrees[dimension[aligned_axis]] = z_degree # not sure???
+        else:
+            euler_degrees = [0, 0, 0]
+            euler_degrees[dimension[aligned_axis]] = z_degree
+        R_placed_to_current = R.from_euler('XYZ', euler_degrees, degrees=True).as_matrix()
+        print(f'continue rotate across object\'s {aligned_axis} axis {euler_degrees[dimension[aligned_axis]]} degrees to current pose')
+        R3=R_world_to_placed_object @ R_placed_to_current
+        # R.from_euler('XYZ', [])
+        
+        # place_xyz = R.from_matrix(self.R_calibration_board_to_object_placed_face_robot).as_euler('xyz', degrees=True)
+        
+        
+        # R_board_to_object_current = R_limited_worldz_object_placed_face_robot_to_current @ R_world_to_placed_object
+        # rotx
+        # R_A_to_B = 1,0,0; 0,0,1, 0,-1,0
+        # R_limited_worldz_object_placed_face_robot_to_current2 = R_world_to_placed_object @ R_limited_worldz_object_placed_face_robot_to_current @ np.linalg.inv(R_world_to_placed_object)
+        # R_board_to_object_current = R_limited_worldz_object_placed_face_robot_to_current @ R_world_to_placed_object # ???, not sure here
+        # R2 = R_limited_worldz_object_placed_face_robot_to_current2 @ R_world_to_placed_object
+        # R3 = self.calibration@(np.linalg.inv(self.R_calibration_board_to_object_placed_face_robot) @ R_limited_worldz_object_placed_face_robot_to_current)
+        # R3 = self.R_calibration_board_to_object_placed_face_robot @ (R_limited_worldz_object_placed_face_robot_to_current @ np.linalg.inv(self.R_calibration_board_to_object_placed_face_robot) )
+        return R3
     
     def locate_object_pose(self,  
                             x_range=[None, None], 

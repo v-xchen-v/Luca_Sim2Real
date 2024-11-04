@@ -17,6 +17,8 @@ cube_rot_euler = [np.pi, 0, -np.pi/2] #
 realsense_box_rot_euler = [np.pi, 0, np.pi/2]
 cube_rot_euler = [-np.pi, 0, 0] # for cube_1023
 bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
+sunscreen_rot_euler = [np.pi/2, 0, 0] # for sunscreen_1101
+bleach_cleanser_rot_euler = [0, -np.pi/2, 0] # for bleach_cleanser_1030
 
 
 # ------------------- Robot table setup ------------------- #
@@ -47,9 +49,13 @@ sim_traj_object_names = [
     'realsense_box_1024',
     'cube_1023',
     'bottle_coconut_1101',
+    'sunscreen_1101',
+    "bleach_cleanser_1030",
 ]
 
 sim_traj_file_basenames = [
+    'step-0.npy',
+    'step-0.npy',
     'step-0.npy',
     'step-0.npy',
     'step-0.npy',
@@ -63,6 +69,8 @@ euler_object_places  = [
     realsense_box_rot_euler,
     cube_rot_euler,
     bottle_coconut_rot_euler,
+    sunscreen_rot_euler,
+    bleach_cleanser_rot_euler,
     
 ]
 object_modeling_file_paths = [
@@ -71,6 +79,8 @@ object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
     r'data/pointcloud_data/candidiate_objects/cube_055.npy',
     r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
+    r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
+    r"data/pointcloud_data/candidiate_objects/bleach_cleanser.npy",
 ]
 
 date_tip=1104
@@ -81,11 +91,15 @@ scene_data_save_dir = [
     # "data/scene_data/realsense_box_test_scene_data_ver_1024",
     f"data/scene_data/cube_test_scene_data_{date_tip}",
     f"data/scene_data/bottle_coconut_test_scene_data_{date_tip}",
+    f"data/scene_data/sunscreen_test_scene_data_{date_tip}",
+    f"data/scene_data/bleach_cleanser_test_scene_data_{date_tip}",
 ]
 
 icp_rot_euler = [
     False,
     False,
+    True,
+    True,
     True,
     True,
     True,
@@ -97,9 +111,11 @@ icp_rot_euler_limits = [
     180,
     90,
     360,
+    360,
+    360,
 ]
 
-object_idx=4
+object_idx=5
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
@@ -125,8 +141,8 @@ camera_intrinsics_data_dir = f"calibration/calibration_data/{CAMERA_NAME}/camera
 # object_modeling_file_path = r'data/pointcloud_data/candidiate_objects/cube_055.npy'
 CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = True
 # for 11f table
-x_keep_range = [-0.23, 0]
-y_keep_range = [-0.05, 0.10]
+x_keep_range = [-0.30, 0]
+y_keep_range = [-0.05, 0.15]
 z_keep_range = [None, -0.011]
 
 # # for 2f table
