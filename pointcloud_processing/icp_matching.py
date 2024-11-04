@@ -74,6 +74,7 @@ def icp_align(source, target, threshold=0.01, max_iterations=50):
 
     # Seems point_to_point is better than point_to_plane
     print("Coarse ICP...")
+    # TODO: some object rely on good initial transform, multiple init trans here, and choose the best one
     threshold = 0.1  # Larger threshold for coarse alignment
     reg_p2p_coarse = o3d.pipelines.registration.registration_icp(
         source, target_filtered, threshold, init_transformation,

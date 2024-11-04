@@ -19,6 +19,7 @@ cube_rot_euler = [-np.pi, 0, 0] # for cube_1023
 bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
 sunscreen_rot_euler = [np.pi/2, 0, 0] # for sunscreen_1101
 bleach_cleanser_rot_euler = [0, -np.pi/2, 0] # for bleach_cleanser_1030
+hammer_rot_euler = [np.pi/2, 0, 0] # for hammer_1102
 
 
 # ------------------- Robot table setup ------------------- #
@@ -51,9 +52,11 @@ sim_traj_object_names = [
     'bottle_coconut_1101',
     'sunscreen_1101',
     "bleach_cleanser_1030",
+    'hammer_1102',
 ]
 
 sim_traj_file_basenames = [
+    'step-0.npy',
     'step-0.npy',
     'step-0.npy',
     'step-0.npy',
@@ -71,7 +74,7 @@ euler_object_places  = [
     bottle_coconut_rot_euler,
     sunscreen_rot_euler,
     bleach_cleanser_rot_euler,
-    
+    hammer_rot_euler,
 ]
 object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/orange.npy',
@@ -81,6 +84,7 @@ object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
     r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
     r"data/pointcloud_data/candidiate_objects/bleach_cleanser.npy",
+    r'data/pointcloud_data/candidiate_objects/hammer.npy',
 ]
 
 date_tip=1104
@@ -93,11 +97,13 @@ scene_data_save_dir = [
     f"data/scene_data/bottle_coconut_test_scene_data_{date_tip}",
     f"data/scene_data/sunscreen_test_scene_data_{date_tip}",
     f"data/scene_data/bleach_cleanser_test_scene_data_{date_tip}",
+    f'data/scene_data/hammer_test_scene_data_{date_tip}',
 ]
 
 icp_rot_euler = [
     False,
     False,
+    True,
     True,
     True,
     True,
@@ -113,9 +119,10 @@ icp_rot_euler_limits = [
     360,
     360,
     360,
+    360,
 ]
 
-object_idx=5
+object_idx=7
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
