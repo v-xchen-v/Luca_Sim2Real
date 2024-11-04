@@ -16,6 +16,7 @@ coke_object_rot_eular = [-np.pi/2, np.pi/2-np.pi/4, 0] # for coke_1030
 cube_rot_euler = [np.pi, 0, -np.pi/2] # 
 realsense_box_rot_euler = [np.pi, 0, np.pi/2]
 cube_rot_euler = [-np.pi, 0, 0] # for cube_1023
+bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
 
 
 # ------------------- Robot table setup ------------------- #
@@ -45,9 +46,11 @@ sim_traj_object_names = [
     'coke_can_1030',
     'realsense_box_1024',
     'cube_1023',
+    'bottle_coconut_1101',
 ]
 
 sim_traj_file_basenames = [
+    'step-0.npy',
     'step-0.npy',
     'step-0.npy',
     'step-0.npy',
@@ -58,7 +61,8 @@ euler_object_places  = [
     orange_upside_rot_eular,
     coke_object_rot_eular,
     realsense_box_rot_euler,
-    cube_rot_euler
+    cube_rot_euler,
+    bottle_coconut_rot_euler,
     
 ]
 object_modeling_file_paths = [
@@ -66,20 +70,23 @@ object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/coke_can.npy',
     r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
     r'data/pointcloud_data/candidiate_objects/cube_055.npy',
+    r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
 ]
 
-date_tip=1103
+date_tip=1104
 scene_data_save_dir = [
     f"data/scene_data/orange_test_scene_data_{date_tip}",
     f"data/scene_data/coke_test_scene_data_{date_tip}",
     f"data/scene_data/realsense_box_test_scene_data_{date_tip}",
     # "data/scene_data/realsense_box_test_scene_data_ver_1024",
     f"data/scene_data/cube_test_scene_data_{date_tip}",
+    f"data/scene_data/bottle_coconut_test_scene_data_{date_tip}",
 ]
 
 icp_rot_euler = [
     False,
     False,
+    True,
     True,
     True,
 ]
@@ -89,9 +96,10 @@ icp_rot_euler_limits = [
     None,
     180,
     90,
+    360,
 ]
 
-object_idx=3
+object_idx=4
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
@@ -117,7 +125,7 @@ camera_intrinsics_data_dir = f"calibration/calibration_data/{CAMERA_NAME}/camera
 # object_modeling_file_path = r'data/pointcloud_data/candidiate_objects/cube_055.npy'
 CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = True
 # for 11f table
-x_keep_range = [-0.13, 0]
+x_keep_range = [-0.23, 0]
 y_keep_range = [-0.05, 0.10]
 z_keep_range = [None, -0.011]
 
