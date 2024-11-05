@@ -1,6 +1,6 @@
 <launch>
     <!-- TODO: set WORKDIR to the correct path by .sh -->
-    <env name="WORKDIR" value="/home/yichao/Documents/repos/Luca_Transformation/catkin_ws/src/MSRA_SRobot_core" />
+    <env name="WORKDIR" value="/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core" />
 
     <!-- <include file="$(find robot_arm_pkg)/launch/moveit_planner_service.launch"/> -->
     <node name="arm_robot_controls" pkg="robot_arm_pkg" type="arm_robot_control.py" output="screen" clear_params="true">
