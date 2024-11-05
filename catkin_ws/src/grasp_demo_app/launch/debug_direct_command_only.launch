@@ -1,0 +1,11 @@
+<launch>
+    <!-- TODO: set WORKDIR to the correct path by .sh -->
+    <env name="WORKDIR" value="/home/yichao/Documents/repos/Luca_Transformation/catkin_ws/src/MSRA_SRobot_core" />
+
+    <!-- <include file="$(find robot_arm_pkg)/launch/moveit_planner_service.launch"/> -->
+    <node name="arm_robot_controls" pkg="robot_arm_pkg" type="arm_robot_control.py" output="screen" clear_params="true">
+        <!-- <param name="left_arm_ip" value=""/> -->
+        <param name="right_arm_ip" value="192.168.10.18"/>
+        <param name="right_ee_type" value="hand"/>
+    </node>
+</launch>
