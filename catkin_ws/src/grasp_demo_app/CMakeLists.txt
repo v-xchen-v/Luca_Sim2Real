@@ -10,6 +10,8 @@ project(grasp_demo_app)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  robot_arm_pkg
+  ros_msra_robot
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES grasp_demo_app
-#  CATKIN_DEPENDS rospy std_msgs
+   CATKIN_DEPENDS rospy std_msgs ros_msra_robot
 #  DEPENDS system_lib
 )
 
