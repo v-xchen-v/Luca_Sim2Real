@@ -18,7 +18,7 @@ rate = rospy.Rate(1)
 
 while not rospy.is_shutdown():
     arm_command = ArmDirectPoseCommandMsg()
-    arm_command.right_arm_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    arm_command.right_arm_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     arm_command.right_ee_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     arm_pub.publish(arm_command)
     print("arm_command published")
