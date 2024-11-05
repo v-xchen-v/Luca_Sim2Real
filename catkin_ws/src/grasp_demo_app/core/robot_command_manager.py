@@ -6,7 +6,8 @@ class RobotCommandManager:
         # Initialize the ROS publishers for different types of movement commands
         ## 7 robot dof joint angles
         ## 6 hand dof joint angles
-        self.arm_hand_joint_pub = rospy.Publisher("arm_robot_joint_direct_command", ArmJointCommandMsg, queue_size=1)
+        # self.arm_hand_joint_pub = rospy.Publisher("arm_robot_joint_direct_command", ArmJointCommandMsg, queue_size=1)
+        self.arm_hand_joint_pub = rospy.Publisher("arm_robot_joint_plan_command", ArmJointCommandMsg, queue_size=1)
         
         # xyz, quaternion of arm and 6 dof of hand
         self.arm_hand_pose_pub = rospy.Publisher("arm_robot_pose_direct_command", ArmDirectPoseCommandMsg, queue_size=1)
@@ -17,10 +18,13 @@ class RobotCommandManager:
         
     def goto_joint_angles(self, arm_joint_angles, hand_joint_angles):
         """Move the robot to the specified joint angles"""
+        
+        rospy.sleep(1) 
         msg = ArmJointCommandMsg()
         msg.right_arm_data = arm_joint_angles
         msg.right_ee_data = hand_joint_angles
         self.arm_hand_joint_pub.publish(msg)
+        print("command published")
         
     def moveto_pose(self, pose):
         """Move the robot to the specified pose"""
