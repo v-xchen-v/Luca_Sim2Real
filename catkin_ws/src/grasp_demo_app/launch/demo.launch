@@ -1,0 +1,3 @@
+<launch>
+  <include file="$(find robot_arm_pkg)/launch/right_arm_robot.launch"/>
+</launch>

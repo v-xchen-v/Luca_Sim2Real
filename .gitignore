@@ -162,3 +162,7 @@ cython_debug/
 #.idea/
 
 data/debug_data/*/output/*
+
+# ros package build files
+catkin_ws/build/*
+catkin_ws/devel/*
