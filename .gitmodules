@@ -1,3 +1,3 @@
-[submodule "MSRA_SRobot_core"]
+[submodule "catkin_ws/src/MSRA_SRobot_cor"]
 	path = catkin_ws/src/MSRA_SRobot_core
 	url = git@github.com:chlxydl/MSRA_SRobot_core.git
