@@ -11,6 +11,7 @@ alias conda='~/miniconda3/bin/conda'
 conda update conda
 #conda create -n py310 python=3.10
 conda create -n py38 python=3.8
+conda activate py38
 
 conda install conda-forge::pinocchio
 conda install pyyaml # no module yaml

@@ -1,5 +1,7 @@
 {
     "python.analysis.extraPaths": [
-        "./MSRA_SRobot_core/src/robot_arm_pkg/scripts"
+        "./catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/scripts",
+        "./catkin_ws/devel/lib/python3/dist-packages",
+        "./catkin_ws/src/MSRA_SRobot_core/devel/lib/python3/dist-packages/ros_"
     ]
 }
