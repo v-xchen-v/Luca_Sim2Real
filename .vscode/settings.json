@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./MSRA_SRobot_core/src/robot_arm_pkg/scripts"
+    ]
+}
