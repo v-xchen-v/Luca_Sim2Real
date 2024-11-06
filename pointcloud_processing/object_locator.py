@@ -13,6 +13,7 @@ from pytransform3d.transformations import invert_transform
 import os
 from pointcloud_processing.icp_matching import align_source_to_target
 from scipy.spatial.transform import Rotation as R   
+from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
 
 class ObjectLocatorBase:
     """Shared methods and attributes for ObjectPositionLocator and ObjectPoseLocator."""
@@ -39,6 +40,9 @@ class ObjectLocatorBase:
         self.scene_point_cloud_in_camera_coord = None
         self.T_calibration_board_to_camera = None
         self.filtered_scene_point_cloud = None
+       
+        # object pcd in board coord
+        self.object_pcd_extractor = ObjectPointCloudExtractor(T_calibration_board_to_camera)
         
     def _capture_scene(self):
         save_image_and_point_cloud_from_realsense(

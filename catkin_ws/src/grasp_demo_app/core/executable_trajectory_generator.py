@@ -6,7 +6,7 @@ from .object_manager import ObjectManager
 from pointcloud_processing.pointcloud_io import load_point_cloud
 from pointcloud_processing.icp_matching import get_closest_pcd_match
 from pointcloud_processing.pointcloud_io import get_image_and_point_cloud_from_realseanse
-
+from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
         # Object Manager
@@ -18,6 +18,16 @@ class ExecutableTrajectoryGenerator:
         
         # last generated trajectory file path
         self.processor.traj_file_path = None
+        
+        # for 2f table
+        # TODO: move it to config
+        self.x_keep_range=[-0.45, -0.1]
+        self.y_keep_range=[-0.05, 0.40]
+        self.z_keep_range=[-0.5, 0.070]
+        
+        # TODO: restructure code to avoid computing this multiple times
+        self.object_pc_extractor = ObjectPointCloudExtractor(
+            T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
     def capture_scene(self):
         pass
@@ -32,8 +42,14 @@ class ExecutableTrajectoryGenerator:
         candidate_object_pcds = [load_point_cloud(candidate_object_modeling_file) 
                                  for candidate_object_modeling_file in candidate_object_modeling_files]
         
+        scene_pcd, _ = get_image_and_point_cloud_from_realseanse()
+        object_pcd_in_board_coord, _ = self.object_pc_extractor.extract(scene_pcd, 
+                                                                        x_keep_range=self.x_keep_range,
+                                                                        y_keep_range=self.y_keep_range, 
+                                                                        z_keep_range=self.z_keep_range)
+        
         # TODO: should get point cloud from scene and find best match
-        _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=None, candidate_pcds=candidate_object_pcds)
+        _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, candidate_pcds=candidate_object_pcds)
         
         # # Dummy logic to determine the object
         # object_idx = 0
@@ -51,17 +67,12 @@ class ExecutableTrajectoryGenerator:
         self.processor.configure_object_settings(object_identifier=object_name)
         
         
-        # for 2f table
-        # TODO: move it to config
-        x_keep_range=[-0.45, -0.1]
-        y_keep_range=[-0.05, 0.40]
-        z_keep_range=[-0.5, 0.070]
-        
+
         # Trajectory generation
         self.processor.load_sim_trajectory()
-        self.processor.locate_object(x_keep_range=x_keep_range, 
-                                     y_keep_range=y_keep_range, 
-                                     z_keep_range=z_keep_range)
+        self.processor.locate_object(x_keep_range=self.x_keep_range, 
+                                     y_keep_range=self.y_keep_range, 
+                                     z_keep_range=self.z_keep_range)
         self.processor.map_sim_to_real()
         self.processor.compute_real_hand_to_robot_base_transform()
         self.traj_file_path = self.processor.save_real_trajectory()
