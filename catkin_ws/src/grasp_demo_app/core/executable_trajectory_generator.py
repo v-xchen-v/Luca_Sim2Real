@@ -12,12 +12,12 @@ class ExecutableTrajectoryGenerator:
         pass
     
     
-    def determine_object(self):
-        pass
+    # def determine_object(self):
+    #     pass
     
     
-    def locate_object(self):
-        pass
+    # def locate_object(self):
+    #     pass
     
     
     def generate_trajectory(self):
