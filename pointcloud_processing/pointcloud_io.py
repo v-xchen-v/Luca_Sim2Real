@@ -18,6 +18,18 @@ def load_npy_file_as_point_cloud(path: str) -> o3d.geometry.PointCloud:
     
     return pcd
 
+def load_npy_as_point_cloud(points: np.ndarray) -> o3d.geometry.PointCloud:
+    """
+    Load the point cloud from the given path.
+
+    Args:
+    - points: The point cloud as a NumPy array.
+    """
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+    
+    return pcd
+
 def load_point_cloud(path: str) -> np.ndarray:
     """
     Load the point cloud from the given path.
@@ -142,26 +154,13 @@ def _show_point_cloud_window(point_cloud: o3d.geometry.PointCloud):
     viewer.run()
     viewer.destroy_window()
       
-def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
-    """
-    Capture a point cloud from the Intel RealSense D455 camera.
-
-    Returns:
-    - points: The captured point cloud.
-    - color_image: The corresponding color image.
-    """
-    if overwrite_if_exists==False and _image_and_point_cloud_exists(save_dir, file_name):
-        return None, None
-    
-    import pyrealsense2 as rs
-    
+def get_image_and_point_cloud_from_realseanse():
     # Configure the RealSense pipeline
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
     pipeline.start(config)
-
 
     try:
         # Capture frames: depth and color
@@ -178,13 +177,13 @@ def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, ove
         pc.map_to(color_frame)
         points = pc.calculate(depth_frame)
         
-        # Convert the point cloud to numpy arrays
-        vtx = np.asanyarray(points.get_vertices()).view(np.float32).reshape(-1, 3)  # Shape: (N, 3)
-        tex = np.asanyarray(points.get_texture_coordinates()).view(np.float32).reshape(-1, 2)  # Shape: (N, 2)
-
         # Convert images to numpy arrays
         color_image = np.asanyarray(color_frame.get_data())
         # cv2.imwrite(f"output/{args.filename}.png", color_image)
+        
+        # Convert the point cloud to numpy arrays
+        vtx = np.asanyarray(points.get_vertices()).view(np.float32).reshape(-1, 3)  # Shape: (N, 3)
+        tex = np.asanyarray(points.get_texture_coordinates()).view(np.float32).reshape(-1, 2)  # Shape: (N, 2)
         
         # Helper function to map texture coordinates to RGB colors
         def get_rgb_from_tex(tex_coords, color_image):
@@ -202,7 +201,7 @@ def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, ove
 
         # Map RGB colors to the vertices
         colors = get_rgb_from_tex(tex, color_image)
-               
+                
         # x_min = 200
         # x_max = 1000
         # y_min = 100
@@ -216,30 +215,45 @@ def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, ove
         
         # roi_vtx = vtx.reshape(-1, 3)
         # roi_tex = tex.reshape(-1, 2)
-                  
+                    
         # Create Open3D PointCloud object and assign points and colors
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(vtx)
         pcd.colors = o3d.utility.Vector3dVector(colors)
+        return pcd, color_image
         
-        #  Create a coordinate frame (axes) centered at the origin
-        axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
-
-        # debugging purpose of visualizing the point cloud and the coordinate axes
-        if False:
-            o3d.visualization.draw_geometries([pcd, axes])
-
-        # o3d.io.write_point_cloud(f"/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/test_scene_data/test_scene.pcd", pcd)
-
-
-        # points.export_to_ply('./point_cloud.ply', color_frame)
-        _save_realsense_point_cloud(pcd, color_image, save_dir, file_name, overwrite_if_exists)
-        
-        return points, color_image
     except Exception as e:
         raise RecursionError(f"Could not get aligned frames: {e}")
     finally:
         pipeline.stop()
         # raise RuntimeError("Could not get aligned frames")
+        # return None, None
+    
+def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
+    """
+    Capture a point cloud from the Intel RealSense D455 camera.
+
+    Returns:
+    - points: The captured point cloud.
+    - color_image: The corresponding color image.
+    """
+    if overwrite_if_exists==False and _image_and_point_cloud_exists(save_dir, file_name):
         return None, None
+    
+    pcd, color_image = get_image_and_point_cloud_from_realseanse()
+    
+
+    # debugging purpose of visualizing the point cloud and the coordinate axes
+    if False:
+        ##Create a coordinate frame (axes) centered at the origin
+        axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
+        o3d.visualization.draw_geometries([pcd, axes])
+
+    # o3d.io.write_point_cloud(f"/home/yichao/Documents/repos/Luca_Transformation/data/scene_data/test_scene_data/test_scene.pcd", pcd)
+    # points.export_to_ply('./point_cloud.ply', color_frame)
+    
+    _save_realsense_point_cloud(pcd, color_image, save_dir, file_name, overwrite_if_exists)
+    
+    return pcd, color_image
+
     

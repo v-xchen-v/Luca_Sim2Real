@@ -8,6 +8,7 @@ if module_path not in sys.path:
 from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
 import json
+from .object_manager import ObjectManager
 
 class Sim2RealTrajectoryProcessor:
     def __init__(self, config) -> None:
@@ -27,6 +28,8 @@ class Sim2RealTrajectoryProcessor:
         # self.calibration_board_square_size = 0.03
         self.calibration_board_pattern_size = tuple(self.config["calibration_board_pattern_size"])
         self.calibration_board_square_size = self.config["calibration_board_square_size"]
+        
+        self.object_manager = ObjectManager()
         
     def _load_config(self, config=None):
         # Load configuration from a dictionary or a json file
@@ -51,64 +54,65 @@ class Sim2RealTrajectoryProcessor:
         )
         
         
-    def configure_object_settings(self, object_idx):
-         # Object-specific configurations
-        self.object_configs = {
-            "names": [
-                'orange_1024', 
-                'coke_can_1030', 
-                'realsense_box_1024',
-                'cube_055_1103', 
-                'bottle_coconut_1101', 
-                'sunscreen_1101',
-                'hammer_1102'
-            ],
-            "rotation_euler": [
-                [-np.pi, 0, np.pi/2],    # Orange
-                [-np.pi/2, np.pi/4, 0],  # Coke
-                [np.pi, 0, np.pi/2],     # Realsense Box
-                [-np.pi, 0, 0],          # Cube
-                [0, np.pi, 0],           # Coconut Bottle
-                [np.pi/2, 0, 0],         # Sunscreen
-                [np.pi/2, 0, 0]          # Hammer
-            ],
-            "modeling_file_paths": [
-                r'data/pointcloud_data/candidiate_objects/orange.npy',
-                r'data/pointcloud_data/candidiate_objects/coke_can.npy',
-                r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
-                r'data/pointcloud_data/candidiate_objects/cube_055.npy',
-                r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
-                r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
-                r'data/pointcloud_data/candidiate_objects/hammer.npy'
-            ],
-            "icp_rot_euler": [
-                False,
-                False,
-                True,
-                True,
-                True,
-                True,
-                # True,
-                True,
-            ],
-            "icp_rot_euler_limits": [
-                None,
-                None,
-                180,
-                90,
-                360,
-                360,
-                # 360,
-                360,
-            ]
-        }
+    def configure_object_settings(self, object_identifier):
+        #  # Object-specific configurations
+        # self.object_configs = {
+        #     "names": [
+        #         'orange_1024', 
+        #         'coke_can_1030', 
+        #         'realsense_box_1024',
+        #         'cube_055_1103', 
+        #         'bottle_coconut_1101', 
+        #         'sunscreen_1101',
+        #         'hammer_1102'
+        #     ],
+        #     "rotation_euler": [
+        #         [-np.pi, 0, np.pi/2],    # Orange
+        #         [-np.pi/2, np.pi/4, 0],  # Coke
+        #         [np.pi, 0, np.pi/2],     # Realsense Box
+        #         [-np.pi, 0, 0],          # Cube
+        #         [0, np.pi, 0],           # Coconut Bottle
+        #         [np.pi/2, 0, 0],         # Sunscreen
+        #         [np.pi/2, 0, 0]          # Hammer
+        #     ],
+        #     "modeling_file_paths": [
+        #         r'data/pointcloud_data/candidiate_objects/orange.npy',
+        #         r'data/pointcloud_data/candidiate_objects/coke_can.npy',
+        #         r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
+        #         r'data/pointcloud_data/candidiate_objects/cube_055.npy',
+        #         r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
+        #         r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
+        #         r'data/pointcloud_data/candidiate_objects/hammer.npy'
+        #     ],
+        #     "icp_rot_euler": [
+        #         False,
+        #         False,
+        #         True,
+        #         True,
+        #         True,
+        #         True,
+        #         # True,
+        #         True,
+        #     ],
+        #     "icp_rot_euler_limits": [
+        #         None,
+        #         None,
+        #         180,
+        #         90,
+        #         360,
+        #         360,
+        #         # 360,
+        #         360,
+        #     ]
+        # }
+        self.object_configs = self.object_manager.get_object_config(object_identifier)
 
-        self.object_idx = object_idx
-        self.object_name = self.object_configs["names"][object_idx]
-        self.euler_xyz = self.object_configs["rotation_euler"][object_idx]
-        self.object_modeling_file_path = self.object_configs["modeling_file_paths"][object_idx]
-        self.object_icp_rot_euler = self.object_configs["icp_rot_euler"][object_idx]
-        self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limits"][object_idx]
+        # self.object_idx = self.object.index(object_identifier)
+        self.object_name = self.object_configs["names"]
+        self.euler_xyz = self.object_configs["rotation_euler"]
+        self.object_modeling_file_path = self.object_configs["modeling_file_paths"]
+        self.object_icp_rot_euler = self.object_configs["icp_rot_euler"]
+        self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limits"]
         
     def load_sim_trajectory(self):
         # Load and transform simulated trajectory

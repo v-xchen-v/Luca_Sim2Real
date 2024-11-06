@@ -1,7 +1,8 @@
 """Filters out points that are not on the table."""
 import numpy as np
+import open3d as o3d
 
-def filter_point_outside_operation_area(pcd_in_table, x_range, y_range, z_range):
+def filter_point_outside_operation_area(pcd_in_table: o3d.geometry.PointCloud , x_range, y_range, z_range):
     """Filters out points that are not on the table.
 
     Args:
