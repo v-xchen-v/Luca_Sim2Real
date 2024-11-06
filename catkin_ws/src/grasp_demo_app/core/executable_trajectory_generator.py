@@ -5,6 +5,7 @@ from .sim2real_trajectory_processor import Sim2RealTrajectoryProcessor
 from .object_manager import ObjectManager
 from pointcloud_processing.pointcloud_io import load_point_cloud
 from pointcloud_processing.icp_matching import get_closest_pcd_match
+from pointcloud_processing.pointcloud_io import get_image_and_point_cloud_from_realseanse
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -31,8 +32,8 @@ class ExecutableTrajectoryGenerator:
         candidate_object_pcds = [load_point_cloud(candidate_object_modeling_file) 
                                  for candidate_object_modeling_file in candidate_object_modeling_files]
         
+        # TODO: should get point cloud from scene and find best match
         _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=None, candidate_pcds=candidate_object_pcds)
-        
         
         # # Dummy logic to determine the object
         # object_idx = 0

@@ -124,16 +124,25 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.vis_scene_point_cloud_in_board_coord = vis_scene_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_board_coord = vis_filtered_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_cam_coord = vis_filtered_point_cloud_in_cam_coord
-
+    
+    
+    def get_object_point_cloud(self,
+                               x_range=[None, None], 
+                               y_range=[None, None], 
+                               z_range=[None, None]):
+        self._capture_scene()
+        self._load_scene()
+        self._get_transform_table_to_camera(self.T_calibration_board_to_camera)
+        self._process_scene_pointcloud(x_range, y_range, z_range) # [num_points, 3]
+        return self.filtered_scene_point_cloud
+    
     def locate_partial_view_object_position(self, 
                                x_range=[None, None], 
                                y_range=[None, None], 
                                z_range=[None, None],
                                save_filtered_point_cloud: bool = True) -> np.ndarray:
-        self._capture_scene()
-        self._load_scene()
-        self._get_transform_table_to_camera(self.T_calibration_board_to_camera)
-        self._process_scene_pointcloud(x_range, y_range, z_range) # [num_points, 3]
+        self.get_object_point_cloud(x_range=x_range, y_range=y_range, z_range=z_range)
+        
         if self.filtered_scene_point_cloud_in_board_coord is None:
             raise ValueError("No object point cloud is found after filtering.")
         
