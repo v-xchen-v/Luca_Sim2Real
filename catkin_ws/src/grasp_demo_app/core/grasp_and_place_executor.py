@@ -59,7 +59,7 @@ class GraspAndPlaceExecutor:
 
     def lift(self, offset=0.1):
         """Lift the object"""
-        # TODO:
+        self.robot_comand_manager.move_up(offset=offset)
         pass
 
     def run(self):
