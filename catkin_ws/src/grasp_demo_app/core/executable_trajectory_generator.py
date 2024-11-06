@@ -26,7 +26,8 @@ class ExecutableTrajectoryGenerator:
         # TODO: move it to config
         self.x_keep_range=[-0.40, -0.1] # x can
         self.y_keep_range=[-0.05, 0.40]
-        self.z_keep_range=[-0.5, 0.070]
+        # self.z_keep_range=[-0.5, 0.073]
+        self.z_keep_range=[-0.5, -0.004]
         
         # TODO: restructure code to avoid computing this multiple times
         self.object_pc_extractor = ObjectPointCloudExtractor(
@@ -51,7 +52,7 @@ class ExecutableTrajectoryGenerator:
                                                                         y_keep_range=self.y_keep_range, 
                                                                         z_keep_range=self.z_keep_range)
         
-        if True:
+        if False:
             vis_pcds = []
             for item in candidate_object_pcds:
                 vis_pcds.append(item)
@@ -66,6 +67,7 @@ class ExecutableTrajectoryGenerator:
         # # Dummy logic to determine the object
         # object_idx = 0
         # return object_idx
+        print(f"best matching object: {candidate_object_names[best_matching_index]}")
         return candidate_object_names[best_matching_index]
     
     

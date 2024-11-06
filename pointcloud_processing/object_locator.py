@@ -456,7 +456,11 @@ class ObjectPoseLocator(ObjectPositionLocator):
         #     # axis = axis[1:]
         # else:
         if limit < 360:
-            zyx[limit_dimension[axis]] -= limit 
+            angle = zyx[limit_dimension[axis]]
+            angle %= limit
+            # angle -= limit
+            zyx[limit_dimension[axis]] = angle
+            
         
         print(f"Continue rotation to {zyx[limit_dimension[axis]]} degrees around the board's {axis}-axis, \n\
               or {-zyx[limit_dimension[axis]]} degrees around the board's -{axis} axis, \n\

@@ -32,11 +32,11 @@ def icp_align_with_multiple_rotations(source, target, threshold=0.01, max_iterat
 
     rotations = np.array([
         [0, 0, 0],
-        [np.pi / 2, 0, 0],
+        # [np.pi / 2, 0, 0],
         [np.pi, 0, 0],
-        [0, np.pi / 2, 0],
+        # [0, np.pi / 2, 0],
         [0, np.pi, 0],
-        [0, 0, np.pi / 2],
+        # [0, 0, np.pi / 2],
         [0, 0, np.pi]
     ])
     max_correspondence_distance = 0.1

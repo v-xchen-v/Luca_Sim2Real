@@ -46,7 +46,7 @@ class GraspAndPlaceExecutor:
         # TODO: compute first n steps by  flag
         
         real_traj = np.load(real_traj_path)
-        self.robot_comand_manager.execute_trajectory(real_traj[:first_n_steps])
+        self.robot_comand_manager.execute_trajectory(real_traj[:first_n_steps], hz=8)
         print('Grasp trajectory executed.')
 
     def grasp(self, real_traj_path):

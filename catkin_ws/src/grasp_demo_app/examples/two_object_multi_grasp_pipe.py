@@ -41,10 +41,11 @@ def main():
         
         # Moveto home position
         grasp_and_place_executor.goto_home()
+        # grasp_and_place_executor.lift(offset=0.05)
         
         # Generate and execute trajectory
         generate_executable_trajectory(traj_generator)
-        grasp_and_place_executor.goto_pregrasp(traj_generator.traj_file_path, hz=4)
+        grasp_and_place_executor.goto_pregrasp(traj_generator.traj_file_path, hz=2)
         execuate_trajectory(grasp_and_place_executor, traj_generator.traj_file_path)
         
         # Place object
@@ -53,6 +54,7 @@ def main():
         
         # Return to home position
         grasp_and_place_executor.goto_home()
+        # grasp_and_place_executor.lift(offset=0.05)
         
         # Pause to allow the user to press Enter to continue
         input("Press Enter to continue...")
