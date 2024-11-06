@@ -45,6 +45,11 @@ class RobotCommandManager:
         self.arm_hand_joint_pub.publish(msg)
         print("command published")
         
+        
+    def move_up(self, offset=0.1):
+        # in cartisian space, move up by offset
+        pass
+    
     def moveto_pose(self, pose):
         """Move the robot to the specified pose"""
         
