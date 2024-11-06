@@ -31,12 +31,14 @@ class GraspAndPlaceExecutor:
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
         self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
 
-    def goto_pregrasp(self, target_position):
+    def goto_pregrasp(self, real_traj_path):
         """Optional"""
         """Speed control, softly reach the rl traj start point."""
         """Approach the target position"""
-        # TODO:
-        pass
+        # TODO: given the target arm pose and hand angles as input
+        real_traj = np.load(real_traj_path)
+        self.robot_comand_manager.execute_trajectory(real_traj[:1])
+        print('Robot reached the pregrasp position.')
 
     def _execute_rl_trajectory(self, real_traj_path):
         """Execute the RL trajectory"""
