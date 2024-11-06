@@ -8,18 +8,21 @@ Pre-requesties:
 - A Calibration board on the scene and known or computed the T_calibration_board_to_camera.
 """
     
-from pointcloud_processing.pointcloud_io import save_image_and_point_cloud_from_realsense
+from pointcloud_processing.pointcloud_io import (save_image_and_point_cloud_from_realsense, load_npy_as_point_cloud)
 from calibration.calibrate_board_to_camera import compute_table_to_camera
 from pointcloud_processing.table_filter import filter_point_outside_operation_area
-from pointcloud_processing.transformations import camera_to_calibration_board_frame
+from pointcloud_processing.transformations import transform_point_cloud_from_camera_to_table
+from pytransform3d.transformations import invert_transform
+from pointcloud_processing.pointcloud_visualization import visualize_numpy_as_point_cloud
 import cv2
+import numpy as np
 
 # Save the point cloud from the realsense camera
 save_image_and_point_cloud_from_realsense('./data/debug_data/pointcloud_data/camera_captures', 'test', overwrite_if_exists=True)
 
 # load the point cloud
-from pointcloud_processing.pointcloud_io import load_point_cloud
-points = load_point_cloud('./data/debug_data/pointcloud_data/camera_captures/test.ply')
+from pointcloud_processing.pointcloud_io import load_point_cloud_as_numpy
+points = load_point_cloud_as_numpy('./data/debug_data/pointcloud_data/camera_captures/test.pcd')
 print(points.shape)
 
 # Compute the table to camera transformation
@@ -34,11 +37,15 @@ T_calibration_board_to_camera = compute_table_to_camera(image=table_calibration_
                                                         mtx=mtx, dist=dist, 
                                                         report_dir='./data/debug_data/pointcloud_data/camera_captures', error_threshold=1)
 
-points_in_calibration_board = camera_to_calibration_board_frame(points, T_calibration_board_to_camera)
+points_in_calibration_board = \
+    transform_point_cloud_from_camera_to_table(load_npy_as_point_cloud(points), 
+                                                T_depthcam_to_rgbcam=np.load(r'calibration/calibration_data/camera1/depth_to_rgb/T_depth_to_rgb.npy'),
+                                                T_rgbcam_to_table=invert_transform(T_calibration_board_to_camera))
 from pointcloud_processing.pointcloud_visualization import visualize_point_cloud
 visualize_point_cloud(points_in_calibration_board)
 
-points_filtered = filter_point_outside_operation_area(points_in_calibration_board, x_range=(0, 1), y_range=(0, 1), z_range=(None, 0.5))
+points_filtered = filter_point_outside_operation_area(points_in_calibration_board, 
+                                                      x_range=(-1, 0), y_range=(0, 1), z_range=(-0.5, 0))
 
 # # visualize the filtered point cloud
 # from pointcloud_processing.pointcloud_io import save_point_cloud
@@ -46,4 +53,4 @@ points_filtered = filter_point_outside_operation_area(points_in_calibration_boar
 # print("Filtered point cloud is saved to ./data/debug_data/pointcloud_data/camera_captures/test_filtered.ply")
 
 # Visualize the filtered point cloud
-visualize_point_cloud(points_filtered)
+visualize_numpy_as_point_cloud(points_filtered)

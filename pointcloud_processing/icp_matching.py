@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 # TODO: put all candidates here, and do test
-candidate_pcbs = [
+candidate_pcds = [
     "data/pointcloud_data/candidiate_objects/coke_can.npy",
 ]
 
@@ -154,7 +154,7 @@ def icp_align(source, target, threshold=0.01, max_iterations=50):
 
     # print("ICP converged:", reg_p2p.converged)
     print("ICP Fitness:", reg_p2p.fitness)
-    print("ICP Transformation:\n", reg_p2p.transformation)
+    # print("ICP Transformation:\n", reg_p2p.transformation)
 
     return reg_p2p.transformation, reg_p2p.fitness, reg_p2p.inlier_rmse
 
@@ -223,3 +223,45 @@ def align_and_restore(source, target):
     return aligned_source, restored_target
 
 
+def get_closest_pcd_match(target_pcd, candidate_pcds, 
+                                  max_correspondence_distance=0.1, w_fit=1.0, w_rmse=50.0):
+    # TODO: the weight of fitness and rmse should be adjusted based on the object
+    
+    best_matching_pcd = None
+    best_matching_index = -1  # Initialize to indicate no match if not found
+    best_fitness = 0
+    best_score = -float('inf')
+    best_rmse = float('inf')
+    best_transformation = None
+    
+    for i, candidate_pcd in enumerate(candidate_pcds):
+        transformation, fitness, rmse = icp_align(candidate_pcd, target_pcd)
+        score = w_fit * fitness - w_rmse * rmse  # Higher fitness, lower RMSE is better
+        # Apply ICP registration
+        # icp_result = o3d.pipelines.registration.registration_icp(
+        #     candidate_pcd, target_pcd, max_correspondence_distance,
+        #     init=np.eye(4),
+        #     criteria=o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=1000)
+        # )
+
+        # Check if this candidate is a better match
+        # if icp_result.fitness > best_fitness or (icp_result.fitness == best_fitness and icp_result.inlier_rmse < best_rmse):
+        #     best_fitness = icp_result.fitness
+        #     best_rmse = icp_result.inlier_rmse
+        #     best_pcd_file = candidate_file
+        #     best_transformation = icp_result.transformation
+        
+        #visualize the aligned point cloud
+        # o3d.visualization.draw_geometries([candidate_pcd.transform(transformation), target_pcd])
+        print("RMSE:", rmse)    
+        print("Score:", score)
+            
+        if score > best_score:
+            best_score = score
+            best_fitness = fitness
+            best_rmse = rmse
+            best_matching_pcd = candidate_pcd
+            best_transformation = transformation
+            best_matching_index = i
+            
+    return best_matching_pcd, best_matching_index, best_fitness, best_rmse, best_transformation, best_score
