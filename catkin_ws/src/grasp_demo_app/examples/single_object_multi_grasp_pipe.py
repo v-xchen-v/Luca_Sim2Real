@@ -1,8 +1,19 @@
+"""Grasp orange multiple times"""
+
+"""
+- conda activate py38
+- source /opt/ros/noetic/setup.bash
+- source ./catkin_ws/devel/setup.bash
+- then, run this script
+"""
+import os, sys
+module_path = os.path.abspath(os.path.join('catkin_ws/src/grasp_demo_app'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+
 from core.grasp_and_place_executor import GraspAndPlaceExecutor
 from core.executable_trajectory_generator import ExecutableTrajectoryGenerator
-
-# TODO: work ver for orange and realsense box
-
 
 def setup_scene():
     print("Setting up scene") # place holder for setup scene at very first then no need to repeat
@@ -15,8 +26,11 @@ def execuate_trajectory(grasp_and_place_executor: GraspAndPlaceExecutor, traject
     grasp_and_place_executor.grasp(trajectory_file)
 
 def main():
+    # Config
+    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_config.json'
+    
     # Initialize objects
-    traj_generator = ExecutableTrajectoryGenerator()    
+    traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=sim2real_config)    
     grasp_and_place_executor = GraspAndPlaceExecutor()
     
     repeat_times = 10
@@ -30,7 +44,7 @@ def main():
         
         # Generate and execute trajectory
         generate_executable_trajectory(traj_generator)
-        execuate_trajectory(grasp_and_place_executor, 'trace.npy') # traj_generator.traj_file_path
+        execuate_trajectory(grasp_and_place_executor, traj_generator.traj_file_path)
         
         # Return to home position
         grasp_and_place_executor.goto_home()

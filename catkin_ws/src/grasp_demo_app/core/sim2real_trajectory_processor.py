@@ -7,19 +7,37 @@ if module_path not in sys.path:
 
 from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
+import json
 
 class Sim2RealTrajectoryProcessor:
-    def __init__(self, camera_name="camera1", capture_new_calibration=True) -> None:
+    def __init__(self, config) -> None:
         # Initialize attributes
         self.real_traj_adaptor = TrajectoryAdaptor()
-        self.camera_name = camera_name
-        self.capture_new_calibration = capture_new_calibration
         
-        # Calibration board settings
-        self.calibration_board_pattern_size = (5, 8)
-        self.calibration_board_square_size = 0.03
+        # Load configuration
+        self._load_config(config)
+        ## Camera settings
+        ## self.camera_name = "camera1"
+        ## self.capture_new_calibration = True
+        self.camera_name = self.config["camera_name"]
+        self.capture_new_calibration = self.config["capture_new_calibration"]
         
+        ## Calibration board settings
+        # self.calibration_board_pattern_size = (5, 8)
+        # self.calibration_board_square_size = 0.03
+        self.calibration_board_pattern_size = tuple(self.config["calibration_board_pattern_size"])
+        self.calibration_board_square_size = self.config["calibration_board_square_size"]
         
+    def _load_config(self, config=None):
+        # Load configuration from a dictionary or a json file
+        if isinstance(config, str):
+            with open(config, 'r') as f:
+                self.config = json.load(f)
+        elif isinstance(config, dict):
+            self.config = config
+        else:
+            raise ValueError("Invalid config type. Use a dictionary or a json file.")
+                
     def setup_robot_table(self):
         # Calculate the transformation between arm, table, and robot
         calibration_data_dir = f"calibration/calibration_data/{self.camera_name}"
@@ -37,8 +55,12 @@ class Sim2RealTrajectoryProcessor:
          # Object-specific configurations
         self.object_configs = {
             "names": [
-                'orange_1024', 'coke_can_1030', 'realsense_box_1024',
-                'cube_055_1103', 'bottle_coconut_1101', 'sunscreen_1101',
+                'orange_1024', 
+                'coke_can_1030', 
+                'realsense_box_1024',
+                'cube_055_1103', 
+                'bottle_coconut_1101', 
+                'sunscreen_1101',
                 'hammer_1102'
             ],
             "rotation_euler": [
@@ -112,3 +134,5 @@ class Sim2RealTrajectoryProcessor:
         save_path = f"data/trajectory_data/real_trajectory/{self.object_name}/step-0.npy"
         self.real_traj_adaptor.save_executable_trajectory(save_path)
         print(f'Real trajectory data saved at: {save_path}')
+        
+        return save_path
