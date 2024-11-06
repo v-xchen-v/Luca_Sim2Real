@@ -33,7 +33,7 @@ if __name__ == "__main__":
     print(f'center before align: {get_point_cloud_center(target_pc)}')
     
     # Align and restore point clouds
-    aligned_source, restored_target = align_source_to_target(source_pc, target_pc)
+    aligned_source, restored_target, matrix, _, _ = align_source_to_target(source_pc, target_pc)
 
     print(f'center after align: {get_point_cloud_center(aligned_source)}')
     print(f'center after align: {get_point_cloud_center(restored_target)}')

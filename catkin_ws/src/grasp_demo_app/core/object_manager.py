@@ -60,7 +60,7 @@ class ObjectManager:
                     "rotation_euler": self.object_configs["rotation_euler"][identifier],
                     "modeling_file_path": self.object_configs["modeling_file_paths"][identifier],
                     "icp_rot_euler": self.object_configs["icp_rot_euler"][identifier],
-                    "icp_rot_euler_limits": self.object_configs["icp_rot_euler_limits"][identifier]
+                    "icp_rot_euler_limit": self.object_configs["icp_rot_euler_limits"][identifier]
                 }
                 return object_config
             else:
@@ -73,7 +73,7 @@ class ObjectManager:
                     "rotation_euler": self.object_configs["rotation_euler"][index],
                     "modeling_file_path": self.object_configs["modeling_file_paths"][index],
                     "icp_rot_euler": self.object_configs["icp_rot_euler"][index],
-                    "icp_rot_euler_limits": self.object_configs["icp_rot_euler_limits"][index]
+                    "icp_rot_euler_limit": self.object_configs["icp_rot_euler_limits"][index]
                 }
                 return object_config
             else:

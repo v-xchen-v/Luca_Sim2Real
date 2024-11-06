@@ -177,7 +177,8 @@ class ObjectPositionLocator(ObjectLocatorBase):
         
     def _icp(self):
         # Align and restore point clouds
-        self.aligned_source, restored_target, self.source_to_algined_rotation_matrix = align_source_to_target(self.object_model_pcd, 
+        self.aligned_source, restored_target, self.source_to_algined_rotation_matrix,\
+            fitness, rmse = align_source_to_target(self.object_model_pcd, 
                                                                  self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord),
                                                                  vis_aligned=True)
     

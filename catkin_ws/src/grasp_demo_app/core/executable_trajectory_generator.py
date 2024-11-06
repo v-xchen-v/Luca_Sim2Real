@@ -3,10 +3,13 @@
 
 from .sim2real_trajectory_processor import Sim2RealTrajectoryProcessor
 from .object_manager import ObjectManager
-from pointcloud_processing.pointcloud_io import load_point_cloud
+from pointcloud_processing.pointcloud_io import load_npy_file_as_point_cloud
 from pointcloud_processing.icp_matching import get_closest_pcd_match
 from pointcloud_processing.pointcloud_io import get_image_and_point_cloud_from_realseanse
 from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
+import open3d as o3d
+
+
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
         # Object Manager
@@ -21,7 +24,7 @@ class ExecutableTrajectoryGenerator:
         
         # for 2f table
         # TODO: move it to config
-        self.x_keep_range=[-0.45, -0.1]
+        self.x_keep_range=[-0.40, -0.1] # x can
         self.y_keep_range=[-0.05, 0.40]
         self.z_keep_range=[-0.5, 0.070]
         
@@ -39,7 +42,7 @@ class ExecutableTrajectoryGenerator:
         candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
                                              for obj in candidate_object_names]
         
-        candidate_object_pcds = [load_point_cloud(candidate_object_modeling_file) 
+        candidate_object_pcds = [load_npy_file_as_point_cloud(candidate_object_modeling_file) 
                                  for candidate_object_modeling_file in candidate_object_modeling_files]
         
         scene_pcd, _ = get_image_and_point_cloud_from_realseanse()
@@ -48,8 +51,17 @@ class ExecutableTrajectoryGenerator:
                                                                         y_keep_range=self.y_keep_range, 
                                                                         z_keep_range=self.z_keep_range)
         
+        if True:
+            vis_pcds = []
+            for item in candidate_object_pcds:
+                vis_pcds.append(item)
+            vis_pcds.append(object_pcd_in_board_coord)
+            o3d.visualization.draw_geometries(vis_pcds)
+    
+
         # TODO: should get point cloud from scene and find best match
-        _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, candidate_pcds=candidate_object_pcds)
+        _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, 
+                                                                   candidate_pcds=candidate_object_pcds)
         
         # # Dummy logic to determine the object
         # object_idx = 0

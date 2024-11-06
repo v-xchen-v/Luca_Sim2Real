@@ -110,7 +110,7 @@ def icp_align(source, target, threshold=0.01, max_iterations=50):
     # # Use the global registration result as the initial transformation for ICP
     # init_transformation = result.transformation
     # print("Initial Transformation from Global Registration:")
-    print(init_transformation)
+    # print(init_transformation)
 
     # Compute normals if necessary (for ICP with point-to-plane)
     source.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
@@ -203,7 +203,7 @@ def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=F
         print(f"Aligned point cloud saved to {save_aligned_pcd_path}") 
                
     source_to_aligned_rotation_matrix = transformation[:3, :3]
-    return aligned_source, restored_target, source_to_aligned_rotation_matrix
+    return aligned_source, restored_target, source_to_aligned_rotation_matrix, fitness, rmse
 
 def align_and_restore(source, target):
     # Step 1: Center both point clouds at the origin
@@ -235,7 +235,7 @@ def get_closest_pcd_match(target_pcd, candidate_pcds,
     best_transformation = None
     
     for i, candidate_pcd in enumerate(candidate_pcds):
-        transformation, fitness, rmse = icp_align(candidate_pcd, target_pcd)
+        _, _, transformation, fitness, rmse = align_source_to_target(candidate_pcd, target_pcd)
         score = w_fit * fitness - w_rmse * rmse  # Higher fitness, lower RMSE is better
         # Apply ICP registration
         # icp_result = o3d.pipelines.registration.registration_icp(
