@@ -1,3 +1,5 @@
+"""The simplest executation pipeline."""
+
 import os, sys
 module_path = os.path.abspath(os.path.join('catkin_ws/src/grasp_demo_app'))
 if module_path not in sys.path:

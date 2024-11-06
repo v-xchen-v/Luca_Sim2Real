@@ -10,18 +10,28 @@ class GraspAndPlaceExecutor:
         # joint angles of the home position, order in [joint1, ..., joint7]
         ## Represent the home position of the robot
         self.home_position = np.array([-41.3, -8.7, -27.2, 74.0, 71.8, -43.3, 20.0]) /180 * np.pi
-        
-        self.preplace_position = [] # TODO: give a dummy place at first.
+        # TODO: give a dummy place at first, replace to real position later
+        self.preplace_position = np.array([-41.3, -24.9, -44.6, 77.3, 68.8, -12.7, 6.2]) /180*np.pi
         
         # command manager
         self.robot_comand_manager = RobotCommandManager()
 
     def goto_home(self):
         """Return to the home position"""
-        for i in range(2):
-            self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
+        # for i in range(2):
+        #     self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
+            
+        rospy.sleep(1)
+        self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
         print('Robot returned to home position.')
     
+    def goto_preplace(self, target_position):
+        """Approach the target position for placing"""
+        rospy.sleep(1)
+        # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
+        self.robot_comand_manager.goto_joint_angles(self.preplace_position,
+                                                    [0, 0, 0, 0, 0, 0, 0])
+
     def goto_pregrasp(self, target_position):
         """Optional"""
         """Speed control, softly reach the rl traj start point."""
@@ -41,9 +51,6 @@ class GraspAndPlaceExecutor:
         self._execute_rl_trajectory(real_traj_path)
         pass
 
-    def goto_preplace(self, target_position):
-        """Approach the target position for placing"""
-        pass
 
     def open_hand(self):
         """Release the object"""
