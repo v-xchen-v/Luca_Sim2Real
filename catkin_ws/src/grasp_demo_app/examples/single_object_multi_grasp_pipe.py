@@ -41,10 +41,15 @@ def main():
         
         # Moveto home position
         grasp_and_place_executor.goto_home()
+        grasp_and_place_executor.goto_pregrasp()
         
         # Generate and execute trajectory
         generate_executable_trajectory(traj_generator)
         execuate_trajectory(grasp_and_place_executor, traj_generator.traj_file_path)
+        
+        # Place object
+        grasp_and_place_executor.goto_preplace()
+        grasp_and_place_executor.open_hand()
         
         # Return to home position
         grasp_and_place_executor.goto_home()
