@@ -30,7 +30,7 @@ def load_npy_as_point_cloud(points: np.ndarray) -> o3d.geometry.PointCloud:
     
     return pcd
 
-def load_point_cloud(path: str) -> np.ndarray:
+def load_point_cloud(path: str) -> o3d.geometry.PointCloud:
     """
     Load the point cloud from the given path.
 
@@ -40,6 +40,10 @@ def load_point_cloud(path: str) -> np.ndarray:
     Returns:
     - points: The loaded point cloud as a NumPy array.
     """
+    # if file not exists, throw error
+    if not os.path.exists(path):
+        raise ValueError("point cloud file not found")
+    
     point_cloud = o3d.io.read_point_cloud(path)
     
     return point_cloud

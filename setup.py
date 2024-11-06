@@ -8,7 +8,7 @@ setup(
         'pytransform3d',
         'opencv-python',
         'pyrealsense2',
-        # 'torch', # only for load sim trajectory data, not necessary for the main functionality,
+        'torch', # only for load sim trajectory data, not necessary for the main functionality,
         "open3d",
         'pyglet==1.5.27'
     ],

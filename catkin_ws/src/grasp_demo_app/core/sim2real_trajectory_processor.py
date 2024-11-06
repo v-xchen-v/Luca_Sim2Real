@@ -108,11 +108,11 @@ class Sim2RealTrajectoryProcessor:
         self.object_configs = self.object_manager.get_object_config(object_identifier)
 
         # self.object_idx = self.object.index(object_identifier)
-        self.object_name = self.object_configs["names"]
+        self.object_name = self.object_configs["name"]
         self.euler_xyz = self.object_configs["rotation_euler"]
-        self.object_modeling_file_path = self.object_configs["modeling_file_paths"]
+        self.object_modeling_file_path = self.object_configs["modeling_file_path"]
         self.object_icp_rot_euler = self.object_configs["icp_rot_euler"]
-        self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limits"]
+        self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limit"]
         
     def load_sim_trajectory(self):
         # Load and transform simulated trajectory

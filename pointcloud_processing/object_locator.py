@@ -13,6 +13,7 @@ from pytransform3d.transformations import invert_transform
 import os
 from pointcloud_processing.icp_matching import align_source_to_target
 from scipy.spatial.transform import Rotation as R   
+from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
 
 class ObjectLocatorBase:
     """Shared methods and attributes for ObjectPositionLocator and ObjectPoseLocator."""
@@ -39,6 +40,9 @@ class ObjectLocatorBase:
         self.scene_point_cloud_in_camera_coord = None
         self.T_calibration_board_to_camera = None
         self.filtered_scene_point_cloud = None
+       
+        # object pcd in board coord
+        self.object_pcd_extractor = ObjectPointCloudExtractor(T_calibration_board_to_camera)
         
     def _capture_scene(self):
         save_image_and_point_cloud_from_realsense(
@@ -124,16 +128,25 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.vis_scene_point_cloud_in_board_coord = vis_scene_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_board_coord = vis_filtered_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_cam_coord = vis_filtered_point_cloud_in_cam_coord
-
+    
+    
+    def get_object_point_cloud(self,
+                               x_range=[None, None], 
+                               y_range=[None, None], 
+                               z_range=[None, None]):
+        self._capture_scene()
+        self._load_scene()
+        self._get_transform_table_to_camera(self.T_calibration_board_to_camera)
+        self._process_scene_pointcloud(x_range, y_range, z_range) # [num_points, 3]
+        return self.filtered_scene_point_cloud
+    
     def locate_partial_view_object_position(self, 
                                x_range=[None, None], 
                                y_range=[None, None], 
                                z_range=[None, None],
                                save_filtered_point_cloud: bool = True) -> np.ndarray:
-        self._capture_scene()
-        self._load_scene()
-        self._get_transform_table_to_camera(self.T_calibration_board_to_camera)
-        self._process_scene_pointcloud(x_range, y_range, z_range) # [num_points, 3]
+        self.get_object_point_cloud(x_range=x_range, y_range=y_range, z_range=z_range)
+        
         if self.filtered_scene_point_cloud_in_board_coord is None:
             raise ValueError("No object point cloud is found after filtering.")
         
@@ -164,7 +177,8 @@ class ObjectPositionLocator(ObjectLocatorBase):
         
     def _icp(self):
         # Align and restore point clouds
-        self.aligned_source, restored_target, self.source_to_algined_rotation_matrix = align_source_to_target(self.object_model_pcd, 
+        self.aligned_source, restored_target, self.source_to_algined_rotation_matrix,\
+            fitness, rmse = align_source_to_target(self.object_model_pcd, 
                                                                  self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord),
                                                                  vis_aligned=True)
     
@@ -442,7 +456,11 @@ class ObjectPoseLocator(ObjectPositionLocator):
         #     # axis = axis[1:]
         # else:
         if limit < 360:
-            zyx[limit_dimension[axis]] -= limit 
+            angle = zyx[limit_dimension[axis]]
+            angle %= limit
+            # angle -= limit
+            zyx[limit_dimension[axis]] = angle
+            
         
         print(f"Continue rotation to {zyx[limit_dimension[axis]]} degrees around the board's {axis}-axis, \n\
               or {-zyx[limit_dimension[axis]]} degrees around the board's -{axis} axis, \n\

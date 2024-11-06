@@ -1,0 +1,7 @@
+{
+    "camera_name": "camera1",
+    "capture_new_calibration": true,
+    "calibration_board_pattern_size": [5, 8],
+    "calibration_board_square_size": 0.03
+    
+}
