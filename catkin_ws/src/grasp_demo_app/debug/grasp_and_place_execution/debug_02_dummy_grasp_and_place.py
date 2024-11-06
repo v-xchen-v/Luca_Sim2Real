@@ -1,4 +1,4 @@
-"""The simplest executation pipeline."""
+"""Better way to approac the pregrasp"""
 
 import os, sys
 module_path = os.path.abspath(os.path.join('catkin_ws/src/grasp_demo_app'))
@@ -13,6 +13,7 @@ grasp_executor = GraspAndPlaceExecutor()
 grasp_executor.goto_home()
 
 traj_filepath = 'catkin_ws/src/grasp_demo_app/debug/grasp_and_place_execution/data/real_trajectory/sunscreen_1101/step-0.npy'
+grasp_executor.goto_pregrasp(traj_filepath) # Necessary? If need slower speed when approaching?
 grasp_executor.grasp(traj_filepath)
 
 grasp_executor.goto_preplace()

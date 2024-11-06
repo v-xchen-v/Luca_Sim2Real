@@ -14,7 +14,26 @@ class RobotCommandManager:
         
         # a sequence of arm_hand_poses
         # self.trajectory_pub = rospy.Publisher("/???", ???, queue_size=1)
+
+    def goto_hand_joint_angles(self, hand_joint_angles):
+        """Move the robot to the specified hand joint angles"""
         
+        rospy.sleep(1)
+        msg = ArmJointCommandMsg()
+        msg.right_ee_data = hand_joint_angles
+        msg.right_arm_data = []
+        self.arm_hand_joint_pub.publish(msg)
+        print("command published")
+        
+    def goto_arm_joint_angles(self, arm_joint_angles):
+        """Move the robot to the specified arm joint angles"""
+        
+        rospy.sleep(1)
+        msg = ArmJointCommandMsg()
+        msg.right_arm_data = arm_joint_angles
+        msg.right_ee_data = []
+        self.arm_hand_joint_pub.publish(msg)
+        print("command published")
         
     def goto_joint_angles(self, arm_joint_angles, hand_joint_angles):
         """Move the robot to the specified joint angles"""
@@ -34,10 +53,10 @@ class RobotCommandManager:
         msg.right_ee_data = pose[7:13]
         self.arm_hand_pose_pub.publish(msg)
 
-    def execute_trajectory(self, trajectory):
+    def execute_trajectory(self, trajectory, hz=10):
         """Execute the specified trajectory"""
         
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(hz)
         
         for i, traj_point in enumerate(trajectory):
             print(f"Executing trajectory point {i+1}/{len(trajectory)}")
