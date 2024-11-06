@@ -31,9 +31,17 @@ class ExecutableTrajectoryGenerator:
         self.processor.configure_object_settings(object_idx=object_idx)
         
         
+        # for 2f table
+        # TODO: move it to config
+        x_keep_range=[-0.45, -0.1]
+        y_keep_range=[-0.05, 0.40]
+        z_keep_range=[-0.5, 0.070]
+        
         # Trajectory generation
         self.processor.load_sim_trajectory()
-        self.processor.locate_object(x_keep_range=[-0.30, 0], y_keep_range=[-0.05, 0.15], z_keep_range=[None, -0.011])
+        self.processor.locate_object(x_keep_range=x_keep_range, 
+                                     y_keep_range=y_keep_range, 
+                                     z_keep_range=z_keep_range)
         self.processor.map_sim_to_real()
         self.processor.compute_real_hand_to_robot_base_transform()
         self.traj_file_path = self.processor.save_real_trajectory()
