@@ -8,6 +8,7 @@ from pointcloud_processing.icp_matching import get_closest_pcd_match
 from pointcloud_processing.pointcloud_io import get_image_and_point_cloud_from_realseanse
 from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
 import open3d as o3d
+import json
 
 
 class ExecutableTrajectoryGenerator:
@@ -33,12 +34,23 @@ class ExecutableTrajectoryGenerator:
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
+    def _load_config(self, config):
+        # Load configuration from a dictionary or a json file
+        if isinstance(config, str):
+            with open(config, 'r') as f:
+                self.config = json.load(f)
+        elif isinstance(config, dict):
+            self.config = config
+        else:
+            raise ValueError("Invalid config type. Use a dictionary or a json file.")
+        
     def capture_scene(self):
         pass
     
     
     def determine_object(self):
-        candidate_object_names = ['orange_1024', 'realsense_box_1024']
+        # candidate_object_names = ['orange_1024', 'realsense_box_1024']
+        candidate_object_names = self.config["candidiates"]
         
         candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
                                              for obj in candidate_object_names]
