@@ -16,7 +16,7 @@ import numpy as np
 orange_upside_rot_eular = [-np.pi, 0, np.pi/2] # base on calibration board base coordinate
 # coke_object_rot_eular = [np.pi/2, -np.pi/2, 0] # for coke_1023
 coke_object_rot_eular = [-np.pi/2, np.pi/2-np.pi/4, 0] # for coke_1030
-cube_rot_euler = [np.pi, 0, np.pi/2] # 
+cube_rot_euler = [np.pi, 0, np.pi/2-np.pi/4] # 
 realsense_box_rot_euler = [np.pi, 0, np.pi/2]
 cube_rot_euler = [-np.pi, 0, 0] # for cube_1023
 bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
@@ -27,12 +27,12 @@ hammer_rot_euler = [np.pi/2, 0, 0] # for hammer_1102
 
 # ------------------- Robot table setup ------------------- #
 # setup robot and table
-CAMERA_NAME = "camera1"
+CAMERA_NAME = "camera2"
 CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS = True
-# CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
-# CALIBRATION_BOARD_SQUARE_SIZE = 0.02
-CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
-CALIBRATION_BOARD_SQUARE_SIZE = 0.03
+CALIBRATION_BOARD_PATTERN_SIZE = (8, 11)
+CALIBRATION_BOARD_SQUARE_SIZE = 0.02
+# CALIBRATION_BOARD_PATTERN_SIZE = (5, 8)
+# CALIBRATION_BOARD_SQUARE_SIZE = 0.03
 real_traj_adaptor.calculate_arm_table_robot_transform(
     calibration_data_dir=f"calibration/calibration_data/{CAMERA_NAME}",
     overwrite_if_exists=CAPTURE_NEW_TABLE_CALIBRATION_IF_EXISTS, # Please overwrite if table is moved relative to camera
@@ -126,7 +126,7 @@ icp_rot_euler_limits = [
 ]
 
 # The cleanser is hard to do icp since the poor object point cloud quality
-object_idx=3
+object_idx=-1
 sim_traj_object_name = sim_traj_object_names[object_idx]
 sim_traj_file_basename = sim_traj_file_basenames[object_idx]
 euler_xyz = euler_object_places[object_idx]
@@ -151,15 +151,15 @@ scene_data_file_name = "test_scene"
 camera_intrinsics_data_dir = f"calibration/calibration_data/{CAMERA_NAME}/camera_intrinsics"
 # object_modeling_file_path = r'data/pointcloud_data/candidiate_objects/cube_055.npy'
 CAPTURE_NEW_SCENE_TABLE_CALIBRATION_IF_EXISTS = True
-# for 11f table
-x_keep_range = [-0.30, 0]
-y_keep_range = [-0.05, 0.15]
-z_keep_range = [None, -0.011]
+# # for 11f table
+# x_keep_range = [-0.30, 0]
+# y_keep_range = [-0.05, 0.15]
+# z_keep_range = [None, -0.011]
 
-# # for 2f table
-# x_keep_range=[-0.45, -0.1]
-# y_keep_range=[-0.05, 0.25]
-# z_keep_range=[-0.5, 0.073]
+# for 2f table
+x_keep_range=[-0.35, -0.1]
+y_keep_range=[-0.05, 0.40]
+z_keep_range=[-0.5, 0.072]
 # euler_xyz = coke_object_rot_eular
 
 # locate object relative to calibration board

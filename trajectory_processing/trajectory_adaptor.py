@@ -466,6 +466,9 @@ class TrajectoryAdaptor:
 
         
     def save_executable_trajectory(self, adapted_trajectory_save_path: str):
+        if self.T_hand_to_robotbase_with_robotbase_ref is None:
+            raise ValueError("Should do ... first.")
+        
         T_robot_base_to_right_hand_base_steps_real_xyzq = [matrix_to_xyz_quaternion(T) for 
                                                      T in self.T_hand_to_robotbase_with_robotbase_ref]
 

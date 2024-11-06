@@ -1,4 +1,10 @@
 # Uni Grasp Demo App
+## Run Command
+- conda activate py38
+- source /opt/ros/noetic/setup.bash
+- source ./catkin_ws/devel/setup.bash
+- roslaunch grasp_demo_app debug_direct_command_only.launch
+
 ## TODOs
 - Simplest dummy pipe gohome-> grasp -> gohome
 - + place object to blanket

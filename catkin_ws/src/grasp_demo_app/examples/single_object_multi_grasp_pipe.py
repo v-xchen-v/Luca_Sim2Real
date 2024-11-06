@@ -27,7 +27,7 @@ def execuate_trajectory(grasp_and_place_executor: GraspAndPlaceExecutor, traject
 
 def main():
     # Config
-    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_config.json'
+    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_2f.json'
     
     # Initialize objects
     traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=sim2real_config)    
@@ -44,7 +44,12 @@ def main():
         
         # Generate and execute trajectory
         generate_executable_trajectory(traj_generator)
+        grasp_and_place_executor.goto_pregrasp(traj_generator.traj_file_path, hz=4)
         execuate_trajectory(grasp_and_place_executor, traj_generator.traj_file_path)
+        
+        # Place object
+        grasp_and_place_executor.goto_preplace()
+        grasp_and_place_executor.open_hand()
         
         # Return to home position
         grasp_and_place_executor.goto_home()

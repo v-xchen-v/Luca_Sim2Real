@@ -80,12 +80,35 @@ class Sim2RealTrajectoryProcessor:
                 r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
                 r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
                 r'data/pointcloud_data/candidiate_objects/hammer.npy'
+            ],
+            "icp_rot_euler": [
+                False,
+                False,
+                True,
+                True,
+                True,
+                True,
+                # True,
+                True,
+            ],
+            "icp_rot_euler_limits": [
+                None,
+                None,
+                180,
+                90,
+                360,
+                360,
+                # 360,
+                360,
             ]
         }
+
         self.object_idx = object_idx
         self.object_name = self.object_configs["names"][object_idx]
         self.euler_xyz = self.object_configs["rotation_euler"][object_idx]
         self.object_modeling_file_path = self.object_configs["modeling_file_paths"][object_idx]
+        self.object_icp_rot_euler = self.object_configs["icp_rot_euler"][object_idx]
+        self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limits"][object_idx]
         
     def load_sim_trajectory(self):
         # Load and transform simulated trajectory
@@ -116,7 +139,11 @@ class Sim2RealTrajectoryProcessor:
             x_keep_range=x_keep_range,
             y_keep_range=y_keep_range,
             z_keep_range=z_keep_range,
-            euler_xyz=self.euler_xyz
+            euler_xyz=self.euler_xyz,
+            T_calibration_board_to_camera=None,
+            locate_rot_by_icp=self.object_icp_rot_euler,
+            icp_rot_euler_limit=self.object_icp_rot_euler_limit,
+            
         )
         print(f'Object position: {object_pos[:, 3]}')
         
@@ -128,6 +155,7 @@ class Sim2RealTrajectoryProcessor:
     def compute_real_hand_to_robot_base_transform(self):
         # Compute necessary transformations in the mapped real trajectory
         self.real_traj_adaptor.compute_mapped_real_hand_to_robot_base_transform()
+        self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference()
 
     def save_real_trajectory(self):
         # Save real trajectory data
