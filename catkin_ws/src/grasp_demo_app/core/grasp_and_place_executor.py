@@ -29,8 +29,7 @@ class GraspAndPlaceExecutor:
         """Approach the target position for placing"""
         rospy.sleep(1)
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
-        self.robot_comand_manager.goto_joint_angles(self.preplace_position,
-                                                    [0, 0, 0, 0, 0, 0, 0])
+        self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
 
     def goto_pregrasp(self, target_position):
         """Optional"""
@@ -51,13 +50,12 @@ class GraspAndPlaceExecutor:
         self._execute_rl_trajectory(real_traj_path)
         pass
 
-
     def open_hand(self):
         """Release the object"""
-        pass
+        # open all fingers to release the object
+        self.robot_comand_manager.goto_hand_joint_angles([0, 0, 0, 0, 0, 0])
 
-
-    def lift(self):
+    def lift(self, offset=0.1):
         """Lift the object"""
         # TODO:
         pass

@@ -15,5 +15,7 @@ grasp_executor.goto_home()
 traj_filepath = 'catkin_ws/src/grasp_demo_app/debug/grasp_and_place_execution/data/real_trajectory/sunscreen_1101/step-0.npy'
 grasp_executor.grasp(traj_filepath)
 
+grasp_executor.goto_preplace()
+grasp_executor.open_hand()
 
 grasp_executor.goto_home()
