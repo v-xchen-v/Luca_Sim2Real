@@ -1,5 +1,5 @@
 import rospy
-from ros_msra_robot.msg import ArmJointCommandMsg, ArmDirectPoseCommandMsg
+from ros_msra_robot.msg import (ArmJointCommandMsg, ArmDirectPoseCommandMsg, ArmDirectPoseDeltaCommandMsg)
 
 class RobotCommandManager:
     def __init__(self) -> None:
@@ -11,6 +11,12 @@ class RobotCommandManager:
         
         # xyz, quaternion of arm and 6 dof of hand
         self.arm_hand_pose_pub = rospy.Publisher("arm_robot_pose_direct_command", ArmDirectPoseCommandMsg, queue_size=1)
+        
+        self.arm_cartisian_move_pub = rospy.Publisher(
+            "arm_robot_pose_delta_direct_command", 
+            ArmDirectPoseDeltaCommandMsg,
+            queue_size=1
+        )
         
         # a sequence of arm_hand_poses
         # self.trajectory_pub = rospy.Publisher("/???", ???, queue_size=1)
@@ -48,7 +54,14 @@ class RobotCommandManager:
         
     def move_up(self, offset=0.1):
         # in cartisian space, move up by offset
-        pass
+        msg = ArmDirectPoseDeltaCommandMsg()
+        dx = 0.1 # meter
+        msg.right_arm_data = [dx, 0, 0, 0, 0, 0]
+        msg.right_ee_data = []
+        self.arm_cartisian_move_pub.publish(msg)
+        rospy.sleep(2) # TODO:??? how to wait for executation be completed or very close to be completed??？
+        print("move_up command published")
+        
     
     def moveto_pose(self, pose):
         """Move the robot to the specified pose"""
