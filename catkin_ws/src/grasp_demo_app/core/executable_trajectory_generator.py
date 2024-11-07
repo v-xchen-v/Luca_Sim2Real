@@ -17,10 +17,9 @@ class ExecutableTrajectoryGenerator:
         self.object_manager = ObjectManager()
         
         self._load_config(sim2real_traj_config)
-        
         # Trajectory Processor
         self.processor = Sim2RealTrajectoryProcessor(config=sim2real_traj_config)
-        self.processor.setup_robot_table()
+        
         
         # last generated trajectory file path
         self.processor.traj_file_path = None
@@ -32,9 +31,7 @@ class ExecutableTrajectoryGenerator:
         self.z_keep_range=[-0.5, 0.068 -0.073]
         # self.z_keep_range=[-0.5, -0.004]
         
-        # TODO: restructure code to avoid computing this multiple times
-        self.object_pc_extractor = ObjectPointCloudExtractor(
-            T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
+        
     
     def _load_config(self, config):
         # Load configuration from a dictionary or a json file
@@ -46,8 +43,11 @@ class ExecutableTrajectoryGenerator:
         else:
             raise ValueError("Invalid config type. Use a dictionary or a json file.")
         
-    def capture_scene(self):
-        pass
+    def initialize(self):
+        self.processor.setup_robot_table()
+        # TODO: restructure code to avoid computing this multiple times
+        self.object_pc_extractor = ObjectPointCloudExtractor(
+            T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
     
     def determine_object(self):

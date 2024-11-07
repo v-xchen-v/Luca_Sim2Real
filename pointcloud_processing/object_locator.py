@@ -115,6 +115,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
                          T_calibration_board_to_camera)
         # custom input arguments
         self.object_modeling_file_path = object_modeling_file_path
+        self.T_calibration_board_to_camera = T_calibration_board_to_camera
         
         # intermediate data
         self.scene_point_cloud_in_board_coord = None

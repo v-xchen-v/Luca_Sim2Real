@@ -126,12 +126,18 @@ class Sim2RealTrajectoryProcessor:
         self.real_traj_adaptor.load_sim_traj_and_transform_hand_to_object(sim_traj_filepath)
         
         
-    def locate_object(self, x_keep_range, y_keep_range, z_keep_range):
+    def locate_object(self, x_keep_range, y_keep_range, z_keep_range, reuse_env_board2cam=True):
         # Locate the object relative to the calibration board
         scene_data_save_dir = f"data/scene_data/{self.object_name}_test_scene_data"
         scene_data_file_name = "test_scene"
         camera_intrinsics_data_dir = f"calibration/calibration_data/{self.camera_name}/camera_intrinsics"
         
+        T_calibration_board_to_camera = None
+        if reuse_env_board2cam:
+            # calibration/calibration_data/camera1/table_to_camera
+            camera_extrensics_data_dir = f"calibration/calibration_data/{self.camera_name}/table_to_camera"
+            T_calibration_board_to_camera = np.load(f"{camera_extrensics_data_dir}/table_to_camera.npy")
+            
         object_pos = self.real_traj_adaptor.locate_object_in_calibration_board_coords(
             scene_data_save_dir=scene_data_save_dir,
             scene_data_file_name=scene_data_file_name,
@@ -149,7 +155,7 @@ class Sim2RealTrajectoryProcessor:
             y_keep_range=y_keep_range,
             z_keep_range=z_keep_range,
             euler_xyz=self.euler_xyz,
-            T_calibration_board_to_camera=None,
+            T_calibration_board_to_camera=T_calibration_board_to_camera,
             locate_rot_by_icp=self.object_icp_rot_euler,
             icp_rot_euler_limit=self.object_icp_rot_euler_limit,
             
