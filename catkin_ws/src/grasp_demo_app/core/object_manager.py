@@ -6,7 +6,7 @@ class ObjectManager:
         self.object_configs = {
             "names": [
                 'orange_1024', 
-                'coke_can_1030', 
+                'coke_can_1104', 
                 'realsense_box_1024',
                 'cube_055_1103', 
                 'bottle_coconut_1101', 
@@ -15,7 +15,7 @@ class ObjectManager:
             ],
             "rotation_euler": [
                 [-np.pi, 0, np.pi/2],    # Orange
-                [-np.pi/2, np.pi/4, 0],  # Coke
+                [-np.pi/2, -np.pi/2, 0],  # Coke
                 [np.pi, 0, np.pi/2],     # Realsense Box
                 [-np.pi, 0, 0],          # Cube
                 [0, np.pi, 0],           # Coconut Bottle
@@ -24,7 +24,7 @@ class ObjectManager:
             ],
             "modeling_file_paths": [
                 r'data/pointcloud_data/candidiate_objects/orange.npy',
-                r'data/pointcloud_data/candidiate_objects/coke_can.npy',
+                r'data/pointcloud_data/candidiate_objects/coke_can_new.npy',
                 r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
                 r'data/pointcloud_data/candidiate_objects/cube_055.npy',
                 r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',

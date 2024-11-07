@@ -49,17 +49,17 @@ class RobotCommandManager:
         msg.right_arm_data = arm_joint_angles
         msg.right_ee_data = hand_joint_angles
         self.arm_hand_joint_pub.publish(msg)
-        print("command published")
+        print(f"go to joint angles arm: {arm_joint_angles} hand: {hand_joint_angles} command published")
         
         
     def move_up(self, offset=0.1):
         # in cartisian space, move up by offset
         msg = ArmDirectPoseDeltaCommandMsg()
-        dx = 0.1 # meter
+        dx = offset # meter
         msg.right_arm_data = [dx, 0, 0, 0, 0, 0]
         msg.right_ee_data = []
         self.arm_cartisian_move_pub.publish(msg)
-        rospy.sleep(2) # TODO:??? how to wait for executation be completed or very close to be completed??？
+        rospy.sleep(5) # TODO:??? how to wait for executation be completed or very close to be completed??？
         print("move_up command published")
         
     

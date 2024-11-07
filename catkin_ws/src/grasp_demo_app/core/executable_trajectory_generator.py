@@ -16,6 +16,8 @@ class ExecutableTrajectoryGenerator:
         # Object Manager
         self.object_manager = ObjectManager()
         
+        self._load_config(sim2real_traj_config)
+        
         # Trajectory Processor
         self.processor = Sim2RealTrajectoryProcessor(config=sim2real_traj_config)
         self.processor.setup_robot_table()
@@ -27,8 +29,8 @@ class ExecutableTrajectoryGenerator:
         # TODO: move it to config
         self.x_keep_range=[-0.40, -0.1] # x can
         self.y_keep_range=[-0.05, 0.40]
-        # self.z_keep_range=[-0.5, 0.073]
-        self.z_keep_range=[-0.5, -0.004]
+        self.z_keep_range=[-0.5, 0.068 -0.073]
+        # self.z_keep_range=[-0.5, -0.004]
         
         # TODO: restructure code to avoid computing this multiple times
         self.object_pc_extractor = ObjectPointCloudExtractor(
