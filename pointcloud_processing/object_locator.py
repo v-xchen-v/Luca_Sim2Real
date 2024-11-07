@@ -273,6 +273,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
         
         if self.vis_filtered_point_cloud_in_board_coord:
             self._show_points_in_window(self.filtered_scene_point_cloud_in_board_coord)
+            
+    def get_object_roi_color_image(self):
+        raise NotImplementedError("This method is not implemented yet.")
         
 class ObjectPoseLocator(ObjectPositionLocator):
     """
