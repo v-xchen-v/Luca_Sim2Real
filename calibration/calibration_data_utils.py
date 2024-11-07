@@ -64,7 +64,7 @@ def get_calibration_data(calibration_data_dir, overwrite_if_exists=False, calibr
     
     return calibration_data
 
-def get_board_calibration_data(mtx, dist, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
+def get_board_calibration_data(mtx, dist, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.15):
      # check whether table calibration need to be computed
     table_calibration_data_exist = table_to_camera_extrinsics_exist(calibration_data_dir+"/table_to_camera")
     if not table_calibration_data_exist or overwrite_if_exists:
@@ -72,15 +72,30 @@ def get_board_calibration_data(mtx, dist, calibration_data_dir, overwrite_if_exi
         if calibration_board_info is None:
             raise ValueError("Calibration board information include pattern_size and square_size is required when table calibration need to be computed.")
         
-        
-        # capture a frame to compute table-to-camera transformation
-        capture_frame_and_save_table_calibration(calibration_board_info['pattern_size'],
-                                                    calibration_board_info['square_size'],
-                                                    mtx,
-                                                    dist, 
-                                                    calibration_data_dir + '/table_to_camera',
-                                                    error_threshold=error_threshold
-                                                )
+        # Allow re-calibration multiple times until the threshold is satisfied
+        repeat_times = 10
+        for retry_time in range(repeat_times):
+            try:
+                # capture a frame to compute table-to-camera transformation
+                capture_frame_and_save_table_calibration(calibration_board_info['pattern_size'],
+                                                            calibration_board_info['square_size'],
+                                                            mtx,
+                                                            dist, 
+                                                            calibration_data_dir + '/table_to_camera',
+                                                            error_threshold=error_threshold
+                                                        )
+                
+                
+                # Exit the loop if calibration is successful
+                print("Table calibration successful.")
+                break
+
+                
+            except Exception as ReprojectionThresholdExceededError:
+                print(f"Table calibration failed. Retry {retry_time+1}/{repeat_times}")
+                
+                if retry_time == repeat_times - 1:
+                    raise ValueError("Table calibration failed.")
 
         # pop-up a window to show the calibration image to make sure the calibration physical setup is correct
         ## To avoid use wrong data, the calibration image should be checked by human.s

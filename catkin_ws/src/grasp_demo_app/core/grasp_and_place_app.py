@@ -14,7 +14,6 @@ class GraspAndPlaceApp:
         """Initialize the application with the necessary configurations."""
         self.traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=config_path)
         self.executor = GraspAndPlaceExecutor()
-        self.setup_environment()
 
     def setup_environment(self):
         """Set up the scene at the beginning."""
@@ -55,6 +54,11 @@ class GraspAndPlaceApp:
             input("Press Enter to continue...")
 
     def run(self, repeat_count=10):
+        """Setup the table robot camera calibration."""
+        self.setup_environment()
+        
+        input("Press Enter to continue...")
+        
         """Execute the full grasp and place cycle."""
         self.grasp_and_place_cycle(repeat_count)
 
