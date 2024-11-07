@@ -195,6 +195,49 @@ class TrajectoryAdaptor:
                 ], 
             ["calibration_board_real", "camera_real", "robot_base_real"])
         
+    
+    def get_restricted_table_no_touch_zone_in_robot_coord(self, 
+                                                          table_dimensions):
+        """
+        Return the restricted table area where the robot should not touch, put board origin at center of table 
+        and z down to groud.
+        
+        Parameters:
+        # - T_board_to_table: Transformation matrix between the calibration board and the table.
+        - table_dimensions: Dimensions of the table (x, y, z).
+        
+        
+        Returns:
+        - xyzqs: 10D vector containing the position and orientation of the restricted table area in robot coordinates.
+                 format: [x, y, z, qx, qy, qz, qw, x_dim, y_dim, z_dim]
+        """
+        """# Position the object (assuming near the end effector)
+            object_pose.pose.position.x = 0.4
+            object_pose.pose.position.y = 0
+            object_pose.pose.position.z = 0.5
+            object_pose.pose.orientation.w = 1.0
+            
+            # Add the object to the planning scene
+            object_size = (0.05, 0.05, 0.2)  # Object dimensions (x, y, z)
+            scene.add_box(object_id, object_pose, size=object_size)
+        """
+        T_robot_to_calibration_board = self.frame_manager.get_transformation(
+            "robot_base_real", "calibration_board_real")
+        
+        # TO simplify, we assume the calibration board is put on center of the table
+        T_board_to_table = create_transformation_matrix([0, 0, -table_dimensions[2]/2],
+                                                        R.from_euler("XYZ", [np.pi, 0, 0]).as_matrix())
+        
+        T_robot_to_table = concat(T_robot_to_calibration_board, T_board_to_table)
+        
+        # compute the center of table
+        # x, y, z, qx, qy, qz, qw = matrix_to_xyz_quaternion(T_robot_to_table)
+        # x_dim, y_dim, z_dim = table_dimensions
+        # x = x + x_dim / 2
+
+        # [x, y, z, qx, qy, qz, qw, x_dim, y_dim, z_dim]
+        xyzqs = np.concatenate((matrix_to_xyz_quaternion(T_robot_to_table), np.array(table_dimensions)))
+        return xyzqs
 # ----------------- public interface of building transforms between robot(base and cam) and table -----------------#
      
 # --------------------------public interface of object pose locating --------------------------#

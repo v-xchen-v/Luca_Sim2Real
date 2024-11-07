@@ -35,6 +35,7 @@ class Sim2RealTrajectoryProcessor:
         # Intermediate variables
         ## for t_scaled pre-grasp position
         self.T_base_to_hand_at_first_point = None
+        self.restricted_table_no_touch_zone = None
         
     def _load_config(self, config=None):
         # Load configuration from a dictionary or a json file
@@ -46,7 +47,7 @@ class Sim2RealTrajectoryProcessor:
         else:
             raise ValueError("Invalid config type. Use a dictionary or a json file.")
                 
-    def setup_robot_table(self):
+    def setup_robot_table(self, table_dimensions=None):
         # Calculate the transformation between arm, table, and robot
         calibration_data_dir = f"calibration/calibration_data/{self.camera_name}"
         self.real_traj_adaptor.calculate_arm_table_robot_transform(
@@ -58,6 +59,9 @@ class Sim2RealTrajectoryProcessor:
             }
         )
         
+        if table_dimensions is not None:
+            self.restricted_table_no_touch_zone = \
+            self.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(table_dimensions) 
         
     def configure_object_settings(self, object_identifier):
         #  # Object-specific configurations
