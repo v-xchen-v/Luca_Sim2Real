@@ -363,6 +363,18 @@ class TrajectoryAdaptor:
 
 # -----------------------public interface of computing transform in mapped real-----------------------#
 
+# -----------------------public interface of computing more advance transform in mapped real -----------------------#
+    def get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(self, t_scale):
+        T_robot_base_A_Ap = create_relative_transformation(
+            self.frame_manager.get_transformation("readable_real", "robot_base_real"),
+            np.eye(4))# robot base -> np.eye(4), A->A'
+
+        T_first_step = self.T_right_hand_base_to_robot_base_steps_real[0]
+        T_first_step[:3, 3] = t_scale * T_first_step[:3, 3]
+        T_hand_to_robot_base_with_t_scale_at_first_step = T_robot_base_A_Ap@invert_transform(T_first_step)@invert_transform(T_robot_base_A_Ap)
+        return T_hand_to_robot_base_with_t_scale_at_first_step
+
+# -----------------------public interface of computing more advance transform in mapped real -----------------------#
     def _setup_readable_frame(self):
         # TODO: now readable_real is same as calibration board coordinate, it could be some world coordinate later when we have more frames.
         calibration_board_frame = np.array([[1, 0, 0, 0],

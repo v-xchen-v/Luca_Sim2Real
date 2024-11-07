@@ -9,6 +9,7 @@ from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
 import json
 from .object_manager import ObjectManager
+from pytransform3d.transformations import invert_transform
 
 class Sim2RealTrajectoryProcessor:
     def __init__(self, config) -> None:
@@ -30,6 +31,10 @@ class Sim2RealTrajectoryProcessor:
         self.calibration_board_square_size = self.config["calibration_board_square_size"]
         
         self.object_manager = ObjectManager()
+        
+        # Intermediate variables
+        ## for t_scaled pre-grasp position
+        self.T_base_to_hand_at_first_point = None
         
     def _load_config(self, config=None):
         # Load configuration from a dictionary or a json file
@@ -161,6 +166,7 @@ class Sim2RealTrajectoryProcessor:
         self.real_traj_adaptor.compute_mapped_real_hand_to_robot_base_transform()
         self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference()
 
+
     def save_real_trajectory(self):
         # Save real trajectory data
         save_path = f"data/trajectory_data/real_trajectory/{self.object_name}/step-0.npy"
@@ -168,3 +174,12 @@ class Sim2RealTrajectoryProcessor:
         print(f'Real trajectory data saved at: {save_path}')
         
         return save_path
+    
+    def get_tscaled_robotbase_to_hand_at_first_point(self, t_scale=1):
+        # TODO: optimize the scale for each object with specific t_scale
+        T_hand_to_base_at_first_point = self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(t_scale=t_scale)
+        self.T_base_to_hand_at_first_point = T_hand_to_base_at_first_point
+        return self.T_base_to_hand_at_first_point
+        
+    def get_finger_angles_at_first_point(self):
+        return self.real_traj_adaptor.driven_hand_pos_sim[0]
