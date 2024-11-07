@@ -51,7 +51,14 @@ class ObjectPointCloudExtractor:
         if self.masked_pc_point_array is None:
             raise ValueError("Object point cloud in board coordinate is not yet extracted.")
         
-        w, h, c = color_image.shape
+        # masked_pcd_in_cam_coord = transform_point_cloud_from_table_to_camera(self.masked_pc_point_array, 
+        #                                            T_depthcam_to_rgbcam=np.load(r'calibration/calibration_data/camera1/depth_to_rgb/T_depth_to_rgb.npy'),
+        #                                            T_rgbcam_to_table=invert_transform(self.T_calibration_board_to_camera))
+        # masked_pc_point_array_in_cam_coord = np.asarray(masked_pcd_in_cam_coord.points)
+        # masked_points = masked_pc_point_array_in_cam_coord.reshape(w, h, c)
+        
+        # no need to transfrom to camera coord, since the point cloud ordering is captured in depth camera, naturely have info of camera whc position info
+        w, h, c = color_image.shape # 720, 1280, 3
         masked_points = self.masked_pc_point_array.reshape(w, h, c)
         
         # points valued [np.nan, np.nan, np.nan] are not in the mask
@@ -60,7 +67,7 @@ class ObjectPointCloudExtractor:
         # Get the min and max values of the mask
         x_min, y_min = np.min(np.where(mask), axis=1)
         x_max, y_max = np.max(np.where(mask), axis=1)
-        
+
         
         # x_min, x_max, y_min, y_max = pc_mask_range
         
@@ -95,7 +102,7 @@ class ObjectPointCloudExtractor:
 
         
         # for debugging purposes
-        if False: 
+        if True: 
             # Save or display the cropped RGB image
             cv2.imwrite("cropped_rgb_image.jpg", cropped_rgb_image)
             cv2.imshow("Cropped Image", cropped_rgb_image)
