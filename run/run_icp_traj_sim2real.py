@@ -24,7 +24,8 @@ bottle_coconut_rot_euler = [0, np.pi, 0] # for bottle_coconut_1101
 sunscreen_rot_euler = [np.pi/2, 0, 0] # for sunscreen_1101
 bleach_cleanser_rot_euler = [0, -np.pi/2, 0] # for bleach_cleanser_1030
 hammer_rot_euler = [np.pi/2, 0, 0] # for hammer_1102
-
+duck_rot_euler = [-np.pi/2, np.pi/2, 0] # for duck_1104
+tape_measure_rot_euler = [np.pi, np.pi/2, 0] # for tape_measure_1105
 
 # ------------------- Robot table setup ------------------- #
 # setup robot and table
@@ -57,6 +58,8 @@ sim_traj_object_names = [
     'sunscreen_1101',
     # "bleach_cleanser_1030",
     'hammer_1102',
+    'duck_1104',
+    'tape_measure_1105',
 ]
 
 sim_traj_file_basenames = [
@@ -68,6 +71,9 @@ sim_traj_file_basenames = [
     'step-0.npy',
     # 'step-0.npy',
     'step-0.npy',
+    'step-0.npy',
+    'step-5600.npy',
+    
 ]
 
 euler_object_places  = [
@@ -79,6 +85,8 @@ euler_object_places  = [
     sunscreen_rot_euler,
     # bleach_cleanser_rot_euler,
     hammer_rot_euler,
+    duck_rot_euler,
+    tape_measure_rot_euler,
 ]
 object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/orange.npy',
@@ -89,9 +97,11 @@ object_modeling_file_paths = [
     r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
     # r"data/pointcloud_data/candidiate_objects/bleach_cleanser.npy",
     r'data/pointcloud_data/candidiate_objects/hammer.npy',
+    r'data/pointcloud_data/candidiate_objects/duck.npy',
+    r'data/pointcloud_data/candidiate_objects/tape_measure.npy',
 ]
 
-date_tip=1106
+date_tip=1107
 scene_data_save_dir = [
     f"data/scene_data/orange_test_scene_data_{date_tip}",
     f"data/scene_data/coke_test_scene_data_{date_tip}",
@@ -102,6 +112,8 @@ scene_data_save_dir = [
     f"data/scene_data/sunscreen_test_scene_data_{date_tip}",
     # f"data/scene_data/bleach_cleanser_test_scene_data_{date_tip}",
     f'data/scene_data/hammer_test_scene_data_{date_tip}',
+    f'data/scene_data/duck_test_scene_data_{date_tip}',
+    f'data/scene_data/tape_measure_test_scene_data_{date_tip}',
 ]
 
 icp_rot_euler = [
@@ -112,6 +124,8 @@ icp_rot_euler = [
     True,
     True,
     # True,
+    True,
+    True,
     True,
 ]
 
@@ -124,6 +138,8 @@ icp_rot_euler_limits = [
     360,
     # 360,
     360,
+    360,
+    180,
 ]
 
 # The cleanser is hard to do icp since the poor object point cloud quality
