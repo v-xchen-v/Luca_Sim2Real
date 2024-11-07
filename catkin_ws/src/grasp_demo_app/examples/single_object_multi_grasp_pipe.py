@@ -27,9 +27,21 @@ def execuate_trajectory(grasp_and_place_executor: GraspAndPlaceExecutor, traject
                                    first_n_steps=first_n_steps,
                                    hz=hz)
 
+def generate_pregrasp_pose(traj_generator: ExecutableTrajectoryGenerator, t_scale=1):
+    tscaled_eef_pose_at_first_point = traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
+    finger_angles_at_first_point = traj_generator.processor.get_finger_angles_at_first_point()
+    return tscaled_eef_pose_at_first_point, finger_angles_at_first_point
+    
+    
+def pregrasp(traj_generator, grasp_and_place_executor, t_scale=1, hz=2):
+    tscaled_eef_pose_at_first_point, finger_angles_at_first_point = generate_pregrasp_pose(traj_generator=traj_generator, t_scale=t_scale)
+    grasp_and_place_executor.goto_pregrasp(pregrasp_eef_pose_matrix=tscaled_eef_pose_at_first_point, 
+                                           pregrasp_hand_angles=finger_angles_at_first_point, 
+                                           hz=hz)
+    
 def main():
     # Config
-    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_2f_coke.json'
+    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_11f_coke.json'
     
     # Initialize objects
     traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=sim2real_config)    
@@ -44,9 +56,14 @@ def main():
         # Moveto home position
         grasp_and_place_executor.goto_home()
         
-        # Generate and execute trajectory
+        # Generate traj and pregrasp position
         generate_executable_trajectory(traj_generator)
-        grasp_and_place_executor.goto_pregrasp(traj_generator.traj_file_path, hz=2)
+        
+        
+        # Pregrasp
+        pregrasp(traj_generator, grasp_and_place_executor, t_scale=2, hz=2)
+        
+        # Generate and execute trajectory
         execuate_trajectory(grasp_and_place_executor, traj_generator.traj_file_path, first_n_steps=120, hz=2)
         
         # Place object
