@@ -21,13 +21,13 @@ class GraspAndPlaceExecutor:
         # for i in range(2):
         #     self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
             
-        rospy.sleep(1)
+        rospy.sleep(2)
         self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
         print('Robot returned to home position.')
     
     def goto_preplace(self):
         """Approach the target position for placing"""
-        rospy.sleep(1)
+        rospy.sleep(2)
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
         self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
 
@@ -40,18 +40,20 @@ class GraspAndPlaceExecutor:
         self.robot_comand_manager.execute_trajectory(real_traj[:1], hz=hz)
         print('Robot reached the pregrasp position.')
 
-    def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120):
+    def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120, hz=8):
         """Execute the RL trajectory"""
         
         # TODO: compute first n steps by  flag
-        
+        if first_n_steps is None:
+            first_n_steps = len(real_traj)
+            
         real_traj = np.load(real_traj_path)
-        self.robot_comand_manager.execute_trajectory(real_traj[:first_n_steps], hz=8)
+        self.robot_comand_manager.execute_trajectory(real_traj[:first_n_steps], hz=hz)
         print('Grasp trajectory executed.')
 
-    def grasp(self, real_traj_path):
+    def grasp(self, real_traj_path, first_n_steps, hz):
         """Grasp the target position"""
-        self._execute_rl_trajectory(real_traj_path)
+        self._execute_rl_trajectory(real_traj_path, first_n_steps, hz)
         pass
 
     def open_hand(self):
