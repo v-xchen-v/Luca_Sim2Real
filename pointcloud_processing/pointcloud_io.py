@@ -4,6 +4,7 @@ import open3d as o3d
 import os
 import pyrealsense2 as rs
 import cv2
+from .realsense_capture import RealSenseCapture
 
 def load_npy_file_as_point_cloud(path: str) -> o3d.geometry.PointCloud:
     """
@@ -158,81 +159,74 @@ def _show_point_cloud_window(point_cloud: o3d.geometry.PointCloud):
     viewer.run()
     viewer.destroy_window()
       
-def get_image_and_point_cloud_from_realseanse():
-    # Configure the RealSense pipeline
-    pipeline = rs.pipeline()
-    config = rs.config()
-    config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
-    pipeline.start(config)
+# def get_image_and_point_cloud_from_realseanse():
+#     # Configure the RealSense pipeline
+#     pipeline = rs.pipeline()
+#     config = rs.config()
+#     config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
+#     config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+#     pipeline.start(config)
 
-    try:
-        # Capture frames: depth and color
-        frames = pipeline.wait_for_frames()
-        depth_frame = frames.get_depth_frame()
-        color_frame = frames.get_color_frame()
+#     try:
+#         # Capture frames: depth and color
+#         frames = pipeline.wait_for_frames()
+#         depth_frame = frames.get_depth_frame()
+#         color_frame = frames.get_color_frame()
 
         
-        if not depth_frame or not color_frame:
-            raise RuntimeError("Failed to capture frames")
+#         if not depth_frame or not color_frame:
+#             raise RuntimeError("Failed to capture frames")
 
-        # Create point cloud object and map color to it
-        pc = rs.pointcloud()
-        pc.map_to(color_frame)
-        points = pc.calculate(depth_frame)
+#         # Create point cloud object and map color to it
+#         pc = rs.pointcloud()
+#         pc.map_to(color_frame)
+#         points = pc.calculate(depth_frame)
         
-        # Convert images to numpy arrays
-        color_image = np.asanyarray(color_frame.get_data())
-        # cv2.imwrite(f"output/{args.filename}.png", color_image)
+#         # Convert images to numpy arrays
+#         color_image = np.asanyarray(color_frame.get_data())
+#         # cv2.imwrite(f"output/{args.filename}.png", color_image)
         
-        # Convert the point cloud to numpy arrays
-        vtx = np.asanyarray(points.get_vertices()).view(np.float32).reshape(-1, 3)  # Shape: (N, 3)
-        tex = np.asanyarray(points.get_texture_coordinates()).view(np.float32).reshape(-1, 2)  # Shape: (N, 2)
+#         # Convert the point cloud to numpy arrays
+#         vtx = np.asanyarray(points.get_vertices()).view(np.float32).reshape(-1, 3)  # Shape: (N, 3)
+#         tex = np.asanyarray(points.get_texture_coordinates()).view(np.float32).reshape(-1, 2)  # Shape: (N, 2)
         
-        # Helper function to map texture coordinates to RGB colors
-        def get_rgb_from_tex(tex_coords, color_image):
-            """Convert normalized texture coordinates to RGB values."""
-            h, w, _ = color_image.shape
-            # Convert normalized coordinates to pixel indices
-            u = (tex_coords[:, 0] * w).astype(int)
-            v = (tex_coords[:, 1] * h).astype(int)
-            # Clamp the indices to ensure valid range
-            u = np.clip(u, 0, w - 1)
-            v = np.clip(v, 0, h - 1)
-            # Extract RGB values
-            rgb = color_image[v, u, :] / 255.0  # Normalize to [0, 1]
-            return rgb
+#         # Helper function to map texture coordinates to RGB colors
+#         def get_rgb_from_tex(tex_coords, color_image):
+#             """Convert normalized texture coordinates to RGB values."""
+#             h, w, _ = color_image.shape
+#             # Convert normalized coordinates to pixel indices
+#             u = (tex_coords[:, 0] * w).astype(int)
+#             v = (tex_coords[:, 1] * h).astype(int)
+#             # Clamp the indices to ensure valid range
+#             u = np.clip(u, 0, w - 1)
+#             v = np.clip(v, 0, h - 1)
+#             # Extract RGB values
+#             rgb = color_image[v, u, :] / 255.0  # Normalize to [0, 1]
+#             return rgb
 
-        # Map RGB colors to the vertices
-        colors = get_rgb_from_tex(tex, color_image)
+#         # Map RGB colors to the vertices
+#         colors = get_rgb_from_tex(tex, color_image)
                 
-        # x_min = 200
-        # x_max = 1000
-        # y_min = 100
-        # y_max = 600
-        # h, w, _ = color_image.shape
-        # vtx = vtx.reshape(h, w, 3)
-        # tex = tex.reshape(h, w, 2)
-        # roi_vtx = vtx[y_min:y_max, x_min:x_max, :]
-        # roi_tex = tex[y_min:y_max, x_min:x_max, :]
-        # roi_colors = roi_colors[y]
-        
-        # roi_vtx = vtx.reshape(-1, 3)
-        # roi_tex = tex.reshape(-1, 2)
+
                     
-        # Create Open3D PointCloud object and assign points and colors
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(vtx)
-        pcd.colors = o3d.utility.Vector3dVector(colors)
-        return pcd, color_image
+#         # Create Open3D PointCloud object and assign points and colors
+#         pcd = o3d.geometry.PointCloud()
+#         pcd.points = o3d.utility.Vector3dVector(vtx)
+#         pcd.colors = o3d.utility.Vector3dVector(colors)
+#         return pcd, color_image
         
-    except Exception as e:
-        raise RecursionError(f"Could not get aligned frames: {e}")
-    finally:
-        pipeline.stop()
-        # raise RuntimeError("Could not get aligned frames")
-        # return None, None
-    
+#     except Exception as e:
+#         raise RecursionError(f"Could not get aligned frames: {e}")
+#     finally:
+#         pipeline.stop()
+#         # raise RuntimeError("Could not get aligned frames")
+#         # return None, None
+
+def get_image_and_point_cloud_from_realseanse():
+    realsense = RealSenseCapture.get_instance()
+    pcd, color_image = realsense.capture()
+    return pcd, color_image
+
 def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):
     """
     Capture a point cloud from the Intel RealSense D455 camera.

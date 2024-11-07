@@ -9,7 +9,7 @@ from pointcloud_processing.pointcloud_io import get_image_and_point_cloud_from_r
 from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
 import open3d as o3d
 import json
-
+from pointcloud_processing.realsense_capture import RealSenseCapture
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -45,6 +45,9 @@ class ExecutableTrajectoryGenerator:
         
     def initialize(self):
         self.processor.setup_robot_table()
+        
+        # start realsense capture
+        realsense_capture = RealSenseCapture()
         # TODO: restructure code to avoid computing this multiple times
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
