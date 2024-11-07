@@ -108,7 +108,6 @@ def transform_point_cloud_from_camera_to_table(pc_in_depthcam, T_rgbcam_to_table
     Returns:
         np.ndarray: The transformed point cloud in table coordinate system.
     """
-    import open3d as o3d
     # pc = o3d.geometry.PointCloud()
     # pc.points = o3d.utility.Vector3dVector(pc_in_depthcam)
     pc_in_depthcam.transform(invert_transform(T_rgbcam_to_table @ T_depthcam_to_rgbcam))
@@ -173,3 +172,18 @@ def transform_point_cloud_from_camera_to_table(pc_in_depthcam, T_rgbcam_to_table
     #     p_table = (T_rgbcam_to_table@T_depthcam_to_rgbcam@T_rot180_x@one_point)[:3]
     #     p_tables.append(p_table)
     return pc_in_depthcam
+
+def transform_point_cloud_from_table_to_camera(pc_in_board_coord, T_rgbcam_to_table, T_depthcam_to_rgbcam)-> o3d.geometry.PointCloud:
+    pc_in_camera_coord = pc_in_board_coord.transform(T_rgbcam_to_table @ T_depthcam_to_rgbcam)
+    
+    # for debugging purpose
+    if True:
+        # Visualize the transformed point cloud
+        axes = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.2, origin=[0, 0, 0])
+        o3d.visualization.draw_geometries(
+                                [pc_in_camera_coord, axes],
+                                window_name='Transformed Point Cloud to Camera Coordinate',
+                                width=800, height=600,
+                                left=0, top=1)
+    
+    return pc_in_camera_coord

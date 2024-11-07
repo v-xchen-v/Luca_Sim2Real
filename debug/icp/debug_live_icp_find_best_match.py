@@ -61,7 +61,7 @@ while True:
     # from pointcloud_processing.pointcloud_visualization import visualize_point_cloud
     # visualize_point_cloud(points_in_calibration_board)
 
-    points_filtered = filter_point_outside_operation_area(points_in_calibration_board, 
+    points_filtered, _ = filter_point_outside_operation_area(points_in_calibration_board, 
                                                         x_range=(-0.15, 0), y_range=(0, 0.15), z_range=(-0.5, 0))
 
     # # visualize the filtered point cloud

@@ -54,18 +54,22 @@ class ExecutableTrajectoryGenerator:
         # candidate_object_names = ['orange_1024', 'realsense_box_1024']
         candidate_object_names = self.config["candidiates"]
         
+        # if only one object, return it
+        if len(candidate_object_names) == 1:
+            return candidate_object_names[0]
+        
         candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
                                              for obj in candidate_object_names]
         
         candidate_object_pcds = [load_npy_file_as_point_cloud(candidate_object_modeling_file) 
                                  for candidate_object_modeling_file in candidate_object_modeling_files]
         
-        scene_pcd, _ = get_image_and_point_cloud_from_realseanse()
-        object_pcd_in_board_coord, _ = self.object_pc_extractor.extract(scene_pcd, 
+        scene_pcd, scene_color_image = get_image_and_point_cloud_from_realseanse()
+        object_pcd_in_board_coord, _, _ = self.object_pc_extractor.extract(scene_pcd, 
                                                                         x_keep_range=self.x_keep_range,
                                                                         y_keep_range=self.y_keep_range, 
                                                                         z_keep_range=self.z_keep_range)
-        
+        object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
         if False:
             vis_pcds = []
             for item in candidate_object_pcds:
