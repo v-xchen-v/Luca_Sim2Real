@@ -75,6 +75,7 @@ def main():
     
     # Initialize the trajectory generator and executor
     traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=sim2real_config)    
+    traj_generator.initialize()
     grasp_and_place_executor = GraspAndPlaceExecutor()
     
     # Set up the environment once

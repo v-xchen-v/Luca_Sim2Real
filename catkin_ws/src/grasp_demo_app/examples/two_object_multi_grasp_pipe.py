@@ -31,6 +31,7 @@ def main():
     
     # Initialize objects
     traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=sim2real_config)    
+    traj_generator.initialize()
     grasp_and_place_executor = GraspAndPlaceExecutor()
     
     repeat_times = 10
