@@ -1,3 +1,11 @@
+import os, sys
+
+# Add module path for importing custom modules
+module_path = os.path.abspath(os.path.join('catkin_ws/src/grasp_demo_app'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+
 from core.grasp_and_place_app import GraspAndPlaceApp
 
 def main():
