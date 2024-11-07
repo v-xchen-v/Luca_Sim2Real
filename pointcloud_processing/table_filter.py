@@ -50,7 +50,22 @@ def filter_point_outside_operation_area(pcd_in_table: o3d.geometry.PointCloud , 
     # mask = (points_in_table[:, 0] >= x_min) & (points_in_table[:, 0] <= x_max) & \
     #        (points_in_table[:, 1] >= y_min) & (points_in_table[:, 1] <= y_max) & \
     #        (points_in_table[:, 2] >= z_min) & (points_in_table[:, 2] <= z_max)
-    return points_in_table[mask]
+    
+    # if known w, h of image, we can get the range of x, y in pixel coordinates
+    # w = 1280 if w is None else w
+    # h = 720 if h is None else h
+    # fmask = mask.reshape(w, h, 1)
+    # # got the range of fmask value is True
+    # x_min, y_min, _ = np.min(np.where(fmask), axis=1)
+    # x_max, y_max, _ = np.max(np.where(fmask), axis=1)
+    # # print(x_min, x_max, y_min, y_max)
+    # mask_valid_range = (x_min, x_max, y_min, y_max)
+    # set mask point cloud as [np.nan, np.nan, np.nan] for points outside the range
+    points_in_table_copy = points_in_table.copy()
+    points_in_table_copy[~mask] = [np.nan, np.nan, np.nan]
+
+    
+    return points_in_table[mask], points_in_table_copy
 
 
 # def transform_point_cloud_from_camera_to_table(points, camera_to_table_transform):

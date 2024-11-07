@@ -27,7 +27,7 @@ def execuate_trajectory(grasp_and_place_executor: GraspAndPlaceExecutor, traject
 
 def main():
     # Config
-    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_2f_two_objects.json'
+    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_11f_two_objects.json'
     
     # Initialize objects
     traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=sim2real_config)    
