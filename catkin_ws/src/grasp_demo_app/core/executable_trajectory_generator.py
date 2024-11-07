@@ -69,13 +69,13 @@ class ExecutableTrajectoryGenerator:
                                                                         x_keep_range=self.x_keep_range,
                                                                         y_keep_range=self.y_keep_range, 
                                                                         z_keep_range=self.z_keep_range)
-        object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
         if False:
             vis_pcds = []
             for item in candidate_object_pcds:
                 vis_pcds.append(item)
             vis_pcds.append(object_pcd_in_board_coord)
             o3d.visualization.draw_geometries(vis_pcds)
+        object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
     
 
         # TODO: should get point cloud from scene and find best match

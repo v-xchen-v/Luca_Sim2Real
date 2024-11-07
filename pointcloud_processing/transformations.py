@@ -5,6 +5,8 @@ import numpy as np
 from pytransform3d.transformations import invert_transform, transform
 import open3d as o3d
 
+from pointcloud_processing.pointcloud_io import load_npy_as_point_cloud
+
 # def _make_point_cloud_homogeneous(points):
 #     """Appends 1 to the points to make them homogeneous.
 
@@ -174,6 +176,9 @@ def transform_point_cloud_from_camera_to_table(pc_in_depthcam, T_rgbcam_to_table
     return pc_in_depthcam
 
 def transform_point_cloud_from_table_to_camera(pc_in_board_coord, T_rgbcam_to_table, T_depthcam_to_rgbcam)-> o3d.geometry.PointCloud:
+    if isinstance(pc_in_board_coord, np.ndarray):
+        pc_in_board_coord = load_npy_as_point_cloud(pc_in_board_coord)
+    
     pc_in_camera_coord = pc_in_board_coord.transform(T_rgbcam_to_table @ T_depthcam_to_rgbcam)
     
     # for debugging purpose
