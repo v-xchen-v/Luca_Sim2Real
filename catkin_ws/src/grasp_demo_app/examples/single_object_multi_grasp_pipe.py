@@ -61,7 +61,7 @@ def main():
         
         
         # Pregrasp
-        pregrasp(traj_generator, grasp_and_place_executor, t_scale=1, hz=2)
+        pregrasp(traj_generator, grasp_and_place_executor, t_scale=2, hz=2)
         
         # Generate and execute trajectory
         execuate_trajectory(grasp_and_place_executor, traj_generator.traj_file_path, first_n_steps=120, hz=2)
