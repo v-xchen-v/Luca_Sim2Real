@@ -28,7 +28,7 @@ class GraspAndPlaceApp:
         """Execute the generated trajectory with the specified parameters."""
         self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz)
 
-    def _get_pregrasp_pose(self, t_scale=1):
+    def _get_pregrasp_pose(self, t_scale=1, vis=False):
         """Generate and return the pregrasp pose and finger angles.
         
         Parameters:
@@ -40,17 +40,18 @@ class GraspAndPlaceApp:
         """
         eef_pose = self.traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
         finger_angles = self.traj_generator.processor.get_finger_angles_at_first_point()
-        self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
+        if vis:
+            self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
-    def move_to_pregrasp_position(self, t_scale=1, hz=1):
+    def move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False):
         """Move the executor to the pregrasp position.
         Parameters:
             t_scale (float): The scaling factor for the pregrasp pose, 
             which is used to adjust the relative position of end effector with respect to the object.
             hz (int): The frequency at which the robot should move.
         """
-        eef_pose, finger_angles = self._get_pregrasp_pose(t_scale)
+        eef_pose, finger_angles = self._get_pregrasp_pose(t_scale, vis)
         self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=eef_pose, pregrasp_hand_angles=finger_angles, hz=hz)
 
     def grasp_and_place_cycle(self, repeat_count=10):
@@ -58,8 +59,11 @@ class GraspAndPlaceApp:
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
             self.executor.goto_home()
+            
             self.generate_trajectory()
-            self.move_to_pregrasp_position(t_scale=2, hz=2)
+            
+            # Move to pregrasp position
+            self.move_to_pregrasp_position(t_scale=2, hz=2, vis=True)
             self.execute_trajectory(self.traj_generator.traj_file_path, steps=120, hz=2)
             self.executor.lift(0.1)
             self.executor.goto_preplace()
