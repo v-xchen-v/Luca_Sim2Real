@@ -10,6 +10,8 @@ from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudE
 import open3d as o3d
 import json
 from pointcloud_processing.realsense_capture import RealSenseCapture
+import cv2
+from .object_classifier import get_object_name_from_clip
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -79,17 +81,24 @@ class ExecutableTrajectoryGenerator:
             vis_pcds.append(object_pcd_in_board_coord)
             o3d.visualization.draw_geometries(vis_pcds)
         object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
-    
+        if object_roi_color_image is not None: 
+            raise ValueError("object_roi_color_image is None")
+        
+        object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'
+        cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
 
-        # TODO: should get point cloud from scene and find best match
-        _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, 
-                                                                   candidate_pcds=candidate_object_pcds)
+        # # TODO: should get point cloud from scene and find best match
+        # _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, 
+        #                                                            candidate_pcds=candidate_object_pcds)
+        candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
         
         # # Dummy logic to determine the object
         # object_idx = 0
         # return object_idx
-        print(f"best matching object: {candidate_object_names[best_matching_index]}")
-        return candidate_object_names[best_matching_index]
+        # print(f"best matching object: {candidate_object_names[best_matching_index]}")
+        # return candidate_object_names[best_matching_index]
+        print(f"best matching object: {candidate_object_name}")
+        return candidate_object_name
     
     
     # def locate_object(self):

@@ -27,5 +27,18 @@ class ObjectClassifier:
 class_names = ["duck", "orange", "dark green tape measure", "black box", "toy hammer", "Rubik's cube"]
 classifier = ObjectClassifier(class_names=class_names, model_name='ViT-L/14')
 
-res= classifier.predict("data/debug_data/cropped_rgb_image.jpg")
-print(res)
+
+class_mapping_dict = {
+    "orange": "orange_1024",
+    "duck": "duck_1104",
+    "dark green tape measure": "tape_measure_1105",
+    "black box": "realsense_box_1024",
+    "toy hammer": "hammer_1102",
+    "Rubik's cube": "cube_055_1103"
+}
+
+def get_object_name_from_clip(rgb_color_image_path):
+    res = classifier.predict(rgb_color_image_path)
+    return class_mapping_dict[class_names[res]]
+# res= classifier.predict("data/debug_data/cropped_rgb_image.jpg")
+# print(res)
