@@ -408,13 +408,35 @@ class TrajectoryAdaptor:
 
 # -----------------------public interface of computing more advance transform in mapped real -----------------------#
     def get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(self, t_scale):
+        # Known T_object_to_robot = T_object_to_hand*T_hand_to_robot
+        # Now we want to tscale T_object_to_hand, so that T_hand_to_robot will changed with it.
+        
+        # Save the transformation between robot_right_hand_base to robot_base in real world and joint angles of hand
         T_robot_base_A_Ap = create_relative_transformation(
             self.frame_manager.get_transformation("readable_real", "robot_base_real"),
             np.eye(4))# robot base -> np.eye(4), A->A'
+        T_hand_to_object = self.T_right_hand_base_steps_to_object_in_real[step]
+        T_hand_to_object_ref_robot_coord = T_robot_base_A_Ap@invert_transform(T_hand_to_object)@invert_transform(T_robot_base_A_Ap)
+        
+        step=0
+        # transformation = 
+        # transformation2 = self.T_right_hand_base_steps_to_object_in_sim[step]
+        T_object_to_hand = invert_transform(T_hand_to_object_ref_robot_coord)
+            
+            
+        
+        T_hand_to_robot = self.T_right_hand_base_to_robot_base_steps_real[0]
+        # T_object_to_hand = self.frame_manager.get_transformation("object_real", "hand_base_real")
+        T_object_to_robot = concat(T_object_to_hand, T_hand_to_robot)
+        
+        # tscale
+        T_object_to_hand_new = T_object_to_hand.copy()
+        T_object_to_hand_new[:3, 3] = t_scale * T_object_to_hand_new[:3, 3]
+        ## Then compute new T_hand_to_robot
+        T_hand_to_robot_new = concat(invert_transform(T_object_to_hand_new), T_object_to_robot) 
+        T_hand_to_robot_base_with_t_scale_at_first_step = T_hand_to_robot_new
+        
 
-        T_first_step = self.T_right_hand_base_to_robot_base_steps_real[0]
-        T_first_step[:3, 3] = t_scale * T_first_step[:3, 3]
-        T_hand_to_robot_base_with_t_scale_at_first_step = T_robot_base_A_Ap@invert_transform(T_first_step)@invert_transform(T_robot_base_A_Ap)
         return T_hand_to_robot_base_with_t_scale_at_first_step
 
 # -----------------------public interface of computing more advance transform in mapped real -----------------------#
