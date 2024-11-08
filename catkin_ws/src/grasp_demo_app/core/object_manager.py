@@ -2,81 +2,104 @@ import numpy as np
 
 class ObjectManager:
     def __init__(self) -> None:
-         # Object-specific configurations
-        self.object_configs = {
-            "names": [
-                'orange_1024', 
-                'coke_can_1104', 
-                'realsense_box_1024',
-                'cube_055_1103', 
-                'bottle_coconut_1101', 
-                'sunscreen_1101',
-                'hammer_1102'
-            ],
-            "rotation_euler": [
-                [-np.pi, 0, np.pi/2],    # Orange
-                [-np.pi/2, -np.pi/2, 0],  # Coke
-                [np.pi, 0, np.pi/2],     # Realsense Box
-                [-np.pi, 0, 0],          # Cube
-                [0, np.pi, 0],           # Coconut Bottle
-                [np.pi/2, 0, 0],         # Sunscreen
-                [np.pi/2, 0, 0]          # Hammer
-            ],
-            "modeling_file_paths": [
-                r'data/pointcloud_data/candidiate_objects/orange.npy',
-                r'data/pointcloud_data/candidiate_objects/coke_can_new.npy',
-                r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
-                r'data/pointcloud_data/candidiate_objects/cube_055.npy',
-                r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
-                r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
-                r'data/pointcloud_data/candidiate_objects/hammer.npy'
-            ],
-            "icp_rot_euler": [
-                False,
-                False,
-                True,
-                True,
-                True,
-                True,
-                True,
-            ],
-            "icp_rot_euler_limits": [
-                None,
-                None,
-                180,
-                90,
-                360,
-                360,
-                360,
-            ]
-        }
+        # Object-specific configurations as a list of dictionaries
+        self.object_configs = [
+            {
+                "name": "orange_1024",
+                "rotation_euler": [-np.pi, 0, np.pi/2],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/orange.npy',
+                "icp_rot_euler": False,
+                "icp_rot_euler_limit": None
+            },
+            {
+                "name": "realsense_box_1024",
+                "rotation_euler": [np.pi, 0, np.pi/2],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 180
+            },
+            {
+                "name": "cube_055_1103",
+                "rotation_euler": [-np.pi, 0, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/cube_055.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 90
+            },
+            {
+                "name": "duck_1101",
+                "rotation_euler": [0, 0, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/duck.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 360
+            },
+            {
+                "name": "tape_measure_1101",
+                "rotation_euler": [0, 0, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/tape_measure.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 180,
+            },
+            {
+                "name": "hammer_1102",
+                "rotation_euler": [np.pi/2, 0, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/hammer.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 360
+            },
+            {
+                "name": "coke_can_1030",
+                "rotation_euler": [-np.pi/2, np.pi/4, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/coke_can.npy',
+                "icp_rot_euler": False,
+                "icp_rot_euler_limit": None
+            },
+            {
+                "name": "bottle_coconut_1101",
+                "rotation_euler": [0, np.pi, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 360
+            },
+            {
+                "name": "sunscreen_1101",
+                "rotation_euler": [np.pi/2, 0, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 360
+            },
+        ]
         
     def get_object_config(self, identifier):
-        """Retrieve object configuration by name or index."""
+        """
+        Retrieve object configuration by name or index.
+        
+        Parameters:
+            identifier (str or int): The name (str) or index (int) of the object.
+
+        Returns:
+            dict: Configuration of the specified object.
+        
+        Raises:
+            ValueError: If the identifier is not found.
+            TypeError: If the identifier type is invalid.
+        """
         if isinstance(identifier, int):  # If identifier is an index
-            if 0 <= identifier < len(self.object_configs["names"]):
-                object_config = {
-                    "name": self.object_configs["names"][identifier],
-                    "rotation_euler": self.object_configs["rotation_euler"][identifier],
-                    "modeling_file_path": self.object_configs["modeling_file_paths"][identifier],
-                    "icp_rot_euler": self.object_configs["icp_rot_euler"][identifier],
-                    "icp_rot_euler_limit": self.object_configs["icp_rot_euler_limits"][identifier]
-                }
-                return object_config
+            if 0 <= identifier < len(self.object_configs):
+                return self.object_configs[identifier]
             else:
                 raise ValueError("Index out of range for object configurations.")
         elif isinstance(identifier, str):  # If identifier is a name
-            if identifier in self.object_configs["names"]:
-                index = self.object_configs["names"].index(identifier)
-                object_config = {
-                    "name": self.object_configs["names"][index],
-                    "rotation_euler": self.object_configs["rotation_euler"][index],
-                    "modeling_file_path": self.object_configs["modeling_file_paths"][index],
-                    "icp_rot_euler": self.object_configs["icp_rot_euler"][index],
-                    "icp_rot_euler_limit": self.object_configs["icp_rot_euler_limits"][index]
-                }
-                return object_config
-            else:
-                raise ValueError("Name not found in object configurations.")
+            for config in self.object_configs:
+                if config["name"] == identifier:
+                    return config
+            raise ValueError("Name not found in object configurations.")
         else:
-                raise TypeError("Identifier must be a string (name) or an integer (index).")
+            raise TypeError("Identifier must be a string (name) or an integer (index).")
+
+if __name__ == "__main__":
+    manager = ObjectManager()
+    config_by_name = manager.get_object_config("coke_can_1030")
+    config_by_index = manager.get_object_config(1)
+
+    print("Config by name:", config_by_name)
+    print("Config by index:", config_by_index)
