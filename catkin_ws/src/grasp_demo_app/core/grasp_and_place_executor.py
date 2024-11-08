@@ -58,11 +58,30 @@ class GraspAndPlaceExecutor:
         
         print('Robot returned to home position.')
     
-    def goto_preplace(self):
+    def goto_preplace(self, type='moveit', allow_moveit_fail=True, table_obstacle=None, hz=2):
         """Approach the target position for placing"""
         rospy.sleep(2)
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
-        self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
+        # self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
+        
+        preplace_eef_pose = self.arm_ik.fk(self.preplace_position)
+        # xyz = home_eef_pose[:3, 3]
+        # quat = R.from_matrix(home_eef_pose[:3, :3]).as_quat()
+        # xyzq = np.concatenate((xyz, quat))
+        # TODO: add table obstacle to avoid collision
+        try:
+            self.robot_comand_manager.moveto_pose_with_moveit_plan(
+                preplace_eef_pose, 
+                [], 
+                table_obstacle=table_obstacle)
+    
+        except Exception as ServiceException:
+            if allow_moveit_fail:
+                print("Failed to reach the pregrasp position by moveit. ", ServiceException)
+                print("Try to reach the pregrasp position by spliting joint angles.")
+
+            else:
+                raise ServiceException     
 
     def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz, 
                       type='moveit', direct_if_moveit_failed=False, table_obstacle=None):

@@ -76,7 +76,8 @@ class GraspAndPlaceApp:
                                     steps=self.traj_generator.object_manager_configs["first_n_steps"], 
                                     hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
             self.executor.lift(0.1)
-            self.executor.goto_preplace()
+            self.executor.goto_preplace(type="moveit",
+                                    table_obstacle=self.table_obstacle)
             self.executor.open_hand()
             self.executor.goto_home()
             input("Press Enter to continue...")

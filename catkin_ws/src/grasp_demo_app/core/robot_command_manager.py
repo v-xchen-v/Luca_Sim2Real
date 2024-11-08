@@ -100,7 +100,7 @@ class RobotCommandManager:
             print(f"Executing trajectory point {i+1}/{len(trajectory)}")
             x, y, z, qx, qy, qz, qw = traj_point[:7]
             hand_joints = traj_point[7:13] # pinky, ring, middle, index, pitch, yaw
-            # print(f"computed hand_joints: {hand_joints}")
+            print(f"computed hand_joints: {hand_joints}")
             arm_hand_pose_command = ArmDirectPoseCommandMsg()
             arm_hand_pose_command.right_arm_data = [x, y, z, qx, qy, qz, qw]
             arm_hand_pose_command.right_ee_data = hand_joints
