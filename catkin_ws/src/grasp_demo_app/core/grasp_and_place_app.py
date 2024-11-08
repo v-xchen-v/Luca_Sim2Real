@@ -30,8 +30,9 @@ class GraspAndPlaceApp:
 
     def get_pregrasp_pose(self, t_scale=1):
         """Generate and return the pregrasp pose and finger angles."""
-        eef_pose = self.traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
+        eef_pose, _ = self.traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
         finger_angles = self.traj_generator.processor.get_finger_angles_at_first_point()
+        self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0()
         return eef_pose, finger_angles
 
     def move_to_pregrasp_position(self, t_scale=1, hz=2):
