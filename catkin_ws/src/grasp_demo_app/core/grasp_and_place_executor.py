@@ -1,3 +1,6 @@
+"""The GraspAndPlaceExecutor class is responsible for executing the grasp and place actions."""
+
+
 import numpy as np
 from .robot_command_manager import RobotCommandManager
 import rospy 
@@ -32,7 +35,7 @@ class GraspAndPlaceExecutor:
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
         self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
 
-    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz):
+    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz, type='moveit'):
         """Control the speed and position of pregrasp position, it matters for the grasp success"""
         """Optional"""
         """Speed control, softly reach the rl traj start point."""
@@ -41,7 +44,14 @@ class GraspAndPlaceExecutor:
         pregrasp_eef_pose = np.array(matrix_to_xyzq(pregrasp_eef_pose_matrix))
         tscaled_first_traj_point = np.concatenate((pregrasp_eef_pose, pregrasp_hand_angles))
         
-        self.robot_comand_manager.execute_trajectory([tscaled_first_traj_point], hz=hz)
+        if type != 'moveit':
+            print("goto_pregrasp by spliting joint angles")
+            self.robot_comand_manager.execute_trajectory([tscaled_first_traj_point], hz=hz)
+            
+        else:
+            print("goto_pregrasp by moveit")
+            # TODO: add table obstacle to avoid collision
+            self.robot_comand_manager.moveto_pose_with_moveit_plan(pregrasp_eef_pose, pregrasp_hand_angles, table_obstacle=None)
         print('Robot is reaching the pregrasp position.')
 
     def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120, hz=8):

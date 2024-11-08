@@ -1,5 +1,6 @@
 import rospy
 from ros_msra_robot.msg import (ArmJointCommandMsg, ArmDirectPoseCommandMsg, ArmDirectPoseDeltaCommandMsg)
+from ros_msra_robot.srv import MoveOnceService, MoveOnceServiceRequest
 
 class RobotCommandManager:
     def __init__(self) -> None:
@@ -62,7 +63,26 @@ class RobotCommandManager:
         rospy.sleep(5) # TODO:??? how to wait for executation be completed or very close to be completed??？
         print("move_up command published")
         
-    
+    def moveto_pose_with_moveit_plan(self, eef_pose, hand_joint_angles,
+                                     table_obstacle=None):
+        """Move the robot to the specified pose, with moveit planned trajectory"""
+        x, y, z, qx, qy, qz, qw = eef_pose
+        arm_command = MoveOnceServiceRequest()
+        arm_command.right_arm_data = [x, y, z, qx, qy, qz, qw]
+        # arm_command.right_arm_data = [x, y, z, 0, 0, 0, 1]
+        arm_command.right_ee_data = hand_joint_angles # pinky, ring, middle, index, pitch, yaw
+        arm_command.plan_mode = 'moveit'
+        
+        if table_obstacle is not None:
+            arm_command.obstacle_cnt = 1
+            arm_command.obstacles = []
+            for i in range(arm_command.obstacle_cnt):
+                arm_command.obstacles += table_obstacle
+                # arm_command.obstacles += [-0.333,-0.524,0.085,-0.1638,-0.2579,0.0418,0.9513,0.3,0.3,0.001]
+                # arm_command.obstacles += [x, y, z, qx, qy, qz, qw, x_length:0.3, y_length:0.3, z_length:0.001]
+        task_service = rospy.ServiceProxy('move_once_service', MoveOnceService)
+        response = task_service(arm_command)
+        
     def moveto_pose(self, pose):
         """Move the robot to the specified pose"""
         
