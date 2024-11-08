@@ -19,6 +19,9 @@ class GraspAndPlaceApp:
         """Set up the scene at the beginning."""
         print("Setting up scene")
         self.traj_generator.initialize()
+        self.table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
+            [0.6, 0.5, 0.055]
+        )
 
     def generate_trajectory(self):
         """Generate the trajectory using the provided trajectory generator."""
@@ -52,23 +55,23 @@ class GraspAndPlaceApp:
             hz (int): The frequency at which the robot should move.
         """
         
-        table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
-            [0.6, 0.5, 0.055]
-        )
+
         eef_pose, finger_angles = self._get_pregrasp_pose(t_scale, vis)
         self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=eef_pose, pregrasp_hand_angles=finger_angles, hz=hz,
-                                    table_obstacle=table_obstacle)
+                                    table_obstacle=self.table_obstacle)
 
     def grasp_and_place_cycle(self, repeat_count=10):
         """Run the grasp and place process multiple times."""
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
-            self.executor.goto_home()
+            self.executor.goto_home(type="moveit",
+                                    table_obstacle=self.table_obstacle)
             
             self.generate_trajectory()
             
             # Move to pregrasp position
-            self.move_to_pregrasp_position(t_scale=1.2, hz=2, vis=True)
+            # TODO: config this vis switch to file
+            self.move_to_pregrasp_position(t_scale=1.2, hz=2, vis=False)
             self.execute_trajectory(self.traj_generator.traj_file_path, 
                                     steps=self.traj_generator.object_manager_configs["first_n_steps"], 
                                     hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])

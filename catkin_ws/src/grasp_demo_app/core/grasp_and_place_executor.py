@@ -5,6 +5,8 @@ import numpy as np
 from .robot_command_manager import RobotCommandManager
 import rospy 
 from scipy.spatial.transform import Rotation as R
+from robot_arm_py.arm_ik import Arm_IK
+import os
 
 class GraspAndPlaceExecutor:
     def __init__(self):
@@ -13,20 +15,47 @@ class GraspAndPlaceExecutor:
         
         # joint angles of the home position, order in [joint1, ..., joint7]
         ## Represent the home position of the robot
-        self.home_position = np.array([-41.3, -8.7, -27.2, 74.0, 71.8, -43.3, 20.0]) /180 * np.pi
+        self.home_position_angles = np.array([-41.3, -8.7, -27.2, 74.0, 71.8, -43.3, 20.0]) /180 * np.pi
         # TODO: give a dummy place at first, replace to real position later
         self.preplace_position = np.array([-41.3, -24.9, -44.6, 77.3, 68.8, -12.7, 6.2]) /180*np.pi
         
         # command manager
         self.robot_comand_manager = RobotCommandManager()
+        
+        arm_right_urdf_path=f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R/Realman_Inspire_R.urdf"
+        arm_right_urdf_package_dirs=[
+        f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R"]
+        self.arm_ik = Arm_IK(arm_right_urdf_path, arm_right_urdf_package_dirs)
 
-    def goto_home(self):
+    def goto_home(self, type='moveit', allow_moveit_fail=True, table_obstacle=None, hz=2):
         """Return to the home position"""
         # for i in range(2):
         #     self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
             
         rospy.sleep(2)
-        self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
+        home_hand_joint_angles = [0, 0, 0, 0, 0, 0]
+        # self.robot_comand_manager.goto_joint_angles(self.home_position_angles, home_hand_joint_angles)
+        home_eef_pose = self.arm_ik.fk(self.home_position_angles)
+        # xyz = home_eef_pose[:3, 3]
+        # quat = R.from_matrix(home_eef_pose[:3, :3]).as_quat()
+        # xyzq = np.concatenate((xyz, quat))
+        # TODO: add table obstacle to avoid collision
+        try:
+            self.robot_comand_manager.moveto_pose_with_moveit_plan(
+                home_eef_pose, 
+                home_hand_joint_angles, 
+                table_obstacle=table_obstacle)
+    
+        except Exception as ServiceException:
+            if allow_moveit_fail:
+                print("Failed to reach the pregrasp position by moveit. ", ServiceException)
+                print("Try to reach the pregrasp position by spliting joint angles.")
+
+            else:
+                raise ServiceException     
+        home_point = np.concatenate((home_eef_pose, home_hand_joint_angles))
+        self.robot_comand_manager.execute_trajectory([home_point], hz=hz)           
+        
         print('Robot returned to home position.')
     
     def goto_preplace(self):
@@ -92,6 +121,7 @@ class GraspAndPlaceExecutor:
         """Lift the object"""
         self.robot_comand_manager.move_up(offset=offset)
         pass
+    
 
     # def run(self):
     #     """Run the full grasp and place process"""

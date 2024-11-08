@@ -1,0 +1,9 @@
+{
+    "camera_name": "camera2",
+    "capture_new_calibration": false,
+    "calibration_board_pattern_size": [8, 11],
+    "calibration_board_square_size": 0.02,
+    
+    "candidiates": ["orange_1024"]
+    
+}
