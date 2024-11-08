@@ -444,11 +444,11 @@ class TrajectoryAdaptor:
         return T_robot_base_to_hand_base_new_in_robot_base_coord
         
     
-    def visualize_tscale_hand_to_object_at_step0(self):
+    def visualize_tscale_hand_to_object_at_step0(self, t_scale):
         from coordinates.visualization_utils import visualize_frames
         step = 0
         T_robotbase_to_hand = self.T_robot_base_to_hand_with_robotbase_ref[step]
-        T_scaled_robotbase_to_hand = self.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(t_scale=1.5)
+        T_scaled_robotbase_to_hand = self.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(t_scale)
     
         visualize_frames(
             [np.eye(4), T_scaled_robotbase_to_hand, T_robotbase_to_hand],

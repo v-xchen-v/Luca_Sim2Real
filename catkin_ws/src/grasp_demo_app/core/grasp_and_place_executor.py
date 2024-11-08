@@ -32,35 +32,17 @@ class GraspAndPlaceExecutor:
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
         self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
 
-    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz=5):
+    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz):
         """Control the speed and position of pregrasp position, it matters for the grasp success"""
         """Optional"""
         """Speed control, softly reach the rl traj start point."""
         """Approach the target position"""
-        # TODO: given the target arm pose and hand angles as input
-        # real_traj = np.load(real_traj_path)
-        
-        # R_first_pose = R.from_quat(grasp_traj_first_pose[3:7]).as_matrix()
-        # T_first_pose = np.eye(4)
-        # T_first_pose[:3, :3] = R_first_pose
-        # # T_first_pose[:3, 3] = t
-        # t = grasp_traj_first_pose[:3]
-        # scale = 2
-        # t_scaled = scale * t
-        # T_first_pose[:3, 3] = t_scaled
-        # grasp_traj_first_pose[:]
-        
-        # pregrasp_pose = real_traj[0]
-        # if t_scale != 1:
-        #     print(f"Scale the first pose by {t_scale}")
-        #     pregrasp_pose[:3] = t_scale * pregrasp_pose[:3]
-        
         matrix_to_xyzq = lambda matrix: np.concatenate([matrix[:3, 3], R.from_matrix(matrix[:3, :3]).as_quat()])
         pregrasp_eef_pose = np.array(matrix_to_xyzq(pregrasp_eef_pose_matrix))
         tscaled_first_traj_point = np.concatenate((pregrasp_eef_pose, pregrasp_hand_angles))
         
         self.robot_comand_manager.execute_trajectory([tscaled_first_traj_point], hz=hz)
-        print('Robot reached the pregrasp position.')
+        print('Robot is reaching the pregrasp position.')
 
     def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120, hz=8):
         """Execute the RL trajectory"""
@@ -88,19 +70,19 @@ class GraspAndPlaceExecutor:
         self.robot_comand_manager.move_up(offset=offset)
         pass
 
-    def run(self):
-        """Run the full grasp and place process"""
-        self.goto_home()
+    # def run(self):
+    #     """Run the full grasp and place process"""
+    #     self.goto_home()
 
-        # grasp
-        # self.goto_pregrasp()
-        self.grasp()
-        # self.lift()
+    #     # grasp
+    #     # self.goto_pregrasp()
+    #     self.grasp()
+    #     # self.lift()
 
-        # place
-        self.goto_preplace()
-        self.open_hand()
+    #     # place
+    #     self.goto_preplace()
+    #     self.open_hand()
 
-        self.goto_home()
+    #     self.goto_home()
 
-        print("Grasp and place process completed.")
+    #     print("Grasp and place process completed.")

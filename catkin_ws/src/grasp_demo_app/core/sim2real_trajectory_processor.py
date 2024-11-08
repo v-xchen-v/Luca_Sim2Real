@@ -193,8 +193,8 @@ class Sim2RealTrajectoryProcessor:
     
     def get_tscaled_robotbase_to_hand_at_first_point(self, t_scale=1):
         # TODO: optimize the scale for each object with specific t_scale
-        T_hand_to_base_at_first_point = self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(t_scale=t_scale)
-        self.T_base_to_hand_at_first_point = T_hand_to_base_at_first_point
+        self.T_base_to_hand_at_first_point = self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(
+            t_scale=t_scale)
         return self.T_base_to_hand_at_first_point
         
     def get_finger_angles_at_first_point(self):
