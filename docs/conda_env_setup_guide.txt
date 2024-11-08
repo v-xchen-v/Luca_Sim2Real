@@ -32,3 +32,5 @@ source ~/devel/setup.bash
 pip install catkin_pkg # ImportError: No module named catkin_pkg.packages
 
 # And you can continue pip install the dependent packages in ../setup.py
+pip install PySide2 # No module named 'PySide2'
+pip install PyQt5 # No module named 'PyQt5'

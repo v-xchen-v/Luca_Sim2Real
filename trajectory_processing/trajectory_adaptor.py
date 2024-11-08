@@ -108,7 +108,7 @@ class TrajectoryAdaptor:
         
         ## mapped real trajectory
         self.T_right_hand_base_to_robot_base_steps_real = None
-        self.T_hand_to_robotbase_with_robotbase_ref = None
+        self.T_robot_base_to_hand_with_robotbase_ref = None
         
         
     def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
@@ -401,21 +401,61 @@ class TrajectoryAdaptor:
             self.frame_manager.get_transformation("readable_real", "robot_base_real"),
             np.eye(4))# robot base -> np.eye(4), A->A'
 
-        self.T_hand_to_robotbase_with_robotbase_ref = [T_robot_base_A_Ap@invert_transform(T)@invert_transform(T_robot_base_A_Ap) 
+        self.T_robot_base_to_hand_with_robotbase_ref = [T_robot_base_A_Ap@invert_transform(T)@invert_transform(T_robot_base_A_Ap) 
                                                     for T in self.T_right_hand_base_to_robot_base_steps_real]
 
 # -----------------------public interface of computing transform in mapped real-----------------------#
 
 # -----------------------public interface of computing more advance transform in mapped real -----------------------#
-    def get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(self, t_scale):
+    def get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(self, t_scale=0.95):
+        step = 0
+        
+        # Make it simple, scale robot to hand instead of hand to object
+        # # T_robot_base_to_hand_with_robotbase_ref_at_step0 = self.T_robot_base_to_hand_with_robotbase_ref[step]
+        
+        # # # do scale
+        # # t_scaled_T_robot_base_to_hand_with_robotbase_ref_at_step0 = \
+        # #     T_robot_base_to_hand_with_robotbase_ref_at_step0.copy()
+        # # t_scaled_T_robot_base_to_hand_with_robotbase_ref_at_step0[:3, 3] = \
+        # #     t_scale * t_scaled_T_robot_base_to_hand_with_robotbase_ref_at_step0[:3, 3]
+        
+        # # return t_scaled_T_robot_base_to_hand_with_robotbase_ref_at_step0, T_robot_base_to_hand_with_robotbase_ref_at_step0
+
+        
+        transformation = self.T_right_hand_base_to_robot_base_steps_real[step]
+        T_world_to_object = self.frame_manager.get_transformation("readable_real", "object_real") # or aka, T_object_world_to_object
+        T_world_to_robot_base = self.frame_manager.get_transformation("readable_real", "robot_base_real")
+        T_robot_base_to_hand_base = invert_transform(transformation)
+        T_world_to_hand_base = T_robot_base_to_hand_base@T_world_to_robot_base
+        
+        T_object_to_robot_base = concat(invert_transform(T_world_to_object), T_world_to_robot_base)
+        T_object_to_hand_base = concat(invert_transform(T_world_to_object), T_world_to_hand_base)
+        
+        # tscale
+        T_object_to_hand_base_new = T_object_to_hand_base.copy()
+        T_object_to_hand_base_new[:3, 3] = t_scale * T_object_to_hand_base_new[:3, 3]
+        ## Then compute new T_hand_to_robot
+        T_hand_base_new_to_robot_base = concat(invert_transform(T_object_to_hand_base_new), T_object_to_robot_base)
         T_robot_base_A_Ap = create_relative_transformation(
             self.frame_manager.get_transformation("readable_real", "robot_base_real"),
             np.eye(4))# robot base -> np.eye(4), A->A'
-
-        T_first_step = self.T_right_hand_base_to_robot_base_steps_real[0]
-        T_first_step[:3, 3] = t_scale * T_first_step[:3, 3]
-        T_hand_to_robot_base_with_t_scale_at_first_step = T_robot_base_A_Ap@invert_transform(T_first_step)@invert_transform(T_robot_base_A_Ap)
-        return T_hand_to_robot_base_with_t_scale_at_first_step
+        
+        T_robot_base_to_hand_base_new_in_robot_base_coord = T_robot_base_A_Ap@invert_transform(T_hand_base_new_to_robot_base)@invert_transform(T_robot_base_A_Ap)
+        return T_robot_base_to_hand_base_new_in_robot_base_coord
+        
+    
+    def visualize_tscale_hand_to_object_at_step0(self, t_scale):
+        from coordinates.visualization_utils import visualize_frames
+        step = 0
+        T_robotbase_to_hand = self.T_robot_base_to_hand_with_robotbase_ref[step]
+        T_scaled_robotbase_to_hand = self.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(t_scale)
+    
+        visualize_frames(
+            [np.eye(4), T_scaled_robotbase_to_hand, T_robotbase_to_hand],
+            ["robot_base", "tscaled_hand", "hand"],
+            limits=[[-2, 2],
+                    [-2, 2],
+                    [-2, 2]])
 
 # -----------------------public interface of computing more advance transform in mapped real -----------------------#
     def _setup_readable_frame(self):
@@ -521,11 +561,11 @@ class TrajectoryAdaptor:
 
         
     def save_executable_trajectory(self, adapted_trajectory_save_path: str):
-        if self.T_hand_to_robotbase_with_robotbase_ref is None:
+        if self.T_robot_base_to_hand_with_robotbase_ref is None:
             raise ValueError("Should do ... first.")
         
         T_robot_base_to_right_hand_base_steps_real_xyzq = [matrix_to_xyz_quaternion(T) for 
-                                                     T in self.T_hand_to_robotbase_with_robotbase_ref]
+                                                     T in self.T_robot_base_to_hand_with_robotbase_ref]
 
         
         # concat 

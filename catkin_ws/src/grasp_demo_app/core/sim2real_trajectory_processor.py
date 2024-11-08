@@ -59,6 +59,9 @@ class Sim2RealTrajectoryProcessor:
             }
         )
         
+        if False: # for debugging
+            self.real_traj_adaptor.visualize_arm_table_robot_transform()
+            
         if table_dimensions is not None:
             self.restricted_table_no_touch_zone = \
             self.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(table_dimensions) 
@@ -170,6 +173,9 @@ class Sim2RealTrajectoryProcessor:
     def map_sim_to_real(self):
         # Map simulated trajectory to real world
         self.real_traj_adaptor.map_sim_to_real_handbase_object()
+        
+        if False: # for debugging
+            self.real_traj_adaptor.animate_hand_approach_object_in_real(first_n_steps=200/5)
 
     def compute_real_hand_to_robot_base_transform(self):
         # Compute necessary transformations in the mapped real trajectory
@@ -187,8 +193,8 @@ class Sim2RealTrajectoryProcessor:
     
     def get_tscaled_robotbase_to_hand_at_first_point(self, t_scale=1):
         # TODO: optimize the scale for each object with specific t_scale
-        T_hand_to_base_at_first_point = self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(t_scale=t_scale)
-        self.T_base_to_hand_at_first_point = T_hand_to_base_at_first_point
+        self.T_base_to_hand_at_first_point = self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference_with_tscale_at_first_step(
+            t_scale=t_scale)
         return self.T_base_to_hand_at_first_point
         
     def get_finger_angles_at_first_point(self):
