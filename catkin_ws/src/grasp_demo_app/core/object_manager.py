@@ -9,28 +9,40 @@ class ObjectManager:
                 "rotation_euler": [-np.pi, 0, np.pi/2],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/orange.npy',
                 "icp_rot_euler": False,
-                "icp_rot_euler_limit": None
+                "icp_rot_euler_limit": None,
+                "first_n_steps": 100,
+                "grasp_traj_hz": 4,
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "realsense_box_1024",
                 "rotation_euler": [np.pi, 0, np.pi/2],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 180
+                "icp_rot_euler_limit": 180,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "cube_055_1103",
                 "rotation_euler": [-np.pi, 0, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/cube_055.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 90
+                "icp_rot_euler_limit": 90,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "duck_1101",
                 "rotation_euler": [-np.pi/2, np.pi/2, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/duck.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360
+                "icp_rot_euler_limit": 360,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "tape_measure_1105",
@@ -38,34 +50,49 @@ class ObjectManager:
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/tape_measure.npy',
                 "icp_rot_euler": True,
                 "icp_rot_euler_limit": 180,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "hammer_1102",
                 "rotation_euler": [np.pi/2, 0, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/hammer.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360
+                "icp_rot_euler_limit": 360,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "coke_can_1030",
                 "rotation_euler": [-np.pi/2, np.pi/4, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/coke_can.npy',
                 "icp_rot_euler": False,
-                "icp_rot_euler_limit": None
+                "icp_rot_euler_limit": None,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "bottle_coconut_1101",
                 "rotation_euler": [0, np.pi, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360
+                "icp_rot_euler_limit": 360,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,  
             },
             {
                 "name": "sunscreen_1101",
                 "rotation_euler": [np.pi/2, 0, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/sunscreen.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360
+                "icp_rot_euler_limit": 360,
+                "first_n_steps": 200,
+                "grasp_traj_hz": 2,
+                "hand_lift_offset": 0,   
             },
         ]
         

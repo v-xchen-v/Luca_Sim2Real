@@ -4,6 +4,7 @@ import cv2
 import os
 
 class RealSenseCamera:
+    #TODO: throw error when initialize failed
     def __init__(self):
         """Initialize the Intel RealSense camera pipeline."""
         self.pipeline = rs.pipeline()

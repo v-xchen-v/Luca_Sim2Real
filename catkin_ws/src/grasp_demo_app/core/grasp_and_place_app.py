@@ -44,15 +44,20 @@ class GraspAndPlaceApp:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
-    def move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False, type='direct', direct_if_moveit_failed=True):
+    def move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
         """Move the executor to the pregrasp position.
         Parameters:
             t_scale (float): The scaling factor for the pregrasp pose, 
             which is used to adjust the relative position of end effector with respect to the object.
             hz (int): The frequency at which the robot should move.
         """
+        
+        table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
+            [0.6, 0.5, 0.055]
+        )
         eef_pose, finger_angles = self._get_pregrasp_pose(t_scale, vis)
-        self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=eef_pose, pregrasp_hand_angles=finger_angles, hz=hz)
+        self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=eef_pose, pregrasp_hand_angles=finger_angles, hz=hz,
+                                    table_obstacle=table_obstacle)
 
     def grasp_and_place_cycle(self, repeat_count=10):
         """Run the grasp and place process multiple times."""
@@ -64,7 +69,9 @@ class GraspAndPlaceApp:
             
             # Move to pregrasp position
             self.move_to_pregrasp_position(t_scale=1.2, hz=2, vis=True)
-            self.execute_trajectory(self.traj_generator.traj_file_path, steps=120, hz=2)
+            self.execute_trajectory(self.traj_generator.traj_file_path, 
+                                    steps=self.traj_generator.object_manager_configs["first_n_steps"], 
+                                    hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
             self.executor.lift(0.1)
             self.executor.goto_preplace()
             self.executor.open_hand()

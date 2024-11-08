@@ -35,7 +35,8 @@ class GraspAndPlaceExecutor:
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
         self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
 
-    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz, type='moveit', direct_if_moveit_failed=False):
+    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz, 
+                      type='moveit', direct_if_moveit_failed=False, table_obstacle=None):
         """Control the speed and position of pregrasp position, it matters for the grasp success"""
         """Optional"""
         """Speed control, softly reach the rl traj start point."""
@@ -52,7 +53,10 @@ class GraspAndPlaceExecutor:
             print("goto_pregrasp by moveit")
             # TODO: add table obstacle to avoid collision
             try:
-                self.robot_comand_manager.moveto_pose_with_moveit_plan(pregrasp_eef_pose, pregrasp_hand_angles, table_obstacle=None)
+                self.robot_comand_manager.moveto_pose_with_moveit_plan(
+                    pregrasp_eef_pose, 
+                    pregrasp_hand_angles, 
+                    table_obstacle=None)
         
             except Exception as ServiceException:
                 if direct_if_moveit_failed:
