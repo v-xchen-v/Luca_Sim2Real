@@ -81,7 +81,7 @@ class ExecutableTrajectoryGenerator:
             vis_pcds.append(object_pcd_in_board_coord)
             o3d.visualization.draw_geometries(vis_pcds)
         object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
-        if object_roi_color_image is not None: 
+        if object_roi_color_image is None: 
             raise ValueError("object_roi_color_image is None")
         
         object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'

@@ -33,7 +33,7 @@ class ObjectManager:
                 "icp_rot_euler_limit": 360
             },
             {
-                "name": "tape_measure_1101",
+                "name": "tape_measure_1105",
                 "rotation_euler": [np.pi, np.pi/2, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/tape_measure.npy',
                 "icp_rot_euler": True,
