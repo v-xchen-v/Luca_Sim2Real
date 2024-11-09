@@ -48,7 +48,7 @@ class GraspAndPlaceApp:
         """Execute grasp and place, including moving to pregrasp position, executing trajectory, and placing object."""
         # Move to pregrasp position
         # TODO: config this vis switch to file
-        self._move_to_pregrasp_position(t_scale=1.2, hz=2, vis=False)
+        self._move_to_pregrasp_position(hz=2, vis=False)
         self._execute_trajectory(self.traj_generator.traj_file_path, 
                                 steps=self.traj_generator.object_manager_configs["first_n_steps"], 
                                 hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
@@ -79,7 +79,7 @@ class GraspAndPlaceApp:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
-    def _move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
+    def _move_to_pregrasp_position(self, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
         """Move the executor to the pregrasp position.
         Parameters:
             t_scale (float): The scaling factor for the pregrasp pose, 

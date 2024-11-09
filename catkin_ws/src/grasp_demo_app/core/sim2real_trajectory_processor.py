@@ -126,6 +126,7 @@ class Sim2RealTrajectoryProcessor:
         self.object_icp_rot_euler = self.object_configs["icp_rot_euler"]
         self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limit"]
         self.object_sim_traj_file_name = self.object_configs["sim_traj_file_name"]
+        self.object_icp_rot_euler_offset_after_limit = self.object_configs["icp_rot_euler_offset_after_limit"]
         
     def load_sim_trajectory(self):
         # Load and transform simulated trajectory
@@ -166,6 +167,7 @@ class Sim2RealTrajectoryProcessor:
             T_calibration_board_to_camera=T_calibration_board_to_camera,
             locate_rot_by_icp=self.object_icp_rot_euler,
             icp_rot_euler_limit=self.object_icp_rot_euler_limit,
+            icp_rot_euler_offset_after_limit=self.object_icp_rot_euler_offset_after_limit
             
         )
         print(f'Object position: {object_pos[:, 3]}')
