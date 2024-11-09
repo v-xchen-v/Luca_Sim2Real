@@ -40,5 +40,7 @@ class_mapping_dict = {
 def get_object_name_from_clip(rgb_color_image_path):
     res = classifier.predict(rgb_color_image_path)
     return class_mapping_dict[class_names[res]]
-# res= classifier.predict("data/debug_data/cropped_rgb_image.jpg")
-# print(res)
+
+if __name__ == "__main__":
+    res= classifier.predict("data/debug_data/cropped_rgb_image.jpg")
+    print(res)

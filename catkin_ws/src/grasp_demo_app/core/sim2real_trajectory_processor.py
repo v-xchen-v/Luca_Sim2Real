@@ -125,10 +125,11 @@ class Sim2RealTrajectoryProcessor:
         self.object_modeling_file_path = self.object_configs["modeling_file_path"]
         self.object_icp_rot_euler = self.object_configs["icp_rot_euler"]
         self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limit"]
+        self.object_sim_traj_file_name = self.object_configs["sim_traj_file_name"]
         
     def load_sim_trajectory(self):
         # Load and transform simulated trajectory
-        sim_traj_file_basename = 'step-0.npy'
+        sim_traj_file_basename =  self.object_sim_traj_file_name
         sim_traj_filepath = f'data/trajectory_data/sim_trajectory/{self.object_name}/{sim_traj_file_basename}'
         self.real_traj_adaptor.load_sim_traj_and_transform_hand_to_object(sim_traj_filepath)
         

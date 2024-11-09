@@ -27,12 +27,18 @@ class ExecutableTrajectoryGenerator:
         self.processor.traj_file_path = None
         
         # for 2f table
-        # TODO: move it to config
-        self.x_keep_range=[-0.40, -0.1] # x can
-        self.y_keep_range=[-0.05, 0.40]
-        self.z_keep_range=[-0.5, 0.068 -0.073]
+        # # TODO: move it to config
+        # self.x_keep_range=[-0.40, -0.1] # x can
+        # self.y_keep_range=[-0.05, 0.40]
+        # self.z_keep_range=[-0.5, 0.068 -0.073]
         # self.z_keep_range=[-0.5, -0.004]
         
+        self.x_keep_range = [-0.2, +0.2]
+        self.y_keep_range = [-0.15, +0.15]
+        self.z_keep_range = [-0.3, -0.004]
+        
+        # object management configs
+        self.object_manager_configs = None
         
     
     def _load_config(self, config):
@@ -61,6 +67,7 @@ class ExecutableTrajectoryGenerator:
         
         # if only one object, return it
         if len(candidate_object_names) == 1:
+            self.object_manager_configs = self.object_manager.get_object_config(candidate_object_names[0])
             return candidate_object_names[0]
         
         candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
@@ -81,7 +88,7 @@ class ExecutableTrajectoryGenerator:
             vis_pcds.append(object_pcd_in_board_coord)
             o3d.visualization.draw_geometries(vis_pcds)
         object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
-        if object_roi_color_image is not None: 
+        if object_roi_color_image is None: 
             raise ValueError("object_roi_color_image is None")
         
         object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'
@@ -92,6 +99,7 @@ class ExecutableTrajectoryGenerator:
         #                                                            candidate_pcds=candidate_object_pcds)
         candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
         
+        self.object_manager_configs = self.object_manager.get_object_config(candidate_object_name)
         # # Dummy logic to determine the object
         # object_idx = 0
         # return object_idx

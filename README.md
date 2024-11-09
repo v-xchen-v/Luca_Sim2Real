@@ -126,3 +126,11 @@ A trajectory in generated with RL in simulator. -> A trajectory of real world th
 ### Can locate the object pos in robot coordiate
 ### Can apply a sim2real a traj approach object and grasp it
 ### Make sure object pointcloud is distinguish with ICP
+
+### 5 object
+- orange
+- realsense-box
+- cube
+- duck
+- drak green tape measure
+- toy hammer
