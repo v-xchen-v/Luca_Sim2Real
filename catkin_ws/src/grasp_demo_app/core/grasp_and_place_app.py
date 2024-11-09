@@ -7,6 +7,7 @@ if module_path not in sys.path:
 
 from core.grasp_and_place_executor import GraspAndPlaceExecutor
 from core.executable_trajectory_generator import ExecutableTrajectoryGenerator
+import json
 
 RIGHT_ARM_URDF_PATH = 'catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R/Realman_Inspire_R.urdf'
 
@@ -15,6 +16,10 @@ class GraspAndPlaceApp:
         """Initialize the application with the necessary configurations."""
         self.traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=config_path)
         self.executor = GraspAndPlaceExecutor(RIGHT_ARM_URDF_PATH)
+        
+        # load configs
+        self._load_config(config_path)
+        self.execution_enabled=self.config["execution_enabled"]
         
         self.pregrasp_eef_pose = None
         self.pregrasp_hand_angles = None
@@ -84,7 +89,7 @@ class GraspAndPlaceApp:
                                     hz=hz,
                                     table_obstacle=self.table_obstacle)
 
-    def grasp_and_place_cycle(self, repeat_count=10):
+    def _grasp_and_place_cycle(self, repeat_count=10):
         """Run the grasp and place process multiple times."""
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
@@ -93,7 +98,8 @@ class GraspAndPlaceApp:
             
             self.prepare_trajectory()
             
-            self.execute()
+            if self.execution_enabled:
+                self.execute()
             
             input("Press Enter to continue next grasp iteration...")
 
@@ -103,9 +109,17 @@ class GraspAndPlaceApp:
         input("Environment ready, Press Enter to continue...")
         
         """Execute the full grasp and place cycle."""
-        self.grasp_and_place_cycle(repeat_count)
+        self._grasp_and_place_cycle(repeat_count)
 
-
+    def _load_config(self, config):
+        # Load configuration from a dictionary or a json file
+        if isinstance(config, str):
+            with open(config, 'r') as f:
+                self.config = json.load(f)
+        elif isinstance(config, dict):
+            self.config = config
+        else:
+            raise ValueError("Invalid config type. Use a dictionary or a json file.")
 def main():
     # Configuration for the system
     sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_11f_coke.json'

@@ -33,9 +33,13 @@ class ExecutableTrajectoryGenerator:
         # self.z_keep_range=[-0.5, 0.068 -0.073]
         # self.z_keep_range=[-0.5, -0.004]
         
-        self.x_keep_range = [-0.2, +0.2]
-        self.y_keep_range = [-0.15, +0.15]
-        self.z_keep_range = [-0.3, -0.004]
+        # self.x_keep_range = [-0.2, +0.2]
+        # self.y_keep_range = [-0.15, +0.15]
+        # self.z_keep_range = [-0.3, -0.004]
+        
+        self.x_keep_range = self.config["point_cloud_x_keep_range"]
+        self.y_keep_range = self.config["point_cloud_y_keep_range"]
+        self.z_keep_range = self.config["point_cloud_z_keep_range"]
         
         # object management configs
         self.object_manager_configs = None
