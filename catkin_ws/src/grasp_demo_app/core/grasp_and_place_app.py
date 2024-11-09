@@ -20,7 +20,7 @@ class GraspAndPlaceApp:
         print("Setting up scene")
         self.traj_generator.initialize()
         self.table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
-            [0.6, 0.5, 0.055]
+            [0.6, 0.5, 0.055+0.25]
         )
 
     def generate_trajectory(self):
@@ -43,7 +43,8 @@ class GraspAndPlaceApp:
         """
         eef_pose = self.traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
         finger_angles = self.traj_generator.processor.get_finger_angles_at_first_point()
-        if vis:
+        #TODO: move this vis switch to config file
+        if False:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 

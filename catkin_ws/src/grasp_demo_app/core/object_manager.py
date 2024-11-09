@@ -12,7 +12,8 @@ class ObjectManager:
                 "icp_rot_euler_limit": None,
                 "first_n_steps": 100,
                 "grasp_traj_hz": 4,
-                "hand_lift_offset": 0,  
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
                 "name": "realsense_box_1024",
@@ -22,7 +23,8 @@ class ObjectManager:
                 "icp_rot_euler_limit": 180,
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,  
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
                 "name": "cube_055_1103",
@@ -32,10 +34,11 @@ class ObjectManager:
                 "icp_rot_euler_limit": 90,
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,  
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
-                "name": "duck_1101",
+                "name": "duck_1104",
                 "rotation_euler": [-np.pi/2, np.pi/2, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/duck.npy',
                 "icp_rot_euler": True,
@@ -43,6 +46,7 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,  
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
                 "name": "tape_measure_1105",
@@ -53,6 +57,7 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,  
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
                 "name": "hammer_1102",
@@ -72,7 +77,8 @@ class ObjectManager:
                 "icp_rot_euler_limit": None,
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,  
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
                 "name": "bottle_coconut_1101",
@@ -82,7 +88,8 @@ class ObjectManager:
                 "icp_rot_euler_limit": 360,
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,  
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy" 
             },
             {
                 "name": "sunscreen_1101",
@@ -92,7 +99,8 @@ class ObjectManager:
                 "icp_rot_euler_limit": 360,
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2,
-                "hand_lift_offset": 0,   
+                "hand_lift_offset": 0,     
+                "sim_traj_file_name": "step-0.npy" 
             },
         ]
         
