@@ -177,7 +177,7 @@ class Sim2RealTrajectoryProcessor:
         # Map simulated trajectory to real world
         self.real_traj_adaptor.map_sim_to_real_handbase_object()
         
-        if False: # for debugging
+        if True: # for debugging
             self.real_traj_adaptor.animate_hand_approach_object_in_real(first_n_steps=200/5)
 
     def compute_real_hand_to_robot_base_transform(self):

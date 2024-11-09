@@ -441,11 +441,22 @@ class ObjectPoseLocator(ObjectPositionLocator):
             if angle < 0:
                 angle += 360
             
-            # if angle is greater than limit, %limit
-            if angle > limit:
-                angle %= limit
-                
-            angle += offset_after_limit
+            if limit == 180:
+                # -90, +90
+                # Assuming `angle` is in degrees
+                angle = angle % 180  # First, bring the angle within the range [0, 180)
+
+                # Map to the range [-90, 90]
+                if angle > 90:
+                    angle -= 180
+            else:
+                # if angle is greater than limit, %limit
+                if angle > limit:
+                    angle %= limit
+                    
+                angle += offset_after_limit
+            
+            
                 
             return angle
         

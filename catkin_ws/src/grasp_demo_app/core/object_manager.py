@@ -15,20 +15,8 @@ class ObjectManager:
                 "grasp_traj_hz": 4,
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
-            },
-            {
-                "name": "realsense_box_1024",
-                "rotation_euler": [np.pi, 0, np.pi/2],
-                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
-                "icp_rot_euler": True,
-                "icp_rot_euler_limit": 180,
-                "icp_rot_euler_offset_after_limit": 0, # must be limit*n, n could be 0, 1, 2
-                "first_n_steps": 100,
-                "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy",
-                "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
-                "hand_offset": 1, # degree 
+                "hand_offset_at_n_step": None, # start af offset at step n, when object is upper than table
+                "hand_offset": 0, # degree 
             },
             {
                 "name": "cube_055_1103",
@@ -43,6 +31,34 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
                 "hand_offset": 3, # degree 
+            },
+            {
+                "name": "realsense_box_1024",
+                "rotation_euler": [np.pi, 0, np.pi/2],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 180,
+                "icp_rot_euler_offset_after_limit": 0, # must be limit*n, n could be 0, 1, 2
+                "first_n_steps": 80,
+                "grasp_traj_hz": 3, 
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy",
+                "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
+                "hand_offset": 4, # degree 
+            },
+            {
+                "name": "bottle_coconut_1101",
+                "rotation_euler": [0, np.pi, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 180, # 360
+                "icp_rot_euler_offset_after_limit": 0, # 180
+                "first_n_steps": 100,
+                "grasp_traj_hz": 2, 
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-0.npy",
+                "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
+                "hand_offset": 4, # degree 
             },
             {
                 "name": "duck_1104",
@@ -87,18 +103,6 @@ class ObjectManager:
                 "icp_rot_euler_limit": None,
                 "icp_rot_euler_offset_after_limit": 0,
                 "first_n_steps": 200,
-                "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy" 
-            },
-            {
-                "name": "bottle_coconut_1101",
-                "rotation_euler": [0, np.pi, 0],
-                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
-                "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360,
-                "icp_rot_euler_offset_after_limit": 180,
-                "first_n_steps": 100,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy" 
