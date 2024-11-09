@@ -221,14 +221,14 @@ class TrajectoryAdaptor:
             object_size = (0.05, 0.05, 0.2)  # Object dimensions (x, y, z)
             scene.add_box(object_id, object_pose, size=object_size)
         """
-        T_robot_to_calibration_board = self.frame_manager.get_transformation(
+        T_robot_base_to_calibration_board = self.frame_manager.get_transformation(
             "robot_base_real", "calibration_board_real")
         
         # TO simplify, we assume the calibration board is put on center of the table
-        T_board_to_table = create_transformation_matrix([0, 0, -table_dimensions[2]/2],
-                                                        R.from_euler("XYZ", [np.pi, 0, 0]).as_matrix())
+        T_board_to_box = create_transformation_matrix([0, 0, table_dimensions[2]/2],
+                                                        R.from_euler("XYZ", [0, 0, 0]).as_matrix())
         
-        T_robot_to_table = concat(T_robot_to_calibration_board, T_board_to_table)
+        T_robot_to_table = concat(T_robot_base_to_calibration_board, T_board_to_box)
         
         # compute the center of table
         # x, y, z, qx, qy, qz, qw = matrix_to_xyz_quaternion(T_robot_to_table)

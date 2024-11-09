@@ -4,7 +4,7 @@ import open3d as o3d
 import os
 import pyrealsense2 as rs
 import cv2
-from .realsense_capture import RealSenseCapture
+from .realsense_capture import realsense_instance
 
 def load_npy_file_as_point_cloud(path: str) -> o3d.geometry.PointCloud:
     """
@@ -223,8 +223,7 @@ def _show_point_cloud_window(point_cloud: o3d.geometry.PointCloud):
 #         # return None, None
 
 def get_image_and_point_cloud_from_realseanse():
-    realsense = RealSenseCapture.get_instance()
-    pcd, color_image = realsense.capture()
+    pcd, color_image = realsense_instance.capture()
     return pcd, color_image
 
 def save_image_and_point_cloud_from_realsense(save_dir: str, file_name: str, overwrite_if_exists):

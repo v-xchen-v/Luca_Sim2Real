@@ -106,7 +106,7 @@ class GraspAndPlaceExecutor:
                 self.robot_comand_manager.moveto_pose_with_moveit_plan(
                     pregrasp_eef_pose, 
                     pregrasp_hand_angles, 
-                    table_obstacle=None)
+                    table_obstacle=table_obstacle)
         
             except Exception as ServiceException:
                 if direct_if_moveit_failed:

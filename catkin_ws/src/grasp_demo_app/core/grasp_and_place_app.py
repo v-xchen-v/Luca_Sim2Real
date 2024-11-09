@@ -30,9 +30,11 @@ class GraspAndPlaceApp:
         print("Setting up scene")
         self.traj_generator.initialize()
         notouch_table_dimensions = [1.0, 0.8, 0.055+0.1]
+        # notouch_table_dimensions = [0.1, 0.1, 0.1]
         self.table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
             notouch_table_dimensions
         )
+        print(f"table_obstacle: {self.table_obstacle}")
 
     # Step 2: Prepare Trajectory
     def prepare_trajectory(self, pregrasp_t_scale=1, vis_pregrasp_pose=False):

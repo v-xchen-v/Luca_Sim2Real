@@ -3,36 +3,65 @@ import numpy as np
 import open3d as o3d
 
 class RealSenseCapture:
-    _instance = None  # Class variable to hold the singleton instance
+    # _instance = None  # Class variable to hold the singleton instance
 
-    def __new__(cls, *args, **kwargs):
-        # Check if an instance already exists
-        if cls._instance is None:
-            cls._instance = super(RealSenseCapture, cls).__new__(cls)
-        return cls._instance
+    # def __new__(cls, *args, **kwargs):
+    #     # Check if an instance already exists
+    #     if cls._instance is None:
+    #         cls._instance = super(RealSenseCapture, cls).__new__(cls)
+    #     return cls._instance
 
-    def __init__(self, width=1280, height=720, depth_format=rs.format.z16, color_format=rs.format.bgr8, fps=30):
+    def __init__(self, width=1280, height=720, depth_format=rs.format.z16, color_format=rs.format.bgr8, fps=5):
         if not hasattr(self, '_initialized'):
-            # Configure the RealSense pipeline
-            self.pipeline = rs.pipeline()
-            self.config = rs.config()
-            self.config.enable_stream(rs.stream.depth, width, height, depth_format, fps)
-            self.config.enable_stream(rs.stream.color, width, height, color_format, fps)
-            self.pipeline.start(self.config)
-            self._initialized = True  # Mark as initialized to prevent reinitialization
+            self._initialized = False
+            try:
+                # Configure the RealSense pipeline
+                self.pipeline = rs.pipeline()
+                self.config = rs.config()
+                self.config.enable_stream(rs.stream.depth, width, height, depth_format, fps)
+                self.config.enable_stream(rs.stream.color, width, height, color_format, fps)
+                
+                # Start the pipeline
+                self.pipeline.start(self.config)
+                self._initialized = True
+            except Exception as e:
+                print("Failed to initialize RealSense camera:", e)
+                self._initialized = False
+            # self._initialized = True  # Mark as initialized to prevent reinitialization
 
-    @classmethod
-    def get_instance(cls, *args, **kwargs):
-        """Factory method to get the singleton instance."""
-        if cls._instance is None:
-            cls._instance = RealSenseCapture(*args, **kwargs)
-        return cls._instance
+    # @classmethod
+    # def get_instance(cls, *args, **kwargs):
+    #     """Factory method to get the singleton instance."""
+    #     if cls._instance is None:
+    #         cls._instance = RealSenseCapture(*args, **kwargs)
+    #     return cls._instance
 
     def reset(self):
         """Reset the pipeline if needed."""
         self.pipeline.stop()
         self.pipeline.start(self.config)
 
+    def get_rgb_frame(self):
+        """
+        Retrieve a single RGB frame from the camera.
+
+        Returns:
+        - color_image: The captured RGB frame as a NumPy array.
+        """
+        # Wait for the next set of frames from the camera
+        frames = self.pipeline.wait_for_frames()
+
+        # Extract the color frame
+        color_frame = frames.get_color_frame()
+
+        if not color_frame:
+            raise RuntimeError("Failed to retrieve RGB frame")
+
+        # Convert the frame to a NumPy array
+        color_image = np.asanyarray(color_frame.get_data())
+
+        return color_image
+    
     def capture(self):
         try:
             # Capture frames: depth and color
@@ -79,3 +108,6 @@ class RealSenseCapture:
         # Extract RGB values
         rgb = color_image[v, u, :] / 255.0  # Normalize to [0, 1]
         return rgb
+
+
+realsense_instance = RealSenseCapture()

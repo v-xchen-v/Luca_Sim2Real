@@ -89,3 +89,8 @@ class RealSenseCamera:
         # Release resources
         self.release()
         cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    camera = RealSenseCamera()
+    camera.run_loop()
