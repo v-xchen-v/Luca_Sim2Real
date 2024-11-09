@@ -20,7 +20,7 @@ class GraspAndPlaceApp:
         print("Setting up scene")
         self.traj_generator.initialize()
         self.table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
-            [0.6, 0.5, 0.055+0.25]
+            [0.6, 0.5, 0.055]
         )
 
     def generate_trajectory(self):
