@@ -10,7 +10,7 @@ class ObjectManager:
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/orange.npy',
                 "icp_rot_euler": False,
                 "icp_rot_euler_limit": None,
-                "first_n_steps": 100,
+                "first_n_steps": 75,
                 "grasp_traj_hz": 4,
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy" 

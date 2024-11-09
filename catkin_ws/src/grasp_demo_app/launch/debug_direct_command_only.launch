@@ -8,5 +8,8 @@
         <param name="right_arm_ip" value="192.168.10.18"/>
         <param name="right_ee_type" value="hand"/>
         <param name="hand_modbus_mode" value="false"/>
+        <param name="right_arm_ik_target_frame_name" value="R_hand_base_link_in_sim"/>
     </node>
+
+    <include file="$(find robot_arm_pkg)/launch/moveit_planner_service.launch"/>
 </launch>
