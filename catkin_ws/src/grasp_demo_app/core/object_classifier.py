@@ -24,17 +24,25 @@ class ObjectClassifier:
     
     
     
-class_names = ["duck", "orange", "dark green tape measure", "black box", "toy hammer", "Rubik's cube"]
+class_names = [
+    # "duck", 
+    "orange", 
+    "dark green tape measure", 
+    "black box", 
+    "toy hammer", 
+    "Rubik's cube",
+    "juice milk"]
 classifier = ObjectClassifier(class_names=class_names, model_name='ViT-L/14')
 
 
 class_mapping_dict = {
     "orange": "orange_1024",
-    "duck": "duck_1104",
+    # "duck": "duck_1104",
     "dark green tape measure": "tape_measure_1105",
     "black box": "realsense_box_1024",
     "toy hammer": "hammer_1102",
-    "Rubik's cube": "cube_055_1103"
+    "Rubik's cube": "cube_055_1103",
+    "juice milk": "bottle_coconut_1101"
 }
 
 def get_object_name_from_clip(rgb_color_image_path):
@@ -42,5 +50,23 @@ def get_object_name_from_clip(rgb_color_image_path):
     return class_mapping_dict[class_names[res]]
 
 if __name__ == "__main__":
-    res= classifier.predict("data/debug_data/cropped_rgb_image.jpg")
-    print(res)
+    # res= classifier.predict("data/debug_data/cropped_rgb_image.jpg")
+    # print(res)
+    
+    # opencv capture image then predict and text on the image
+    import cv2
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = cap.read()
+        cv2.imshow('frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.imwrite("data/debug_data/tmp_cropped_rgb_image.jpg", frame)
+            # wait for a while
+            cv2.waitKey(1000)
+            
+            # read the image and predict
+            res = classifier.predict("data/debug_data/tmp_cropped_rgb_image.jpg")
+            # got the object name
+            object_name = class_mapping_dict[class_names[res]]
+            print(object_name)
+            break
