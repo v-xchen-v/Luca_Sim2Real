@@ -20,6 +20,14 @@ def filter_point_outside_operation_area(pcd_in_table: o3d.geometry.PointCloud , 
     x_min, x_max = x_range
     y_min, y_max = y_range
     z_min, z_max = z_range
+    
+    # check max is bigger than min
+    if x_min > x_max:
+        x_min, x_max = x_max, x_min
+    if y_min > y_max:
+        y_min, y_max = y_max, y_min
+    if z_min > z_max:
+        z_min, z_max = z_max, z_min
         
     # Helper function to get min or max with fallback for NaN
     def get_bound(array, func, default):

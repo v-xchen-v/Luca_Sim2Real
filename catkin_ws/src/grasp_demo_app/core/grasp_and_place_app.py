@@ -7,6 +7,7 @@ if module_path not in sys.path:
 
 from core.grasp_and_place_executor import GraspAndPlaceExecutor
 from core.executable_trajectory_generator import ExecutableTrajectoryGenerator
+import json
 
 RIGHT_ARM_URDF_PATH = 'catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R/Realman_Inspire_R.urdf'
 
@@ -15,7 +16,15 @@ class GraspAndPlaceApp:
         """Initialize the application with the necessary configurations."""
         self.traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=config_path)
         self.executor = GraspAndPlaceExecutor(RIGHT_ARM_URDF_PATH)
+        
+        # load configs
+        self._load_config(config_path)
+        self.execution_enabled=self.config["execution_enabled"]
+        
+        self.pregrasp_eef_pose = None
+        self.pregrasp_hand_angles = None
 
+    # Step 1: Setup
     def setup_environment(self):
         """Set up the scene at the beginning."""
         print("Setting up scene")
@@ -25,11 +34,29 @@ class GraspAndPlaceApp:
             notouch_table_dimensions
         )
 
-    def generate_trajectory(self):
+    # Step 2: Prepare Trajectory
+    def prepare_trajectory(self, pregrasp_t_scale=1, vis_pregrasp_pose=False):
         """Generate the trajectory using the provided trajectory generator."""
         self.traj_generator.generate_trajectory()
+        
+        # Compute pregrasp pose by generated grasping trajectory
+        self.pregrasp_eef_pose, self.pregrasp_hand_angles = self._get_pregrasp_pose(t_scale=pregrasp_t_scale, vis=vis_pregrasp_pose)
 
-    def execute_trajectory(self, trajectory_file, steps=120, hz=2):
+    def execute(self):
+        """Execute grasp and place, including moving to pregrasp position, executing trajectory, and placing object."""
+        # Move to pregrasp position
+        # TODO: config this vis switch to file
+        self._move_to_pregrasp_position(t_scale=1.2, hz=2, vis=False)
+        self._execute_trajectory(self.traj_generator.traj_file_path, 
+                                steps=self.traj_generator.object_manager_configs["first_n_steps"], 
+                                hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
+        self.executor.lift(0.1)
+        self.executor.goto_preplace(type="moveit",
+                                table_obstacle=self.table_obstacle)
+        self.executor.open_hand()
+        self.executor.goto_home()
+        
+    def _execute_trajectory(self, trajectory_file, steps=120, hz=2):
         """Execute the generated trajectory with the specified parameters."""
         self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz)
 
@@ -50,51 +77,50 @@ class GraspAndPlaceApp:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
-    def move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
+    def _move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
         """Move the executor to the pregrasp position.
         Parameters:
             t_scale (float): The scaling factor for the pregrasp pose, 
             which is used to adjust the relative position of end effector with respect to the object.
             hz (int): The frequency at which the robot should move.
         """
-        
-
-        eef_pose, finger_angles = self._get_pregrasp_pose(t_scale, vis)
-        self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=eef_pose, pregrasp_hand_angles=finger_angles, hz=hz,
+        # eef_pose, finger_angles = self._get_pregrasp_pose(t_scale, vis)
+        self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=self.pregrasp_eef_pose, 
+                                    pregrasp_hand_angles=self.pregrasp_hand_angles, 
+                                    hz=hz,
                                     table_obstacle=self.table_obstacle)
 
-    def grasp_and_place_cycle(self, repeat_count=10):
+    def _grasp_and_place_cycle(self, repeat_count=10):
         """Run the grasp and place process multiple times."""
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
             self.executor.goto_home(type="moveit",
                                     table_obstacle=self.table_obstacle)
             
-            self.generate_trajectory()
+            self.prepare_trajectory()
             
-            # Move to pregrasp position
-            # TODO: config this vis switch to file
-            self.move_to_pregrasp_position(t_scale=1.2, hz=2, vis=False)
-            self.execute_trajectory(self.traj_generator.traj_file_path, 
-                                    steps=self.traj_generator.object_manager_configs["first_n_steps"], 
-                                    hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
-            self.executor.lift(0.1)
-            self.executor.goto_preplace(type="moveit",
-                                    table_obstacle=self.table_obstacle)
-            self.executor.open_hand()
-            self.executor.goto_home()
-            input("Press Enter to continue...")
+            if self.execution_enabled:
+                self.execute()
+            
+            input("Press Enter to continue next grasp iteration...")
 
     def run(self, repeat_count=10):
         """Setup the table robot camera calibration."""
         self.setup_environment()
-        
-        input("Press Enter to continue...")
+        input("Environment ready, Press Enter to continue...")
         
         """Execute the full grasp and place cycle."""
-        self.grasp_and_place_cycle(repeat_count)
+        self._grasp_and_place_cycle(repeat_count)
 
-
+    def _load_config(self, config):
+        # Load configuration from a dictionary or a json file
+        if isinstance(config, str):
+            with open(config, 'r') as f:
+                self.config = json.load(f)
+        elif isinstance(config, dict):
+            self.config = config
+        else:
+            raise ValueError("Invalid config type. Use a dictionary or a json file.")
 def main():
     # Configuration for the system
     sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_cam_calibration_config_11f_coke.json'
