@@ -9,7 +9,7 @@ from robot_arm_py.arm_ik import Arm_IK
 import os
 
 class GraspAndPlaceExecutor:
-    def __init__(self):
+    def __init__(self, arm_right_urdf_path) -> None:
         # init a node here
         rospy.init_node("robot_command_manager", anonymous=True)
         
@@ -22,9 +22,10 @@ class GraspAndPlaceExecutor:
         # command manager
         self.robot_comand_manager = RobotCommandManager()
         
-        arm_right_urdf_path=f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R/Realman_Inspire_R.urdf"
-        arm_right_urdf_package_dirs=[
-        f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R"]
+        # arm_right_urdf_path=f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R/Realman_Inspire_R.urdf"
+        # arm_right_urdf_package_dirs=[
+        # f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R"]
+        arm_right_urdf_package_dirs = [os.path.dirname(arm_right_urdf_path)]
         self.arm_ik = Arm_IK(arm_right_urdf_path, arm_right_urdf_package_dirs)
 
     def goto_home(self, type='moveit', allow_moveit_fail=True, table_obstacle=None, hz=2):

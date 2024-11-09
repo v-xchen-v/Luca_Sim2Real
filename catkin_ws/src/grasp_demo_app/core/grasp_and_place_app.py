@@ -8,12 +8,13 @@ if module_path not in sys.path:
 from core.grasp_and_place_executor import GraspAndPlaceExecutor
 from core.executable_trajectory_generator import ExecutableTrajectoryGenerator
 
+RIGHT_ARM_URDF_PATH = 'catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R/Realman_Inspire_R.urdf'
 
 class GraspAndPlaceApp:
     def __init__(self, config_path):
         """Initialize the application with the necessary configurations."""
         self.traj_generator = ExecutableTrajectoryGenerator(sim2real_traj_config=config_path)
-        self.executor = GraspAndPlaceExecutor()
+        self.executor = GraspAndPlaceExecutor(RIGHT_ARM_URDF_PATH)
 
     def setup_environment(self):
         """Set up the scene at the beginning."""
