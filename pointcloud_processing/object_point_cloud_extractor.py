@@ -106,7 +106,7 @@ class ObjectPointCloudExtractor:
             # Save or display the cropped RGB image
             cv2.imwrite("cropped_rgb_image.jpg", cropped_rgb_image)
             cv2.imshow("Cropped Image", cropped_rgb_image)
-            cv2.waitKey(0)
+            cv2.waitKey(3000)
             cv2.destroyAllWindows()
         
         return cropped_rgb_image

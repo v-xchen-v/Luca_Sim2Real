@@ -21,6 +21,12 @@ class GraspAndPlaceApp:
         self._load_config(config_path)
         self.execution_enabled=self.config["execution_enabled"]
         
+        ## visualize config
+        self.vis_sim_init = self.config["vis_sim_init"]
+        self.vis_sim_traj = self.config["vis_sim_traj"]
+        self.vis_object_in_real = self.config["vis_object_in_real"]
+        self.vis_real_hand_approach_object = self.config["vis_real_hand_approach_object"]
+        
         self.pregrasp_eef_pose = None
         self.pregrasp_hand_angles = None
 
@@ -33,11 +39,17 @@ class GraspAndPlaceApp:
         self.table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
             notouch_table_dimensions
         )
+        print(f"table_obstacle: {self.table_obstacle}")
 
     # Step 2: Prepare Trajectory
     def prepare_trajectory(self, pregrasp_t_scale=1, vis_pregrasp_pose=False):
         """Generate the trajectory using the provided trajectory generator."""
-        self.traj_generator.generate_trajectory()
+        self.traj_generator.generate_trajectory(
+            vis_sim_initial_setup=self.vis_sim_init,
+            anim_sim_hand_approach=self.vis_sim_traj,
+            vis_object_in_real=self.vis_object_in_real,
+            anim_real_hand_approach_object=self.vis_real_hand_approach_object,
+        )
         
         # Compute pregrasp pose by generated grasping trajectory
         self.pregrasp_eef_pose, self.pregrasp_hand_angles = self._get_pregrasp_pose(t_scale=pregrasp_t_scale, vis=vis_pregrasp_pose)

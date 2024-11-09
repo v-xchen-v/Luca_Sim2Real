@@ -85,7 +85,7 @@ class ObjectManager:
                 "rotation_euler": [0, np.pi, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360,
+                "icp_rot_euler_limit": 180,
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,    

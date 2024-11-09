@@ -117,7 +117,8 @@ class ExecutableTrajectoryGenerator:
     #     pass
     
     
-    def generate_trajectory(self):
+    def generate_trajectory(self, vis_sim_initial_setup, anim_sim_hand_approach,
+                            vis_object_in_real, anim_real_hand_approach_object):
         # Determine the object
         object_name = self.determine_object()
         self.processor.configure_object_settings(object_identifier=object_name)
@@ -125,11 +126,16 @@ class ExecutableTrajectoryGenerator:
         
 
         # Trajectory generation
-        self.processor.load_sim_trajectory()
+        self.processor.load_sim_trajectory(vis_sim_initial_setup=vis_sim_initial_setup, 
+                                           anim_sim_hand_approach=anim_sim_hand_approach)
+        
         self.processor.locate_object(x_keep_range=self.x_keep_range, 
                                      y_keep_range=self.y_keep_range, 
-                                     z_keep_range=self.z_keep_range)
-        self.processor.map_sim_to_real()
+                                     z_keep_range=self.z_keep_range,
+                                     vis_object_in_real=vis_object_in_real)
+        
+        self.processor.map_sim_to_real(anim_real_hand_approach_object=anim_real_hand_approach_object)
+            
         self.processor.compute_real_hand_to_robot_base_transform()
         self.traj_file_path = self.processor.save_real_trajectory()
         

@@ -127,14 +127,17 @@ class Sim2RealTrajectoryProcessor:
         self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limit"]
         self.object_sim_traj_file_name = self.object_configs["sim_traj_file_name"]
         
-    def load_sim_trajectory(self):
+    def load_sim_trajectory(self, vis_sim_initial_setup, anim_sim_hand_approach):
         # Load and transform simulated trajectory
         sim_traj_file_basename =  self.object_sim_traj_file_name
         sim_traj_filepath = f'data/trajectory_data/sim_trajectory/{self.object_name}/{sim_traj_file_basename}'
         self.real_traj_adaptor.load_sim_traj_and_transform_hand_to_object(sim_traj_filepath)
+        if vis_sim_initial_setup:
+            self.real_traj_adaptor.visualize_sim_world_object_hand_initial_step_transformation()
+        if anim_sim_hand_approach:
+            self.real_traj_adaptor.animate_sim_hand_approach_object(first_n_steps=200/5)
         
-        
-    def locate_object(self, x_keep_range, y_keep_range, z_keep_range, reuse_env_board2cam=True):
+    def locate_object(self, x_keep_range, y_keep_range, z_keep_range, vis_object_in_real, reuse_env_board2cam=True):
         # Locate the object relative to the calibration board
         scene_data_save_dir = f"data/scene_data/{self.object_name}_test_scene_data"
         scene_data_file_name = "test_scene"
@@ -170,12 +173,15 @@ class Sim2RealTrajectoryProcessor:
         )
         print(f'Object position: {object_pos[:, 3]}')
         
+        if vis_object_in_real:
+            self.real_traj_adaptor.visualize_object_in_real()
         
-    def map_sim_to_real(self):
+        
+    def map_sim_to_real(self, anim_real_hand_approach_object):
         # Map simulated trajectory to real world
         self.real_traj_adaptor.map_sim_to_real_handbase_object()
         
-        if False: # for debugging
+        if anim_real_hand_approach_object: # for debugging
             self.real_traj_adaptor.animate_hand_approach_object_in_real(first_n_steps=200/5)
 
     def compute_real_hand_to_robot_base_transform(self):
