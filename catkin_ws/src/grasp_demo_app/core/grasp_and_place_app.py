@@ -51,16 +51,19 @@ class GraspAndPlaceApp:
         self._move_to_pregrasp_position(hz=2, vis=False)
         self._execute_trajectory(self.traj_generator.traj_file_path, 
                                 steps=self.traj_generator.object_manager_configs["first_n_steps"], 
-                                hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
+                                hz=self.traj_generator.object_manager_configs["grasp_traj_hz"],
+                                hand_offset_at_n_step=self.traj_generator.object_manager_configs["hand_offset_at_n_step"],
+                                hand_offset=self.traj_generator.object_manager_configs["hand_offset"])
         self.executor.lift(0.1)
         self.executor.goto_preplace(type="moveit",
                                 table_obstacle=self.table_obstacle)
         self.executor.open_hand()
         self.executor.goto_home()
         
-    def _execute_trajectory(self, trajectory_file, steps=120, hz=2):
+    def _execute_trajectory(self, trajectory_file, steps=120, hz=2, hand_offset_at_n_step=50, hand_offset=3):
         """Execute the generated trajectory with the specified parameters."""
-        self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz)
+        self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz,
+                            hand_offset_at_n_step=hand_offset_at_n_step, hand_offset=hand_offset)
 
     def _get_pregrasp_pose(self, t_scale=1, vis=False):
         """Generate and return the pregrasp pose and finger angles.

@@ -14,7 +14,7 @@ class ObjectManager:
                 "first_n_steps": 75,
                 "grasp_traj_hz": 4,
                 "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy" ,
+                "sim_traj_file_name": "step-0.npy",
             },
             {
                 "name": "realsense_box_1024",
@@ -26,7 +26,9 @@ class ObjectManager:
                 "first_n_steps": 100,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy" 
+                "sim_traj_file_name": "step-0.npy",
+                "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
+                "hand_offset": 1, # degree 
             },
             {
                 "name": "cube_055_1103",
@@ -35,10 +37,12 @@ class ObjectManager:
                 "icp_rot_euler": True,
                 "icp_rot_euler_limit": 90,
                 "icp_rot_euler_offset_after_limit": -90,
-                "first_n_steps": 100,
-                "grasp_traj_hz": 2, 
+                "first_n_steps": 90,
+                "grasp_traj_hz": 5, 
                 "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy" 
+                "sim_traj_file_name": "step-0.npy",
+                "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
+                "hand_offset": 3, # degree 
             },
             {
                 "name": "duck_1104",
