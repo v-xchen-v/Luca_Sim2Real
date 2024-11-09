@@ -32,7 +32,7 @@ class_names = [
     "toy hammer", 
     "Rubik's cube",
     "juice milk"]
-classifier = ObjectClassifier(class_names=class_names, model_name='ViT-L/14')
+object_classifier = ObjectClassifier(class_names=class_names, model_name='ViT-L/14')
 
 
 class_mapping_dict = {
@@ -46,7 +46,7 @@ class_mapping_dict = {
 }
 
 def get_object_name_from_clip(rgb_color_image_path):
-    res = classifier.predict(rgb_color_image_path)
+    res = object_classifier.predict(rgb_color_image_path)
     return class_mapping_dict[class_names[res]]
 
 if __name__ == "__main__":
@@ -65,7 +65,7 @@ if __name__ == "__main__":
             cv2.waitKey(1000)
             
             # read the image and predict
-            res = classifier.predict("data/debug_data/tmp_cropped_rgb_image.jpg")
+            res = object_classifier.predict("data/debug_data/tmp_cropped_rgb_image.jpg")
             # got the object name
             object_name = class_mapping_dict[class_names[res]]
             print(object_name)
