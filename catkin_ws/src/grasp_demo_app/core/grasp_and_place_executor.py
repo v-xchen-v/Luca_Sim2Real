@@ -26,7 +26,8 @@ class GraspAndPlaceExecutor:
         # arm_right_urdf_package_dirs=[
         # f"/home/xichen/Documents/repos/Luca_Sim2Real/catkin_ws/src/MSRA_SRobot_core/src/robot_arm_pkg/assets/Realman_Inspire_R"]
         arm_right_urdf_package_dirs = [os.path.dirname(arm_right_urdf_path)]
-        self.arm_ik = Arm_IK(arm_right_urdf_path, arm_right_urdf_package_dirs)
+        self.arm_ik = Arm_IK(arm_right_urdf_path, arm_right_urdf_package_dirs, 
+                             target_frame_name="R_hand_base_link_in_sim")
 
     def goto_home(self, type='moveit', allow_moveit_fail=True, table_obstacle=None, hz=2):
         """Return to the home position"""
@@ -73,13 +74,13 @@ class GraspAndPlaceExecutor:
         try:
             self.robot_comand_manager.moveto_pose_with_moveit_plan(
                 preplace_eef_pose, 
-                [], 
+                None, 
                 table_obstacle=table_obstacle)
     
         except Exception as ServiceException:
             if allow_moveit_fail:
-                print("Failed to reach the pregrasp position by moveit. ", ServiceException)
-                print("Try to reach the pregrasp position by spliting joint angles.")
+                print("Failed to reach the preplace position by moveit. ", ServiceException)
+                print("Try to reach preplace position by spliting joint angles.")
 
             else:
                 raise ServiceException     
@@ -115,6 +116,8 @@ class GraspAndPlaceExecutor:
                 else:
                     raise ServiceException                
         print('Robot is reaching the pregrasp position.')
+        import time
+        time.sleep(5)
 
     def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120, hz=8):
         """Execute the RL trajectory"""

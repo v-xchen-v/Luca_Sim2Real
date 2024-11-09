@@ -63,14 +63,17 @@ class RobotCommandManager:
         rospy.sleep(5) # TODO:??? how to wait for executation be completed or very close to be completed??？
         print("move_up command published")
         
-    def moveto_pose_with_moveit_plan(self, eef_pose, hand_joint_angles,
+    def moveto_pose_with_moveit_plan(self, eef_pose, hand_joint_angles=None,
                                      table_obstacle=None):
         """Move the robot to the specified pose, with moveit planned trajectory"""
         x, y, z, qx, qy, qz, qw = eef_pose
         arm_command = MoveOnceServiceRequest()
         arm_command.right_arm_data = [x, y, z, qx, qy, qz, qw]
         # arm_command.right_arm_data = [x, y, z, 0, 0, 0, 1]
-        arm_command.right_ee_data = hand_joint_angles # pinky, ring, middle, index, pitch, yaw
+        if hand_joint_angles is None:
+            hand_joint_angles = []
+        else:
+            arm_command.right_ee_data = hand_joint_angles # pinky, ring, middle, index, pitch, yaw
         arm_command.plan_mode = 'moveit'
         
         if table_obstacle is not None:
