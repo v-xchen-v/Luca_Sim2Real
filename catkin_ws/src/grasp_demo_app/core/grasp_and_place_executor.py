@@ -106,7 +106,7 @@ class GraspAndPlaceExecutor:
                 self.robot_comand_manager.moveto_pose_with_moveit_plan(
                     pregrasp_eef_pose, 
                     pregrasp_hand_angles, 
-                    table_obstacle=None)
+                    table_obstacle=table_obstacle)
         
             except Exception as ServiceException:
                 if direct_if_moveit_failed:
@@ -119,7 +119,8 @@ class GraspAndPlaceExecutor:
         import time
         time.sleep(5)
 
-    def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120, hz=8):
+    def _execute_rl_trajectory(self, real_traj_path, first_n_steps=120, hz=8, 
+                               hand_offset_at_n_step=50, hand_offset=1):
         """Execute the RL trajectory"""
         
         # TODO: compute first n steps by  flag
@@ -127,12 +128,16 @@ class GraspAndPlaceExecutor:
             first_n_steps = len(real_traj)
             
         real_traj = np.load(real_traj_path)
-        self.robot_comand_manager.execute_trajectory(real_traj[:first_n_steps], hz=hz)
+        self.robot_comand_manager.execute_trajectory(real_traj[:first_n_steps], hz=hz, 
+                                                     hand_offset_at_n_step=hand_offset_at_n_step, 
+                                                     hand_offset=hand_offset)
         print('Grasp trajectory executed.')
 
-    def grasp(self, real_traj_path, first_n_steps, hz):
+    def grasp(self, real_traj_path, first_n_steps, hz, hand_offset_at_n_step=None, hand_offset=0):
         """Grasp the target position"""
-        self._execute_rl_trajectory(real_traj_path, first_n_steps, hz)
+        self._execute_rl_trajectory(real_traj_path, first_n_steps, hz,
+                                    hand_offset_at_n_step=hand_offset_at_n_step,
+                                    hand_offset=hand_offset)
         pass
 
     def open_hand(self):

@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import os
 from .calibration_exceptions import CalibrationBoardNotFoundError, ReprojectionThresholdExceededError
-from camera_operations.camera_capture import RealSenseCamera
+from pointcloud_processing.realsense_capture import realsense_instance
 
 def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_dir, error_threshold):
     """
@@ -87,12 +87,10 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
     return T_object_to_camera
 
 def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dist, report_dir, error_threshold):
-    camera = RealSenseCamera()
-    
     while True:
         try:
             # Get the RGB frame
-            frame = camera.get_rgb_frame()
+            frame = realsense_instance.get_rgb_frame()
             cv2.imshow("camera frame", frame)
             cv2.waitKey(2000)
             if frame is None:

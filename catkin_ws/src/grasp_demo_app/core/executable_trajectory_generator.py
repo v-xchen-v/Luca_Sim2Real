@@ -64,7 +64,6 @@ class ExecutableTrajectoryGenerator:
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
-    
     def determine_object(self):
         # candidate_object_names = ['orange_1024', 'realsense_box_1024']
         candidate_object_names = self.config["candidiates"]

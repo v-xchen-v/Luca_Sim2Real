@@ -9,7 +9,7 @@ from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
 import json
 from .object_manager import ObjectManager
-from pytransform3d.transformations import invert_transform
+from pytransform3d.transforsmations import invert_transform
 
 class Sim2RealTrajectoryProcessor:
     def __init__(self, config) -> None:
@@ -126,6 +126,7 @@ class Sim2RealTrajectoryProcessor:
         self.object_icp_rot_euler = self.object_configs["icp_rot_euler"]
         self.object_icp_rot_euler_limit = self.object_configs["icp_rot_euler_limit"]
         self.object_sim_traj_file_name = self.object_configs["sim_traj_file_name"]
+        self.object_icp_rot_euler_offset_after_limit = self.object_configs["icp_rot_euler_offset_after_limit"]
         
     def load_sim_trajectory(self, vis_sim_initial_setup, anim_sim_hand_approach):
         # Load and transform simulated trajectory
@@ -169,6 +170,7 @@ class Sim2RealTrajectoryProcessor:
             T_calibration_board_to_camera=T_calibration_board_to_camera,
             locate_rot_by_icp=self.object_icp_rot_euler,
             icp_rot_euler_limit=self.object_icp_rot_euler_limit,
+            icp_rot_euler_offset_after_limit=self.object_icp_rot_euler_offset_after_limit
             
         )
         print(f'Object position: {object_pos[:, 3]}')
@@ -191,7 +193,7 @@ class Sim2RealTrajectoryProcessor:
 
 
     def save_real_trajectory(self):
-        # Save real trajectory data
+        # Save real trajectory datas
         save_path = f"data/trajectory_data/real_trajectory/{self.object_name}/step-0.npy"
         self.real_traj_adaptor.save_executable_trajectory(save_path)
         print(f'Real trajectory data saved at: {save_path}')

@@ -303,6 +303,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
                  vis_filtered_point_cloud_in_cam_coord: bool = False,
                  T_calibration_board_to_camera: np.ndarray = None,
                  icp_rot_euler_limit:int = None,
+                 icp_rot_euler_offset_after_limit = None,
                  ) -> None:
         super().__init__(scene_data_save_dir,
                         scene_data_file_name,
@@ -322,6 +323,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
         when the object is positioned on a table, facing a robot)"""
         self.R_calibration_board_to_object_placed_face_robot = R_calibration_board_to_object_placed_face_robot
         self.icp_rot_euler_limit = icp_rot_euler_limit
+        self.icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit
         
         # store itermediate data
         self.R_object_placed_face_robot_to_current = None
@@ -429,19 +431,32 @@ class ObjectPoseLocator(ObjectPositionLocator):
             
         return R_new
 
-    def _limit_rotation_to_axis(self, rotation_matrix, axis, limit=90):
+    def _limit_rotation_to_axis(self, rotation_matrix, axis, limit=90, offset_after_limit=0):
         """Assume the object is rotation invariant around the z-axis every 90 degrees."""
         # should be 'xyz', rot z->rot y->rot x, to avoid guess of x, y, since we known
         # it have only rot on z-axis
         zyx = R.from_matrix(rotation_matrix).as_euler('ZYX', degrees=True)
-        def _limit_rotation_angle(angle, limit):
+        def _limit_rotation_angle(angle, limit, offset_after_limit):
             # if angle is positive, +360
             if angle < 0:
                 angle += 360
             
-            # if angle is greater than limit, %limit
-            if angle > limit:
-                angle %= limit
+            if limit == 180:
+                # -90, +90
+                # Assuming `angle` is in degrees
+                angle = angle % 180  # First, bring the angle within the range [0, 180)
+
+                # Map to the range [-90, 90]
+                if angle > 90:
+                    angle -= 180
+            else:
+                # if angle is greater than limit, %limit
+                if angle > limit:
+                    angle %= limit
+                    
+                angle += offset_after_limit
+            
+            
                 
             return angle
         
@@ -451,7 +466,8 @@ class ObjectPoseLocator(ObjectPositionLocator):
         # the other two axis should be 0
         # for other_axis in np.delete(np.array([0, 1, 2]), [limit_dimension[axis]]):
         #     xyz[other_axis] = 0
-        zyx[limit_dimension[axis]] = _limit_rotation_angle(zyx[limit_dimension[axis]], limit)
+        zyx[limit_dimension[axis]] = _limit_rotation_angle(zyx[limit_dimension[axis]], limit,
+                                                           offset_after_limit=offset_after_limit)
         
         # hope it rot to the -z of calibration board, so that easy to operate by right arm
         # if axis in ['-x', '-y', '-z']:
@@ -459,11 +475,12 @@ class ObjectPoseLocator(ObjectPositionLocator):
         #     pass 
         #     # axis = axis[1:]
         # else:
-        if limit < 360:
-            angle = zyx[limit_dimension[axis]]
-            angle %= limit
+        # if limit < 360:
+        #     angle = zyx[limit_dimension[axis]]
+        #     angle %= limit
+        #     angle += offset_after_limit
             # angle -= limit
-            zyx[limit_dimension[axis]] = angle
+            # zyx[limit_dimension[axis]] = angle
             
         
         print(f"Continue rotation to {zyx[limit_dimension[axis]]} degrees around the board's {axis}-axis, \n\
@@ -498,7 +515,10 @@ class ObjectPoseLocator(ObjectPositionLocator):
         
         print("icp_rot_euler_limit: ", self.icp_rot_euler_limit)
         R_limited_worldz_object_placed_face_robot_to_current = self._limit_rotation_to_axis(
-            R_worldz_object_placed_face_robot_to_current, axis='z', limit=self.icp_rot_euler_limit)
+            R_worldz_object_placed_face_robot_to_current,
+            axis='z', 
+            limit=self.icp_rot_euler_limit,
+            offset_after_limit=self.icp_rot_euler_offset_after_limit)
         z_degree = R.from_matrix(R_limited_worldz_object_placed_face_robot_to_current).as_euler('xyz', degrees=True)[2]
         print(f'z_degree: {z_degree}')
         

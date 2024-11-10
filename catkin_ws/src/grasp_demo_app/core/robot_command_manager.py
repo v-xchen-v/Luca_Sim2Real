@@ -1,6 +1,7 @@
 import rospy
 from ros_msra_robot.msg import (ArmJointCommandMsg, ArmDirectPoseCommandMsg, ArmDirectPoseDeltaCommandMsg)
 from ros_msra_robot.srv import MoveOnceService, MoveOnceServiceRequest
+import numpy as np
 
 class RobotCommandManager:
     def __init__(self) -> None:
@@ -77,10 +78,14 @@ class RobotCommandManager:
         arm_command.plan_mode = 'moveit'
         
         if table_obstacle is not None:
-            arm_command.obstacle_cnt = 1
+            arm_command.obstacle_cnt = 2
             arm_command.obstacles = []
             for i in range(arm_command.obstacle_cnt):
-                arm_command.obstacles += table_obstacle
+                if i ==0:
+                    arm_command.obstacles += list(table_obstacle)
+                if i ==1:
+                    arm_command.obstacles += list([0, 0, 0, 0, 0, 0, 1, 0.8, 0.4, 0.2])
+                
                 # arm_command.obstacles += [-0.333,-0.524,0.085,-0.1638,-0.2579,0.0418,0.9513,0.3,0.3,0.001]
                 # arm_command.obstacles += [x, y, z, qx, qy, qz, qw, x_length:0.3, y_length:0.3, z_length:0.001]
         task_service = rospy.ServiceProxy('move_once_service', MoveOnceService)
@@ -94,7 +99,7 @@ class RobotCommandManager:
         msg.right_ee_data = pose[7:13]
         self.arm_hand_pose_pub.publish(msg)
 
-    def execute_trajectory(self, trajectory, hz=10):
+    def execute_trajectory(self, trajectory, hz=10, hand_offset_at_n_step=None, hand_offset=0):
         """Execute the specified trajectory"""
         
         rate = rospy.Rate(hz)
@@ -106,6 +111,10 @@ class RobotCommandManager:
             print(f"computed hand_joints: {hand_joints}")
             arm_hand_pose_command = ArmDirectPoseCommandMsg()
             arm_hand_pose_command.right_arm_data = [x, y, z, qx, qy, qz, qw]
+            
+            if hand_offset_at_n_step is not None:
+                hand_joints = np.array(hand_joints) 
+                hand_joints[hand_offset_at_n_step:] = hand_joints[hand_offset_at_n_step:]- hand_offset/180*np.pi
             arm_hand_pose_command.right_ee_data = hand_joints
             self.arm_hand_pose_pub.publish(arm_hand_pose_command)
             

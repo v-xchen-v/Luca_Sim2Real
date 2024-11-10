@@ -221,14 +221,14 @@ class TrajectoryAdaptor:
             object_size = (0.05, 0.05, 0.2)  # Object dimensions (x, y, z)
             scene.add_box(object_id, object_pose, size=object_size)
         """
-        T_robot_to_calibration_board = self.frame_manager.get_transformation(
+        T_robot_base_to_calibration_board = self.frame_manager.get_transformation(
             "robot_base_real", "calibration_board_real")
         
         # TO simplify, we assume the calibration board is put on center of the table
-        T_board_to_table = create_transformation_matrix([0, 0, -table_dimensions[2]/2],
-                                                        R.from_euler("XYZ", [np.pi, 0, 0]).as_matrix())
+        T_board_to_box = create_transformation_matrix([0, 0, table_dimensions[2]/2],
+                                                        R.from_euler("XYZ", [0, 0, 0]).as_matrix())
         
-        T_robot_to_table = concat(T_robot_to_calibration_board, T_board_to_table)
+        T_robot_to_table = concat(T_robot_base_to_calibration_board, T_board_to_box)
         
         # compute the center of table
         # x, y, z, qx, qy, qz, qw = matrix_to_xyz_quaternion(T_robot_to_table)
@@ -258,6 +258,7 @@ class TrajectoryAdaptor:
                                                   vis_filtered_point_cloud_in_board_coord=True,
                                                   locate_rot_by_icp=False,
                                                   icp_rot_euler_limit=None,
+                                                  icp_rot_euler_offset_after_limit=None
                                                   ):
         if euler_xyz is None:
             # TODO: use ICP to got the ori
@@ -306,6 +307,7 @@ class TrajectoryAdaptor:
                 vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
                 R_calibration_board_to_object_placed_face_robot=R_board_to_object_placed,
                 icp_rot_euler_limit = icp_rot_euler_limit,
+                icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit
             )
             
         T_object_in_readable = T_board_to_object
@@ -530,7 +532,8 @@ class TrajectoryAdaptor:
                                             vis_scene_point_cloud_in_board_coord,
                                             vis_scene_point_cloud_in_cam_coord,
                                             R_calibration_board_to_object_placed_face_robot,
-                                            icp_rot_euler_limit):
+                                            icp_rot_euler_limit,
+                                            icp_rot_euler_offset_after_limit):
         # using point cloud to locate the position of object in real world
         T_board_to_object = None
         from pointcloud_processing.object_locator import ObjectPoseLocator
@@ -548,6 +551,7 @@ class TrajectoryAdaptor:
             T_calibration_board_to_camera=T_calibration_board_to_camera,
             R_calibration_board_to_object_placed_face_robot=R_calibration_board_to_object_placed_face_robot,
             icp_rot_euler_limit=icp_rot_euler_limit,
+            icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit
             )
 
         T_board_to_object = object_locator.locate_object_pose(

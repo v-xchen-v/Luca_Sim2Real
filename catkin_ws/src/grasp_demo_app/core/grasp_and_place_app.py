@@ -36,13 +36,14 @@ class GraspAndPlaceApp:
         print("Setting up scene")
         self.traj_generator.initialize()
         notouch_table_dimensions = [1.0, 0.8, 0.055+0.1]
+        # notouch_table_dimensions = [0.1, 0.1, 0.1]
         self.table_obstacle = self.traj_generator.processor.real_traj_adaptor.get_restricted_table_no_touch_zone_in_robot_coord(
             notouch_table_dimensions
         )
         print(f"table_obstacle: {self.table_obstacle}")
 
     # Step 2: Prepare Trajectory
-    def prepare_trajectory(self, pregrasp_t_scale=1, vis_pregrasp_pose=False):
+    def prepare_trajectory(self, vis_pregrasp_pose=True):
         """Generate the trajectory using the provided trajectory generator."""
         self.traj_generator.generate_trajectory(
             vis_sim_initial_setup=self.vis_sim_init,
@@ -52,27 +53,33 @@ class GraspAndPlaceApp:
         )
         
         # Compute pregrasp pose by generated grasping trajectory
-        self.pregrasp_eef_pose, self.pregrasp_hand_angles = self._get_pregrasp_pose(t_scale=pregrasp_t_scale, vis=vis_pregrasp_pose)
+        self.pregrasp_eef_pose, self.pregrasp_hand_angles = \
+            self._get_pregrasp_pose(t_scale=self.traj_generator.object_manager_configs["pregrasp_tscale"], 
+                                    vis=vis_pregrasp_pose)
 
     def execute(self):
         """Execute grasp and place, including moving to pregrasp position, executing trajectory, and placing object."""
         # Move to pregrasp position
         # TODO: config this vis switch to file
-        self._move_to_pregrasp_position(t_scale=1.2, hz=2, vis=False)
+        self._move_to_pregrasp_position(hz=2, vis=False,
+                                        )
         self._execute_trajectory(self.traj_generator.traj_file_path, 
                                 steps=self.traj_generator.object_manager_configs["first_n_steps"], 
-                                hz=self.traj_generator.object_manager_configs["grasp_traj_hz"])
+                                hz=self.traj_generator.object_manager_configs["grasp_traj_hz"],
+                                hand_offset_at_n_step=self.traj_generator.object_manager_configs["hand_offset_at_n_step"],
+                                hand_offset=self.traj_generator.object_manager_configs["hand_offset"])
         self.executor.lift(0.1)
         self.executor.goto_preplace(type="moveit",
                                 table_obstacle=self.table_obstacle)
         self.executor.open_hand()
         self.executor.goto_home()
         
-    def _execute_trajectory(self, trajectory_file, steps=120, hz=2):
+    def _execute_trajectory(self, trajectory_file, steps=120, hz=2, hand_offset_at_n_step=50, hand_offset=3):
         """Execute the generated trajectory with the specified parameters."""
-        self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz)
+        self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz,
+                            hand_offset_at_n_step=hand_offset_at_n_step, hand_offset=hand_offset)
 
-    def _get_pregrasp_pose(self, t_scale=1, vis=False):
+    def _get_pregrasp_pose(self, t_scale, vis):
         """Generate and return the pregrasp pose and finger angles.
         
         Parameters:
@@ -85,11 +92,11 @@ class GraspAndPlaceApp:
         eef_pose = self.traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
         finger_angles = self.traj_generator.processor.get_finger_angles_at_first_point()
         #TODO: move this vis switch to config file
-        if False:
+        if vis:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
-    def _move_to_pregrasp_position(self, t_scale=1, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
+    def _move_to_pregrasp_position(self, hz=1, vis=False, type='direct', direct_if_moveit_failed=False):
         """Move the executor to the pregrasp position.
         Parameters:
             t_scale (float): The scaling factor for the pregrasp pose, 
