@@ -29,7 +29,7 @@ class GraspAndPlaceExecutor:
         self.arm_ik = Arm_IK(arm_right_urdf_path, arm_right_urdf_package_dirs, 
                              target_frame_name="R_hand_base_link_in_sim")
 
-    def goto_home(self, type='moveit', allow_moveit_fail=True, table_obstacle=None, hz=2):
+    def goto_home(self, type='moveit', allow_moveit_fail=False, table_obstacle=None, hz=2):
         """Return to the home position"""
         # for i in range(2):
         #     self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
@@ -55,12 +55,12 @@ class GraspAndPlaceExecutor:
 
             else:
                 raise ServiceException     
-        home_point = np.concatenate((home_eef_pose, home_hand_joint_angles))
-        self.robot_comand_manager.execute_trajectory([home_point], hz=hz)           
+        # home_point = np.concatenate((home_eef_pose, home_hand_joint_angles))
+        # self.robot_comand_manager.execute_trajectory([home_point], hz=hz)           
         
         print('Robot returned to home position.')
     
-    def goto_preplace(self, type='moveit', allow_moveit_fail=True, table_obstacle=None, hz=2):
+    def goto_preplace(self, type='moveit', allow_moveit_fail=False, table_obstacle=None, hz=2):
         """Approach the target position for placing"""
         rospy.sleep(2)
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
