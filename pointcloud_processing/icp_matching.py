@@ -65,7 +65,7 @@ def icp_align_with_multiple_rotations(source, target, threshold=0.01, max_iterat
             o3d.pipelines.registration.TransformationEstimationPointToPoint(),
             # o3d.pipelines.registration.TransformationEstimationPointToPlane(),
             o3d.pipelines.registration.ICPConvergenceCriteria(
-                max_iteration=2000,relative_fitness=1e-4, relative_rmse=1e-4))
+                max_iteration=2000,relative_fitness=1e-4, relative_rmse=1e-6))
 
         # Check if this result is better than previous ones
         if icp_result.fitness > best_fitness or (icp_result.fitness == best_fitness and icp_result.inlier_rmse < best_rmse):
