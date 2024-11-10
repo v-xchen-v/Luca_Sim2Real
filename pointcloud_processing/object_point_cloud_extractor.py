@@ -97,13 +97,6 @@ class ObjectPointCloudExtractor:
         # v_min = max(0, min(y_min, h - 1))
         # v_max = max(0, min(y_max, h - 1))
         
-        # crop 1.5 times the bounding box
-        x_min = max(0, x_min - int(0.5 * (x_max - x_min)))
-        x_max = min(w, x_max + int(0.5 * (x_max - x_min)))
-        y_min = max(0, y_min - int(0.5 * (y_max - y_min)))
-        y_max = min(h, y_max + int(0.5 * (y_max - y_min)))
-
-        
         # crop 1.8 times the bounding box
         x_min = max(0, x_min - int(0.8 * (x_max - x_min)))
         x_max = min(w, x_max + int(0.8 * (x_max - x_min)))
