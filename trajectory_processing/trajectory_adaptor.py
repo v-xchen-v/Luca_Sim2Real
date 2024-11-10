@@ -111,7 +111,7 @@ class TrajectoryAdaptor:
         self.T_robot_base_to_hand_with_robotbase_ref = None
         
         
-    def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.5):
+    def _get_calibration_data(self, calibration_data_dir, overwrite_if_exists=False, calibration_board_info=None, error_threshold=0.25):
         from calibration.calibration_data_utils import get_calibration_data
         self.calibration_data = get_calibration_data(calibration_data_dir, overwrite_if_exists, calibration_board_info, error_threshold)
     
@@ -517,6 +517,7 @@ class TrajectoryAdaptor:
         
         return t_board_to_object
         
+
     def _locate_object_pose_with_point_cloud(self,
                                              scene_data_save_dir, 
                                             scene_data_file_name,

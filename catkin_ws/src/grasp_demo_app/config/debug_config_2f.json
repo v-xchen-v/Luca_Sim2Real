@@ -13,7 +13,7 @@
     "object_crop_rgb_y_range": [400, 880],
 
     "point_cloud_x_keep_range": [-0.3, 0.3],
-    "point_cloud_y_keep_range": [-0.25, 0.25],
+    "point_cloud_y_keep_range": [0, 0.4],
     "point_cloud_z_keep_range": [-0.3, -0.004],
 
     "vis_sim_init": false,
