@@ -1,6 +1,7 @@
 import pyrealsense2 as rs
 import numpy as np
 import open3d as o3d
+import time
 
 class RealSenseCapture:
     # _instance = None  # Class variable to hold the singleton instance
@@ -11,22 +12,32 @@ class RealSenseCapture:
     #         cls._instance = super(RealSenseCapture, cls).__new__(cls)
     #     return cls._instance
 
-    def __init__(self, width=1280, height=720, depth_format=rs.format.z16, color_format=rs.format.bgr8, fps=5):
+    def __init__(self, width=1280, height=720, 
+                 depth_format=rs.format.z16, color_format=rs.format.bgr8, fps=5,
+                 max_retries=3, retry_delay=3.0):
         if not hasattr(self, '_initialized'):
             self._initialized = False
-            try:
-                # Configure the RealSense pipeline
-                self.pipeline = rs.pipeline()
-                self.config = rs.config()
-                self.config.enable_stream(rs.stream.depth, width, height, depth_format, fps)
-                self.config.enable_stream(rs.stream.color, width, height, color_format, fps)
-                
-                # Start the pipeline
-                self.pipeline.start(self.config)
-                self._initialized = True
-            except Exception as e:
-                print("Failed to initialize RealSense camera:", e)
-                self._initialized = False
+            retry_count = 0
+
+            while not self._initialized and retry_count < max_retries:
+                try:
+                    # Configure the RealSense pipeline
+                    self.pipeline = rs.pipeline()
+                    self.config = rs.config()
+                    self.config.enable_stream(rs.stream.depth, width, height, depth_format, fps)
+                    self.config.enable_stream(rs.stream.color, width, height, color_format, fps)
+                    
+                    # Start the pipeline
+                    self.pipeline.start(self.config)
+                    self._initialized = True
+                except Exception as e:
+                    print(f"Initialization failed (attempt {retry_count + 1}/{max_retries}):", e)
+                    retry_count += 1
+                    time.sleep(retry_delay)
+                    
+            if not self._initialized:
+                print("Failed to initialize RealSense camera after multiple attempts, Please check the camera is not in use and connected to the system.")
+
             # self._initialized = True  # Mark as initialized to prevent reinitialization
 
     # @classmethod
@@ -48,6 +59,9 @@ class RealSenseCapture:
         Returns:
         - color_image: The captured RGB frame as a NumPy array.
         """
+        if not self._initialized:
+            raise RuntimeError("RealSense camera not initialized")
+        
         # Wait for the next set of frames from the camera
         frames = self.pipeline.wait_for_frames()
 

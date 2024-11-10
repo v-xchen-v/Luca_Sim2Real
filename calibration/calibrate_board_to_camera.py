@@ -88,28 +88,20 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
 
 def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dist, report_dir, error_threshold):
     while True:
-        try:
-            # Get the RGB frame
-            frame = realsense_instance.get_rgb_frame()
-            cv2.imshow("camera frame", frame)
-            cv2.waitKey(2000)
-            if frame is None:
-                print("Warning: no rgb frame from camera.")
-            
-            try:
-                T_table_to_camera = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir, error_threshold)
-                return T_table_to_camera
-            except ReprojectionThresholdExceededError as e:
-                print(e)
-                continue
-            except CalibrationBoardNotFoundError as e:
-                print(e)
-                continue
-            
+        # Get the RGB frame
+        ## if 
+        frame = realsense_instance.get_rgb_frame()
+        cv2.imshow("camera frame", frame)
+        cv2.waitKey(2000)
+        if frame is None:
+            print("Warning: no rgb frame from camera.")
         
-        except RuntimeError as e:
+        try:
+            T_table_to_camera = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir, error_threshold)
+            return T_table_to_camera
+        except ReprojectionThresholdExceededError as e:
             print(e)
-            break
-
-    # Release resources
-    # camera.release()
+            continue
+        except CalibrationBoardNotFoundError as e:
+            print(e)
+            continue
