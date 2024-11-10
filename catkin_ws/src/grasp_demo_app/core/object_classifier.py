@@ -28,9 +28,9 @@ class_names = [
     # "duck", 
     "orange", 
     "dark green tape measure", 
-    "black box", 
+    "yellow box", 
     "toy hammer", 
-    "Rubik's cube",
+    "Rubik's cube white cube",
     "juice milk"]
 object_classifier = ObjectClassifier(class_names=class_names, model_name='ViT-L/14')
 
@@ -39,9 +39,9 @@ class_mapping_dict = {
     "orange": "orange_1024",
     # "duck": "duck_1104",
     "dark green tape measure": "tape_measure_1105",
-    "black box": "realsense_box_1024",
+    "yellow box": "realsense_box_1024",
     "toy hammer": "hammer_1102",
-    "Rubik's cube": "cube_055_1103",
+    "Rubik's cube white cube": "cube_055_1103",
     "juice milk": "bottle_coconut_1101"
 }
 

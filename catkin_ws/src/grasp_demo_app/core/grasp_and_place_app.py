@@ -43,7 +43,7 @@ class GraspAndPlaceApp:
         print(f"table_obstacle: {self.table_obstacle}")
 
     # Step 2: Prepare Trajectory
-    def prepare_trajectory(self, vis_pregrasp_pose=True):
+    def prepare_trajectory(self, vis_pregrasp_pose=False):
         """Generate the trajectory using the provided trajectory generator."""
         self.traj_generator.generate_trajectory(
             vis_sim_initial_setup=self.vis_sim_init,

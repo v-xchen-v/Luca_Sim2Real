@@ -9,7 +9,7 @@ from trajectory_processing.trajectory_adaptor import TrajectoryAdaptor
 import numpy as np
 import json
 from .object_manager import ObjectManager
-from pytransform3d.transforsmations import invert_transform
+from pytransform3d.transformations import invert_transform
 
 class Sim2RealTrajectoryProcessor:
     def __init__(self, config) -> None:

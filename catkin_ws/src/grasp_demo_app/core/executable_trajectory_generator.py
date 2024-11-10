@@ -64,7 +64,7 @@ class ExecutableTrajectoryGenerator:
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
-    def determine_object(self):
+    def determine_object(self, use_pcd=False):
         # candidate_object_names = ['orange_1024', 'realsense_box_1024']
         candidate_object_names = self.config["candidiates"]
         
@@ -73,33 +73,38 @@ class ExecutableTrajectoryGenerator:
             self.object_manager_configs = self.object_manager.get_object_config(candidate_object_names[0])
             return candidate_object_names[0]
         
-        candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
-                                             for obj in candidate_object_names]
-        
-        candidate_object_pcds = [load_npy_file_as_point_cloud(candidate_object_modeling_file) 
-                                 for candidate_object_modeling_file in candidate_object_modeling_files]
-        
-        scene_pcd, scene_color_image = get_image_and_point_cloud_from_realseanse()
-        object_pcd_in_board_coord, _, _ = self.object_pc_extractor.extract(scene_pcd, 
-                                                                        x_keep_range=self.x_keep_range,
-                                                                        y_keep_range=self.y_keep_range, 
-                                                                        z_keep_range=self.z_keep_range)
-        if False:
-            vis_pcds = []
-            for item in candidate_object_pcds:
-                vis_pcds.append(item)
-            vis_pcds.append(object_pcd_in_board_coord)
-            o3d.visualization.draw_geometries(vis_pcds)
-        object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
-        if object_roi_color_image is None: 
-            raise ValueError("object_roi_color_image is None")
-        
         object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'
-        cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
+        if use_pcd:
+            candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
+                                                for obj in candidate_object_names]
+            
+            candidate_object_pcds = [load_npy_file_as_point_cloud(candidate_object_modeling_file) 
+                                    for candidate_object_modeling_file in candidate_object_modeling_files]
+            
+            scene_pcd, scene_color_image = get_image_and_point_cloud_from_realseanse()
+            object_pcd_in_board_coord, _, _ = self.object_pc_extractor.extract(scene_pcd, 
+                                                                            x_keep_range=self.x_keep_range,
+                                                                            y_keep_range=self.y_keep_range, 
+                                                                            z_keep_range=self.z_keep_range)
+            if False:
+                vis_pcds = []
+                for item in candidate_object_pcds:
+                    vis_pcds.append(item)
+                vis_pcds.append(object_pcd_in_board_coord)
+                o3d.visualization.draw_geometries(vis_pcds)
+            object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
+            if object_roi_color_image is None: 
+                raise ValueError("object_roi_color_image is None")
+            
+            cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
 
-        # # TODO: should get point cloud from scene and find best match
-        # _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, 
-        #                                                            candidate_pcds=candidate_object_pcds)
+            # # TODO: should get point cloud from scene and find best match
+            # _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, 
+            #                                                            candidate_pcds=candidate_object_pcds)
+        else:
+            _, scene_color_image = get_image_and_point_cloud_from_realseanse()
+            cv2.imwrite(object_roi_color_image_path, scene_color_image[180:540, 600:960])
+            
         candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
         
         self.object_manager_configs = self.object_manager.get_object_config(candidate_object_name)
