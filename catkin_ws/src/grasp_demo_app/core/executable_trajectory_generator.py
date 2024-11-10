@@ -58,8 +58,6 @@ class ExecutableTrajectoryGenerator:
     def initialize(self):
         self.processor.setup_robot_table()
         
-        # start realsense capture
-        realsense_capture = RealSenseCapture()
         # TODO: restructure code to avoid computing this multiple times
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
