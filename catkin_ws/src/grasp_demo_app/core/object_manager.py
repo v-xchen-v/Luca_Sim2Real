@@ -16,7 +16,8 @@ class ObjectManager:
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": None, # start af offset at step n, when object is upper than table
-                "hand_offset": 0, # degree 
+                "hand_offset": 0, # degree
+                "pregrasp_tscale": 1.5,
             },
             {
                 "name": "cube_055_1103",
@@ -30,7 +31,8 @@ class ObjectManager:
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
-                "hand_offset": 3, # degree 
+                "hand_offset": 3, # degree
+                "pregrasp_tscale": 1.3
             },
             {
                 "name": "realsense_box_1024",
@@ -45,6 +47,7 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
                 "hand_offset": 4, # degree 
+                "pregrasp_tscale": 1.2,
             },
             {
                 "name": "bottle_coconut_1101",
@@ -59,6 +62,7 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
                 "hand_offset": 4, # degree 
+                "pregrasp_tscale": 1.2,
             },
             {
                 "name": "tape_measure_1105",
@@ -73,6 +77,7 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 40, # start af offset at step n, when object is upper than table
                 "hand_offset": 30, # degree 
+                "pregrasp_tscale": 1.2,
             },
             {
                 "name": "duck_1104",
@@ -84,7 +89,8 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,  
-                "sim_traj_file_name": "step-0.npy" 
+                "sim_traj_file_name": "step-0.npy",
+                "pregrasp_tscale": 1.2,
             },
             {
                 "name": "hammer_1102",
@@ -96,6 +102,7 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,  
+                "pregrasp_tscale": 1.2,
             },
             {
                 "name": "coke_can_1030",
@@ -107,7 +114,8 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy" 
+                "sim_traj_file_name": "step-0.npy",
+                "pregrasp_tscale": 1.2,
             },
             {
                 "name": "sunscreen_1101",
@@ -119,7 +127,8 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2,
                 "hand_lift_offset": 0,     
-                "sim_traj_file_name": "step-0.npy" 
+                "sim_traj_file_name": "step-0.npy",
+                "pregrasp_tscale": 1.2,
             },
         ]
         

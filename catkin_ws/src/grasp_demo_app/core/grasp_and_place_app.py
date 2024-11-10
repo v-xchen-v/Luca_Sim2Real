@@ -37,18 +37,21 @@ class GraspAndPlaceApp:
         print(f"table_obstacle: {self.table_obstacle}")
 
     # Step 2: Prepare Trajectory
-    def prepare_trajectory(self, pregrasp_t_scale=1, vis_pregrasp_pose=False):
+    def prepare_trajectory(self, vis_pregrasp_pose=True):
         """Generate the trajectory using the provided trajectory generator."""
         self.traj_generator.generate_trajectory()
         
         # Compute pregrasp pose by generated grasping trajectory
-        self.pregrasp_eef_pose, self.pregrasp_hand_angles = self._get_pregrasp_pose(t_scale=pregrasp_t_scale, vis=vis_pregrasp_pose)
+        self.pregrasp_eef_pose, self.pregrasp_hand_angles = \
+            self._get_pregrasp_pose(t_scale=self.traj_generator.object_manager_configs["pregrasp_tscale"], 
+                                    vis=vis_pregrasp_pose)
 
     def execute(self):
         """Execute grasp and place, including moving to pregrasp position, executing trajectory, and placing object."""
         # Move to pregrasp position
         # TODO: config this vis switch to file
-        self._move_to_pregrasp_position(hz=2, vis=False)
+        self._move_to_pregrasp_position(hz=2, vis=False,
+                                        )
         self._execute_trajectory(self.traj_generator.traj_file_path, 
                                 steps=self.traj_generator.object_manager_configs["first_n_steps"], 
                                 hz=self.traj_generator.object_manager_configs["grasp_traj_hz"],
@@ -65,7 +68,7 @@ class GraspAndPlaceApp:
         self.executor.grasp(trajectory_file, first_n_steps=steps, hz=hz,
                             hand_offset_at_n_step=hand_offset_at_n_step, hand_offset=hand_offset)
 
-    def _get_pregrasp_pose(self, t_scale=1, vis=False):
+    def _get_pregrasp_pose(self, t_scale, vis):
         """Generate and return the pregrasp pose and finger angles.
         
         Parameters:
@@ -78,7 +81,7 @@ class GraspAndPlaceApp:
         eef_pose = self.traj_generator.processor.get_tscaled_robotbase_to_hand_at_first_point(t_scale)
         finger_angles = self.traj_generator.processor.get_finger_angles_at_first_point()
         #TODO: move this vis switch to config file
-        if False:
+        if vis:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
