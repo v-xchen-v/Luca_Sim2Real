@@ -21,6 +21,12 @@ class GraspAndPlaceApp:
         self._load_config(config_path)
         self.execution_enabled=self.config["execution_enabled"]
         
+        ## visualize config
+        self.vis_sim_init = self.config["vis_sim_init"]
+        self.vis_sim_traj = self.config["vis_sim_traj"]
+        self.vis_object_in_real = self.config["vis_object_in_real"]
+        self.vis_real_hand_approach_object = self.config["vis_real_hand_approach_object"]
+        
         self.pregrasp_eef_pose = None
         self.pregrasp_hand_angles = None
 
@@ -39,7 +45,12 @@ class GraspAndPlaceApp:
     # Step 2: Prepare Trajectory
     def prepare_trajectory(self, vis_pregrasp_pose=True):
         """Generate the trajectory using the provided trajectory generator."""
-        self.traj_generator.generate_trajectory()
+        self.traj_generator.generate_trajectory(
+            vis_sim_initial_setup=self.vis_sim_init,
+            anim_sim_hand_approach=self.vis_sim_traj,
+            vis_object_in_real=self.vis_object_in_real,
+            anim_real_hand_approach_object=self.vis_real_hand_approach_object,
+        )
         
         # Compute pregrasp pose by generated grasping trajectory
         self.pregrasp_eef_pose, self.pregrasp_hand_angles = \

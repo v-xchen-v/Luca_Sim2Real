@@ -96,7 +96,6 @@ class ObjectPointCloudExtractor:
         # u_max = max(0, min(x_max, w - 1))
         # v_min = max(0, min(y_min, h - 1))
         # v_max = max(0, min(y_max, h - 1))
-
         
         # crop 1.8 times the bounding box
         x_min = max(0, x_min - int(0.8 * (x_max - x_min)))
@@ -113,7 +112,7 @@ class ObjectPointCloudExtractor:
             # Save or display the cropped RGB image
             cv2.imwrite("cropped_rgb_image.jpg", cropped_rgb_image)
             cv2.imshow("Cropped Image", cropped_rgb_image)
-            cv2.waitKey(0)
+            cv2.waitKey(3000)
             cv2.destroyAllWindows()
         
         return cropped_rgb_image

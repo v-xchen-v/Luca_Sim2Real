@@ -13,5 +13,10 @@
     "point_cloud_y_keep_range": [-0.2, 0.2],
     "point_cloud_z_keep_range": [-0.3, -0.004],
 
+    "vis_sim_init": false,
+    "vis_sim_traj": true,
+    "vis_object_in_real": false,
+    "vis_real_hand_approach_object": true,
+
     "execution_enabled": true
 }
