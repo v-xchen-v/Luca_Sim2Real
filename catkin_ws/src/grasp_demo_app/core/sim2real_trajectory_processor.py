@@ -133,7 +133,8 @@ class Sim2RealTrajectoryProcessor:
         sim_traj_file_basename =  self.object_sim_traj_file_name
         sim_traj_filepath = f'data/trajectory_data/sim_trajectory/{self.object_name}/{sim_traj_file_basename}'
         self.real_traj_adaptor.load_sim_traj_and_transform_hand_to_object(sim_traj_filepath)
-        
+        if False:
+            self.real_traj_adaptor.animate_sim_hand_approach_object()
         
     def locate_object(self, x_keep_range, y_keep_range, z_keep_range, reuse_env_board2cam=True):
         # Locate the object relative to the calibration board
@@ -172,12 +173,15 @@ class Sim2RealTrajectoryProcessor:
         )
         print(f'Object position: {object_pos[:, 3]}')
         
+        if False:
+            self.real_traj_adaptor.visualize_object_in_real()
+        
         
     def map_sim_to_real(self):
         # Map simulated trajectory to real world
         self.real_traj_adaptor.map_sim_to_real_handbase_object()
         
-        if True: # for debugging
+        if False: # for debugging
             self.real_traj_adaptor.animate_hand_approach_object_in_real(first_n_steps=200/5)
 
     def compute_real_hand_to_robot_base_transform(self):
