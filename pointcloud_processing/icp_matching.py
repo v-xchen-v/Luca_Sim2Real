@@ -4,6 +4,7 @@ Uses ICP to align and match the point cloud to the closest object from a list of
 import open3d as o3d
 import numpy as np
 import os
+from pytransform3d.transformations import invert_transform
 
 # TODO: put all candidates here, and do test
 candidate_pcds = [
@@ -169,7 +170,7 @@ def restore_point_cloud(pcd, centroid):
     pcd.translate(centroid)  # Move back to the original position
     return pcd
 
-def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=False, save_aligned_pcd_path=None):
+def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=False, save_aligned_pcd_path=None, switch_source_target=False):
     """Aligns the source point cloud to the target point cloud."""
     # source is modeling fullview point cloud, and target is paritial view in world
     
@@ -178,7 +179,11 @@ def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=F
     target_centered, target_centroid = center_point_cloud(target)
 
     # Perform ICP alignment on centered point clouds
-    transformation, fitness, rmse = icp_align(source_centered, target_centered)
+    if not switch_source_target:
+        transformation, fitness, rmse = icp_align(source_centered, target_centered)
+    else:
+        transformation, fitness, rmse = icp_align(target_centered, source_centered)
+        transformation = invert_transform(transformation)
 
     # Apply transformation to the original (non-centered) source
     source_centered.transform(transformation)
@@ -200,7 +205,7 @@ def align_source_to_target(source, target, vis_aligned=False, save_aligned_pcd=F
         combined_pcd = aligned_source + restored_target
         # if save path is not provided, save to default path
         if save_aligned_pcd_path is None:
-            save_aligned_pcd_path = 'combined_aligned_pcd.pcd'
+            save_aligned_pcd_path = './combined_aligned_pcd.pcd'
         
         # if save folder not exist, create it
         if not os.path.exists(os.path.dirname(save_aligned_pcd_path)):
