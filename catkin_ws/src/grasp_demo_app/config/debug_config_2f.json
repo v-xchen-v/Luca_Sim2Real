@@ -6,8 +6,9 @@
     
     "candidiates": ["orange_1024", 
                     "cube_055_1103",
-                    "realsense_box_1024",
-                    "bottle_coconut_1101","tape_measure_1105"],
+                    "bottle_coconut_1101",
+                    "tape_measure_1105",
+                    "realsense_box_1024"],
     
     "object_crop_rgb_x_range": [180, 540],
     "object_crop_rgb_y_range": [400, 880],

@@ -17,7 +17,8 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": None, # start af offset at step n, when object is upper than table
                 "hand_offset": 0, # degree
-                "pregrasp_tscale": 1.5,
+                "pregrasp_tscale": 1.5,                
+                "hand_preoffset_for_all_steps": 0,
             },
             {
                 "name": "cube_055_1103",
@@ -32,7 +33,8 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
                 "hand_offset": 6, # degree
-                "pregrasp_tscale": 1.3
+                "pregrasp_tscale": 1.3,
+                "hand_preoffset_for_all_steps": 0,
             },
             {
                 "name": "realsense_box_1024",
@@ -48,6 +50,7 @@ class ObjectManager:
                 "hand_offset_at_n_step": 40, # start af offset at step n, when object is upper than table
                 "hand_offset": 3, # degree 
                 "pregrasp_tscale": 1.2,
+                "hand_preoffset_for_all_steps": 0,
             },
             # {
             #     "name": "bottle_coconut_1101",
@@ -69,15 +72,16 @@ class ObjectManager:
                 "rotation_euler": [-np.pi/2, np.pi/2, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
                 "icp_rot_euler": True,
-                "icp_rot_euler_limit": 90, # 360
+                "icp_rot_euler_limit": 95, # 360
                 "icp_rot_euler_offset_after_limit": 0, # 180
                 "first_n_steps": 120,
-                "grasp_traj_hz": 6, 
+                "grasp_traj_hz": 4, 
                 "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-0.npy",
-                "hand_offset_at_n_step": 0, # start af offset at step n, when object is upper than table
-                "hand_offset": -3, # degree 
+                "sim_traj_file_name": "step-800.npy",
+                "hand_offset_at_n_step": 65, # start af offset at step n, when object is upper than table
+                "hand_offset": 25, # degree 
                 "pregrasp_tscale": 1.2,
+                "hand_preoffset_for_all_steps": -10, #degree
             },
             {
                 "name": "tape_measure_1105",
@@ -91,8 +95,9 @@ class ObjectManager:
                 "hand_lift_offset": 0,  
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 40, # start af offset at step n, when object is upper than table
-                "hand_offset": 45, # degree 
-                "pregrasp_tscale": 1.2,
+                "hand_offset": 5, # degree 
+                "pregrasp_tscale": 1.2,                
+                "hand_preoffset_for_all_steps": 0,
             },
             {
                 "name": "coke_can_1104",
@@ -107,7 +112,8 @@ class ObjectManager:
                 "sim_traj_file_name": "step-4000.npy",
                 "hand_offset_at_n_step": 150, # start af offset at step n, when object is upper than table
                 "hand_offset": 30, # degree 
-                "pregrasp_tscale": 1.2,
+                "pregrasp_tscale": 1.2,               
+                "hand_preoffset_for_all_steps": 0,
             },
             {
                 "name": "duck_1104",
@@ -120,7 +126,8 @@ class ObjectManager:
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,  
                 "sim_traj_file_name": "step-0.npy",
-                "pregrasp_tscale": 1.2,
+                "pregrasp_tscale": 1.2,                
+                "hand_preoffset_for_all_steps": 0,
             },
             {
                 "name": "hammer_1102",
@@ -132,7 +139,8 @@ class ObjectManager:
                 "first_n_steps": 200,
                 "grasp_traj_hz": 2, 
                 "hand_lift_offset": 0,  
-                "pregrasp_tscale": 1.2,
+                "pregrasp_tscale": 1.2,                
+                "hand_preoffset_for_all_steps": 0,
             },
             # {
             #     "name": "coke_can_1030",
@@ -158,7 +166,8 @@ class ObjectManager:
                 "grasp_traj_hz": 2,
                 "hand_lift_offset": 0,     
                 "sim_traj_file_name": "step-0.npy",
-                "pregrasp_tscale": 1.2,
+                "pregrasp_tscale": 1.2,                
+                "hand_preoffset_for_all_steps": 0,
             },
         ]
         

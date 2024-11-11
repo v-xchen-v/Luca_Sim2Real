@@ -99,7 +99,7 @@ class RobotCommandManager:
         msg.right_ee_data = pose[7:13]
         self.arm_hand_pose_pub.publish(msg)
 
-    def execute_trajectory(self, trajectory, hz=10, hand_offset_at_n_step=None, hand_offset=0):
+    def execute_trajectory(self, trajectory, hz=10, hand_offset_at_n_step=None, hand_offset=0, hand_preoffset_for_all_steps=0):
         """Execute the specified trajectory"""
         
         rate = rospy.Rate(hz)
@@ -112,9 +112,12 @@ class RobotCommandManager:
             arm_hand_pose_command = ArmDirectPoseCommandMsg()
             arm_hand_pose_command.right_arm_data = [x, y, z, qx, qy, qz, qw]
             
-            if hand_offset_at_n_step is not None:
-                hand_joints = np.array(hand_joints) 
-                hand_joints[hand_offset_at_n_step:] = hand_joints[hand_offset_at_n_step:]- hand_offset/180*np.pi
+            hand_joints = np.array(hand_joints) 
+            if hand_preoffset_for_all_steps != 0:
+                hand_joints += hand_preoffset_for_all_steps/180*np.pi
+                
+            if hand_offset_at_n_step is not None and i >= hand_offset_at_n_step:
+                hand_joints = hand_joints + hand_offset/180*np.pi
             arm_hand_pose_command.right_ee_data = hand_joints
             self.arm_hand_pose_pub.publish(arm_hand_pose_command)
             
