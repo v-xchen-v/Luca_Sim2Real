@@ -37,7 +37,7 @@ error_threshold = 0.5
 report_dir = f"data/debug_data/calibration/output/{image_name}"
 
 # Compute the transformation matrix from the calibration board to the camera
-T_table_to_camera = compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_dir, error_threshold=None)
+T_table_to_camera, _ = compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_dir, error_threshold=None)
 
 # Visualize the transformation
 visualize_table_to_camera(T_table_to_camera)

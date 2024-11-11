@@ -84,7 +84,7 @@ def compute_table_to_camera(image, pattern_size, square_size, mtx, dist, report_
             f.write(f"Reprojection Error: {error:.4f}\n")
         print(f"Reprojection error saved to {error_report_path}.")
         
-    return T_object_to_camera
+    return T_object_to_camera, error
 
 def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dist, report_dir, error_threshold):
     while True:
@@ -97,8 +97,8 @@ def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dis
             print("Warning: no rgb frame from camera.")
         
         try:
-            T_table_to_camera = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir, error_threshold)
-            return T_table_to_camera
+            T_table_to_camera, reprojection_error = compute_table_to_camera(frame, pattern_size, square_size, mtx, dist, report_dir, error_threshold)
+            return T_table_to_camera, reprojection_error
         except ReprojectionThresholdExceededError as e:
             print(e)
             continue

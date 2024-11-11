@@ -177,11 +177,13 @@ class TrajectoryAdaptor:
     def calculate_arm_table_robot_transform(self, 
                                             calibration_data_dir: str, 
                                             overwrite_if_exists: bool=False, 
-                                            calibration_board_info: dict=None):
+                                            calibration_board_info: dict=None,
+                                            calibration_error_threshold=0.02):
         self._get_calibration_data(
             calibration_data_dir=calibration_data_dir,
             overwrite_if_exists=overwrite_if_exists,
-            calibration_board_info=calibration_board_info
+            calibration_board_info=calibration_board_info,
+            error_threshold=calibration_error_threshold
         )
         self._add_transfromations_with_calibration()
         

@@ -3,6 +3,7 @@
     "capture_new_calibration": true,
     "calibration_board_pattern_size": [5, 8],
     "calibration_board_square_size": 0.03,
+    "calibration_error_threshold": 0.05,
     
     "candidiates": ["orange_1024", 
                     "tape_measure_1105", 

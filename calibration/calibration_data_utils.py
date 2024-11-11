@@ -77,7 +77,7 @@ def get_board_calibration_data(mtx, dist, calibration_data_dir, overwrite_if_exi
         for retry_time in range(repeat_times):
             try:
                 # capture a frame to compute table-to-camera transformation
-                capture_frame_and_save_table_calibration(calibration_board_info['pattern_size'],
+                _, reprojection_error = capture_frame_and_save_table_calibration(calibration_board_info['pattern_size'],
                                                             calibration_board_info['square_size'],
                                                             mtx,
                                                             dist, 
@@ -87,7 +87,7 @@ def get_board_calibration_data(mtx, dist, calibration_data_dir, overwrite_if_exi
                 
                 
                 # Exit the loop if calibration is successful
-                print("Table calibration successful.")
+                print(f"Table calibration successful, reprojection_error: {reprojection_error}.")
                 break
 
                 

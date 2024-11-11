@@ -41,6 +41,8 @@ class ExecutableTrajectoryGenerator:
         self.y_keep_range = self.config["point_cloud_y_keep_range"]
         self.z_keep_range = self.config["point_cloud_z_keep_range"]
         
+        self.calibration_error_threshold = self.config["calibration_error_threshold"]
+        
         # object management configs
         self.object_manager_configs = None
         
@@ -56,7 +58,7 @@ class ExecutableTrajectoryGenerator:
             raise ValueError("Invalid config type. Use a dictionary or a json file.")
         
     def initialize(self):
-        self.processor.setup_robot_table()
+        self.processor.setup_robot_table(calibration_error_threshold=self.calibration_error_threshold)
         
         # TODO: restructure code to avoid computing this multiple times
         self.object_pc_extractor = ObjectPointCloudExtractor(
