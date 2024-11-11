@@ -128,8 +128,7 @@ class GraspAndPlaceApp:
             
 
             if self.execution_enabled:
-                self.executor.goto_home(type="moveit",
-                                        table_obstacle=self.table_obstacle)
+                self.executor.goto_home(table_obstacle=self.table_obstacle)
 
             
             # handle errors that can occur during the process and goto next iteration
