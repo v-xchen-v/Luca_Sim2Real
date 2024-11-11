@@ -68,7 +68,7 @@ class ObjectLocatorBase:
             raise ValueError("No scene image is loaded.")
         
         mtx, dist = load_camera_intrinsics_from_npy(self.camera_intrinsics_data_dir)
-        self.T_calibration_board_to_camera = \
+        self.T_calibration_board_to_camera, _ = \
             compute_table_to_camera(image=self.scene_image,
                                     pattern_size=self.calibration_board_info['pattern_size'],
                                     square_size=self.calibration_board_info['square_size'],

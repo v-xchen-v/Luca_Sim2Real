@@ -44,7 +44,7 @@ table_calibration_image = cv2.imread(table_calibration_image_path)
 # load calibration pre-computed
 from calibration.calibration_precomputed_data_loader import load_camera_intrinsics_from_npy
 mtx, dist = load_camera_intrinsics_from_npy('./calibration/calibration_data/camera1/camera_intrinsics')
-T_calibration_board_to_camera = compute_table_to_camera(image=table_calibration_image, 
+T_calibration_board_to_camera, _ = compute_table_to_camera(image=table_calibration_image, 
                                                         pattern_size=(5, 8), square_size=0.03,
                                                         mtx=mtx, dist=dist, 
                                                         report_dir='./data/debug_data/pointcloud_data/camera_captures', error_threshold=1)
