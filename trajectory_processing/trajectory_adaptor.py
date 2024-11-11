@@ -260,7 +260,8 @@ class TrajectoryAdaptor:
                                                   vis_filtered_point_cloud_in_board_coord=True,
                                                   locate_rot_by_icp=False,
                                                   icp_rot_euler_limit=None,
-                                                  icp_rot_euler_offset_after_limit=None
+                                                  icp_rot_euler_offset_after_limit=None,
+                                                  icp_fitness_threshold = None
                                                   ):
         if euler_xyz is None:
             # TODO: use ICP to got the ori
@@ -309,7 +310,8 @@ class TrajectoryAdaptor:
                 vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
                 R_calibration_board_to_object_placed_face_robot=R_board_to_object_placed,
                 icp_rot_euler_limit = icp_rot_euler_limit,
-                icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit
+                icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit,
+                icp_fitness_threshold = icp_fitness_threshold,
             )
             
         T_object_in_readable = T_board_to_object
@@ -536,7 +538,8 @@ class TrajectoryAdaptor:
                                             vis_scene_point_cloud_in_cam_coord,
                                             R_calibration_board_to_object_placed_face_robot,
                                             icp_rot_euler_limit,
-                                            icp_rot_euler_offset_after_limit):
+                                            icp_rot_euler_offset_after_limit,
+                                            icp_fitness_threshold):
         # using point cloud to locate the position of object in real world
         T_board_to_object = None
         from pointcloud_processing.object_locator import ObjectPoseLocator
@@ -554,7 +557,8 @@ class TrajectoryAdaptor:
             T_calibration_board_to_camera=T_calibration_board_to_camera,
             R_calibration_board_to_object_placed_face_robot=R_calibration_board_to_object_placed_face_robot,
             icp_rot_euler_limit=icp_rot_euler_limit,
-            icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit
+            icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit,
+            icp_fitness_threshold = icp_fitness_threshold
             )
 
         T_board_to_object = object_locator.locate_object_pose(

@@ -9,9 +9,9 @@ from pointcloud_processing.pointcloud_io import get_image_and_point_cloud_from_r
 from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
 import open3d as o3d
 import json
-from pointcloud_processing.realsense_capture import RealSenseCapture
 import cv2
 from .object_classifier import get_object_name_from_clip
+from pointcloud_processing.pointcloud_exceptions import ICPFitnessException
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -41,8 +41,7 @@ class ExecutableTrajectoryGenerator:
         self.y_keep_range = self.config["point_cloud_y_keep_range"]
         self.z_keep_range = self.config["point_cloud_z_keep_range"]
         
-        self.calibration_error_threshold = self.config["calibration_error_threshold"]
-        
+        self.calibration_error_threshold = self.config["calibration_error_threshold"]        
         # object management configs
         self.object_manager_configs = None
         
@@ -133,11 +132,14 @@ class ExecutableTrajectoryGenerator:
         self.processor.load_sim_trajectory(vis_sim_initial_setup=vis_sim_initial_setup, 
                                            anim_sim_hand_approach=anim_sim_hand_approach)
         
-        self.processor.locate_object(x_keep_range=self.x_keep_range, 
-                                     y_keep_range=self.y_keep_range, 
-                                     z_keep_range=self.z_keep_range,
-                                     vis_object_in_real=vis_object_in_real)
-        
+        try:
+            self.processor.locate_object(x_keep_range=self.x_keep_range, 
+                                        y_keep_range=self.y_keep_range, 
+                                        z_keep_range=self.z_keep_range,
+                                        vis_object_in_real=vis_object_in_real)
+        except ICPFitnessException as e:
+            raise ICPFitnessException(f"ICP Fitness Exception: {e}")
+            
         self.processor.map_sim_to_real(anim_real_hand_approach_object=anim_real_hand_approach_object)
             
         self.processor.compute_real_hand_to_robot_base_transform()
