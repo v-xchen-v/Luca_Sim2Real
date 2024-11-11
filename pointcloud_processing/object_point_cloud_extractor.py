@@ -101,7 +101,7 @@ class ObjectPointCloudExtractor:
         x_min = max(0, x_min - int(0.8 * (x_max - x_min)))
         x_max = min(w, x_max + int(0.8 * (x_max - x_min)))
         y_min = max(0, y_min - int(0.8 * (y_max - y_min)))
-        y_max = min(h-400, y_max + int(0.8 * (y_max - y_min)))
+        y_max = min(h, y_max + int(0.8 * (y_max - y_min)))
         
         # Crop the RGB image using the calculated pixel bounds
         cropped_rgb_image = color_image[x_min:x_max, y_min:y_max]

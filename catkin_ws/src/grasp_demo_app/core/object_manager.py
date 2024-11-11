@@ -40,8 +40,8 @@ class ObjectManager:
                 "name": "realsense_box_1024",
                 "rotation_euler": [np.pi, 0, 0], #np.pi/2],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/realsense_box.npy',
-                "icp_rot_euler": False,
-                "icp_rot_euler_limit": None,
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 180,
                 "icp_rot_euler_offset_after_limit": 0, # must be limit*n, n could be 0, 1, 2
                 "first_n_steps": 70,
                 "grasp_traj_hz": 6, 

@@ -118,8 +118,9 @@ class GraspAndPlaceApp:
         """Run the grasp and place process multiple times."""
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
-            self.executor.goto_home(type="moveit",
-                                    table_obstacle=self.table_obstacle)
+            if self.execution_enabled:
+                self.executor.goto_home(type="moveit",
+                                        table_obstacle=self.table_obstacle)
             
             self.prepare_trajectory()
             
