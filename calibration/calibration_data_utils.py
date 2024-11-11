@@ -116,6 +116,7 @@ def _show_calibration_image(calibration_data_dir):
     frame = cv2.imread(calibration_image_path)
     if frame is None:
         raise ValueError("Calibration image not found.")
+    # if False: # for debugging purpose
     # cv2.imshow("Calibration Image", frame)
     # cv2.waitKey(1000)
     cv2.destroyAllWindows()
