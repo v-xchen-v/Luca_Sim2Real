@@ -76,18 +76,19 @@ class GraspAndPlaceExecutor:
             
         print("goto_pregrasp by moveit")
         try:
-            self.robot_comand_manager.moveto_pose_with_moveit_plan(
+            moveit_response = self.robot_comand_manager.moveto_pose_with_moveit_plan(
                 pregrasp_eef_pose, 
                 pregrasp_hand_angles, 
                 table_obstacle=table_obstacle)
+            print(f'moveit_response: {moveit_response}')
     
         except Exception as ServiceException:
             print("Failed to reach the pregrasp position by moveit.")
             raise ServiceException         
                    
         print('Robot is reaching the pregrasp position.')
-        import time
-        time.sleep(5)
+        # import time
+        # time.sleep(5)
 
     def _execute_rl_trajectory(self, real_traj_path, first_n_steps, hz, 
                                hand_offset_at_n_step, hand_offset, hand_preoffset_for_all_steps):
