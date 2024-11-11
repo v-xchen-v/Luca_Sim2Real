@@ -19,6 +19,7 @@ class ObjectManager:
                 "hand_offset": 0, # degree
                 "pregrasp_tscale": 1.5,                
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
             {
                 "name": "cube_055_1103",
@@ -35,6 +36,7 @@ class ObjectManager:
                 "hand_offset": 6, # degree
                 "pregrasp_tscale": 1.3,
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
             {
                 "name": "realsense_box_1024",
@@ -51,6 +53,7 @@ class ObjectManager:
                 "hand_offset": 3, # degree 
                 "pregrasp_tscale": 1.2,
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
             # {
             #     "name": "bottle_coconut_1101",
@@ -82,6 +85,7 @@ class ObjectManager:
                 "hand_offset": 8, # degree 
                 "pregrasp_tscale": 1.2,                
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
             {
                 "name": "bottle_coconut_1105",
@@ -98,6 +102,7 @@ class ObjectManager:
                 "hand_offset": 25, # degree 
                 "pregrasp_tscale": 1.2,
                 "hand_preoffset_for_all_steps": -10, #degree
+                "icp_fitness_threshold": 0.5,
             },
             {
                 "name": "coke_can_1104",
@@ -114,6 +119,7 @@ class ObjectManager:
                 "hand_offset": 30, # degree 
                 "pregrasp_tscale": 1.2,               
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
             {
                 "name": "duck_1104",
@@ -128,6 +134,7 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "pregrasp_tscale": 1.2,                
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
             # {
             #     "name": "hammer_1102",
@@ -168,6 +175,7 @@ class ObjectManager:
                 "sim_traj_file_name": "step-0.npy",
                 "pregrasp_tscale": 1.2,                
                 "hand_preoffset_for_all_steps": 0,
+                "icp_fitness_threshold": 0.5,
             },
         ]
         

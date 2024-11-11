@@ -2,8 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from typing import Callable
-# import matplotlib
-# matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
+USE_HEADLESS = False
+if not USE_HEADLESS:
+    import matplotlib
+    matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup
 
 def plot_trajectory_xyz_over_steps(trajectory: np.ndarray):
     """

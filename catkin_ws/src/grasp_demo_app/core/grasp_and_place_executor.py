@@ -29,19 +29,11 @@ class GraspAndPlaceExecutor:
         self.arm_ik = Arm_IK(arm_right_urdf_path, arm_right_urdf_package_dirs, 
                              target_frame_name="R_hand_base_link_in_sim")
 
-    def goto_home(self, type='moveit', allow_moveit_fail=False, table_obstacle=None, hz=2):
-        """Return to the home position"""
-        # for i in range(2):
-        #     self.robot_comand_manager.goto_joint_angles(self.home_position, [0, 0, 0, 0, 0, 0])
-            
+    def goto_home(self, table_obstacle):
+        """Return to the home position"""            
         rospy.sleep(2)
         home_hand_joint_angles = [0, 0, 0, 0, 0, 0]
-        # self.robot_comand_manager.goto_joint_angles(self.home_position_angles, home_hand_joint_angles)
         home_eef_pose = self.arm_ik.fk(self.home_position_angles)
-        # xyz = home_eef_pose[:3, 3]
-        # quat = R.from_matrix(home_eef_pose[:3, :3]).as_quat()
-        # xyzq = np.concatenate((xyz, quat))
-        # TODO: add table obstacle to avoid collision
         try:
             self.robot_comand_manager.moveto_pose_with_moveit_plan(
                 home_eef_pose, 
@@ -49,28 +41,16 @@ class GraspAndPlaceExecutor:
                 table_obstacle=table_obstacle)
     
         except Exception as ServiceException:
-            if allow_moveit_fail:
-                print("Failed to reach the pregrasp position by moveit. ", ServiceException)
-                print("Try to reach the pregrasp position by spliting joint angles.")
-
-            else:
-                raise ServiceException     
-        # home_point = np.concatenate((home_eef_pose, home_hand_joint_angles))
-        # self.robot_comand_manager.execute_trajectory([home_point], hz=hz)           
+            print("Failed to reach the pregrasp position by moveit.")
+            raise ServiceException     
         
         print('Robot returned to home position.')
     
-    def goto_preplace(self, type='moveit', allow_moveit_fail=False, table_obstacle=None, hz=2):
+    def goto_preplace(self, table_obstacle):
         """Approach the target position for placing"""
         rospy.sleep(2)
         # TODO: move arm but in progress, do not move the hand, -1 for not moving hand?
-        # self.robot_comand_manager.goto_arm_joint_angles(self.preplace_position)
-        
         preplace_eef_pose = self.arm_ik.fk(self.preplace_position)
-        # xyz = home_eef_pose[:3, 3]
-        # quat = R.from_matrix(home_eef_pose[:3, :3]).as_quat()
-        # xyzq = np.concatenate((xyz, quat))
-        # TODO: add table obstacle to avoid collision
         try:
             self.robot_comand_manager.moveto_pose_with_moveit_plan(
                 preplace_eef_pose, 
@@ -78,43 +58,33 @@ class GraspAndPlaceExecutor:
                 table_obstacle=table_obstacle)
     
         except Exception as ServiceException:
-            if allow_moveit_fail:
-                print("Failed to reach the preplace position by moveit. ", ServiceException)
-                print("Try to reach preplace position by spliting joint angles.")
+            print("Failed to reach the preplace position by moveit.")
+            raise ServiceException     
 
-            else:
-                raise ServiceException     
-
-    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, hz, 
-                      type='moveit', direct_if_moveit_failed=False, table_obstacle=None):
+    def goto_pregrasp(self, pregrasp_eef_pose_matrix, pregrasp_hand_angles, table_obstacle):
         """Control the speed and position of pregrasp position, it matters for the grasp success"""
         """Optional"""
         """Speed control, softly reach the rl traj start point."""
         """Approach the target position"""
         matrix_to_xyzq = lambda matrix: np.concatenate([matrix[:3, 3], R.from_matrix(matrix[:3, :3]).as_quat()])
         pregrasp_eef_pose = np.array(matrix_to_xyzq(pregrasp_eef_pose_matrix))
-        tscaled_first_traj_point = np.concatenate((pregrasp_eef_pose, pregrasp_hand_angles))
         
-        if type != 'moveit':
-            print("goto_pregrasp by spliting joint angles")
-            self.robot_comand_manager.execute_trajectory([tscaled_first_traj_point], hz=hz)
+        # if type != 'moveit':
+        #     tscaled_first_traj_point = np.concatenate((pregrasp_eef_pose, pregrasp_hand_angles))
+        #     print("goto_pregrasp by spliting joint angles")
+        #     self.robot_comand_manager.execute_trajectory([tscaled_first_traj_point], hz=hz)
             
-        else:
-            print("goto_pregrasp by moveit")
-            # TODO: add table obstacle to avoid collision
-            try:
-                self.robot_comand_manager.moveto_pose_with_moveit_plan(
-                    pregrasp_eef_pose, 
-                    pregrasp_hand_angles, 
-                    table_obstacle=table_obstacle)
-        
-            except Exception as ServiceException:
-                if direct_if_moveit_failed:
-                    print("Failed to reach the pregrasp position by moveit. ", ServiceException)
-                    print("Try to reach the pregrasp position by spliting joint angles.")
-                    self.robot_comand_manager.execute_trajectory([tscaled_first_traj_point], hz=hz)
-                else:
-                    raise ServiceException                
+        print("goto_pregrasp by moveit")
+        try:
+            self.robot_comand_manager.moveto_pose_with_moveit_plan(
+                pregrasp_eef_pose, 
+                pregrasp_hand_angles, 
+                table_obstacle=table_obstacle)
+    
+        except Exception as ServiceException:
+            print("Failed to reach the pregrasp position by moveit.")
+            raise ServiceException         
+                   
         print('Robot is reaching the pregrasp position.')
         import time
         time.sleep(5)

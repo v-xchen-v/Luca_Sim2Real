@@ -104,7 +104,8 @@ class ObjectPositionLocator(ObjectLocatorBase):
                  vis_scene_point_cloud_in_cam_coord: bool = False,
                  vis_scene_point_cloud_in_board_coord: bool = False,
                  vis_filtered_point_cloud_in_cam_coord: bool = False,
-                 T_calibration_board_to_camera: np.ndarray = None
+                 T_calibration_board_to_camera: np.ndarray = None,
+                 icp_fitness_threshold: float = None,
                  ) -> None:
         super().__init__(scene_data_save_dir, 
                          scene_data_file_name, 
@@ -129,6 +130,8 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.vis_scene_point_cloud_in_board_coord = vis_scene_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_board_coord = vis_filtered_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_cam_coord = vis_filtered_point_cloud_in_cam_coord
+        
+        self.icp_fitness_threshold = icp_fitness_threshold
     
     
     def get_object_point_cloud(self,
@@ -183,6 +186,9 @@ class ObjectPositionLocator(ObjectLocatorBase):
                                                                  self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord),
                                                                  vis_aligned=True,
                                                                  switch_source_target=True)
+            
+        if self.icp_fitness_threshold is not None and fitness < self.icp_fitness_threshold:
+            raise ValueError(f"ICP matching fitness is below threshold: {fitness}")
     
     def locate_object_position(self):
         """
@@ -305,6 +311,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
                  T_calibration_board_to_camera: np.ndarray = None,
                  icp_rot_euler_limit:int = None,
                  icp_rot_euler_offset_after_limit = None,
+                 icp_fitness_threshold: float = None,
                  ) -> None:
         super().__init__(scene_data_save_dir,
                         scene_data_file_name,
@@ -325,6 +332,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
         self.R_calibration_board_to_object_placed_face_robot = R_calibration_board_to_object_placed_face_robot
         self.icp_rot_euler_limit = icp_rot_euler_limit
         self.icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit
+        self.icp_fitness_threshold = icp_fitness_threshold
         
         # store itermediate data
         self.R_object_placed_face_robot_to_current = None

@@ -84,12 +84,14 @@ class RobotCommandManager:
                 if i ==0:
                     arm_command.obstacles += list(table_obstacle)
                 if i ==1:
+                    # camera obstacle
                     arm_command.obstacles += list([0, 0, 0, 0, 0, 0, 1, 0.8, 0.4, 0.2])
                 
                 # arm_command.obstacles += [-0.333,-0.524,0.085,-0.1638,-0.2579,0.0418,0.9513,0.3,0.3,0.001]
                 # arm_command.obstacles += [x, y, z, qx, qy, qz, qw, x_length:0.3, y_length:0.3, z_length:0.001]
         task_service = rospy.ServiceProxy('move_once_service', MoveOnceService)
         response = task_service(arm_command)
+        return response
         
     def moveto_pose(self, pose):
         """Move the robot to the specified pose"""
