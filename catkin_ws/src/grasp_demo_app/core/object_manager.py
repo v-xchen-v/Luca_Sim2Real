@@ -68,36 +68,36 @@ class ObjectManager:
             #     "pregrasp_tscale": 1.2,
             # },
             {
-                "name": "bottle_coconut_1105",
-                "rotation_euler": [-np.pi/2, np.pi/2, 0],
-                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
-                "icp_rot_euler": True,
-                "icp_rot_euler_limit": 95, # 360
-                "icp_rot_euler_offset_after_limit": 0, # 180
-                "first_n_steps": 120,
-                "grasp_traj_hz": 4, 
-                "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-800.npy",
-                "hand_offset_at_n_step": 65, # start af offset at step n, when object is upper than table
-                "hand_offset": 25, # degree 
-                "pregrasp_tscale": 1.2,
-                "hand_preoffset_for_all_steps": -10, #degree
-            },
-            {
                 "name": "tape_measure_1105",
                 "rotation_euler": [np.pi, 0, np.pi/2],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/tape_measure.npy',
                 "icp_rot_euler": True,
                 "icp_rot_euler_limit": 180,
                 "icp_rot_euler_offset_after_limit": 0,
-                "first_n_steps": 100,
+                "first_n_steps": 80,
                 "grasp_traj_hz": 4, 
                 "hand_lift_offset": 0,  
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 40, # start af offset at step n, when object is upper than table
-                "hand_offset": 5, # degree 
+                "hand_offset": 8, # degree 
                 "pregrasp_tscale": 1.2,                
                 "hand_preoffset_for_all_steps": 0,
+            },
+            {
+                "name": "bottle_coconut_1105",
+                "rotation_euler": [-np.pi/2, np.pi/2, 0],
+                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/bottle_coconut.npy',
+                "icp_rot_euler": True,
+                "icp_rot_euler_limit": 90, # 360
+                "icp_rot_euler_offset_after_limit": 0, # 180
+                "first_n_steps": 120,
+                "grasp_traj_hz": 6, 
+                "hand_lift_offset": 0,    
+                "sim_traj_file_name": "step-800.npy",
+                "hand_offset_at_n_step": 70, # start af offset at step n, when object is upper than table
+                "hand_offset": 25, # degree 
+                "pregrasp_tscale": 1.2,
+                "hand_preoffset_for_all_steps": -10, #degree
             },
             {
                 "name": "coke_can_1104",
@@ -129,19 +129,19 @@ class ObjectManager:
                 "pregrasp_tscale": 1.2,                
                 "hand_preoffset_for_all_steps": 0,
             },
-            {
-                "name": "hammer_1102",
-                "rotation_euler": [np.pi/2, 0, 0],
-                "modeling_file_path": r'data/pointcloud_data/candidiate_objects/hammer.npy',
-                "icp_rot_euler": True,
-                "icp_rot_euler_limit": 360,
-                "icp_rot_euler_offset_after_limit": 0,
-                "first_n_steps": 200,
-                "grasp_traj_hz": 2, 
-                "hand_lift_offset": 0,  
-                "pregrasp_tscale": 1.2,                
-                "hand_preoffset_for_all_steps": 0,
-            },
+            # {
+            #     "name": "hammer_1102",
+            #     "rotation_euler": [np.pi/2, 0, 0],
+            #     "modeling_file_path": r'data/pointcloud_data/candidiate_objects/hammer.npy',
+            #     "icp_rot_euler": True,
+            #     "icp_rot_euler_limit": 360,
+            #     "icp_rot_euler_offset_after_limit": 0,
+            #     "first_n_steps": 200,
+            #     "grasp_traj_hz": 2, 
+            #     "hand_lift_offset": 0,  
+            #     "pregrasp_tscale": 1.2,                
+            #     "hand_preoffset_for_all_steps": 0,
+            # },
             # {
             #     "name": "coke_can_1030",
             #     "rotation_euler": [-np.pi/2, np.pi/4, 0],

@@ -449,6 +449,11 @@ class ObjectPoseLocator(ObjectPositionLocator):
                 # Map to the range [-90, 90]
                 if angle > 90:
                     angle -= 180
+            if limit == 90:
+                angle = angle % 90
+                
+                if angle > 45:
+                    angle -= 90
             else:
                 # if angle is greater than limit, %limit
                 if angle > limit:

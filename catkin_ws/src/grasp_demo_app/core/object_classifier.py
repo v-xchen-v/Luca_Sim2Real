@@ -26,10 +26,10 @@ class ObjectClassifier:
     
 class_names = [
     # "duck", 
-    "orange", 
+    "orange peach", 
     "dark green tape measure", 
     "dark yellow box", 
-    "toy hammer", 
+    # "toy hammer", 
     "Rubik's cube white cube",
     "milk juice",
     "coke can"]
@@ -37,11 +37,11 @@ object_classifier = ObjectClassifier(class_names=class_names, model_name='ViT-L/
 
 
 class_mapping_dict = {
-    "orange": "orange_1024",
+    "orange peach": "orange_1024",
     # "duck": "duck_1104",
     "dark green tape measure": "tape_measure_1105",
     "dark yellow box": "realsense_box_1024",
-    "toy hammer": "hammer_1102",
+    # "toy hammer": "hammer_1102",
     "Rubik's cube white cube": "cube_055_1103",
     "milk juice": "bottle_coconut_1105",
     "coke can": "coke_can_1104"
