@@ -108,7 +108,7 @@ class ObjectPointCloudExtractor:
 
         
         # for debugging purposes
-        if True: 
+        if False: 
             # Save or display the cropped RGB image
             cv2.imwrite("cropped_rgb_image.jpg", cropped_rgb_image)
             cv2.imshow("Cropped Image", cropped_rgb_image)

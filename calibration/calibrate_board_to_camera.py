@@ -91,8 +91,11 @@ def capture_frame_and_save_table_calibration(pattern_size, square_size, mtx, dis
         # Get the RGB frame
         ## if 
         frame = realsense_instance.get_rgb_frame()
-        cv2.imshow("camera frame", frame)
-        cv2.waitKey(2000)
+        
+        # if False: # for debugging purpose
+            # cv2.imshow("camera frame", frame)
+            # cv2.waitKey(2000)
+        
         if frame is None:
             print("Warning: no rgb frame from camera.")
         
