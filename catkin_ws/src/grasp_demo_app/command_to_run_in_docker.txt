@@ -1,0 +1,19 @@
+# set up for ros1
+source /work/devel/setup.bash
+
+# set up for ros package
+cd /work1/catkin_ws
+catkin_make
+source /work1/catkin_ws/devel/setup.bash
+## Optional
+rm -r /work1/catkin_ws/devel
+rm -r /work1/catkin_ws/build
+
+# prepare before launch app, load model and checking camera...
+cd /work1
+python catkin_ws/src/scripts/checking.py
+
+# launch app
+cd /work1
+python catkin_ws/src/grasp_demo_app/scripts/main.py
+
