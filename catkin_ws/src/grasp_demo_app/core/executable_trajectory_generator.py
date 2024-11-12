@@ -13,6 +13,7 @@ import cv2
 from .object_classifier import get_object_name_from_clip
 from pointcloud_processing.pointcloud_exceptions import ICPFitnessException
 import select, sys
+from rembg import remove
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -46,6 +47,8 @@ class ExecutableTrajectoryGenerator:
         
         self.vis_object_pcd = self.config["vis_object_pcd"]
         self.vis_object_icp = self.config["vis_object_icp"]
+        self.roi_object_remove_bg = self.config["roi_object_remove_bg"]
+        self.roi_object_scale_factor = self.config["roi_object_scale_factor"]
         
         self.calibration_error_threshold = self.config["calibration_error_threshold"]        
         # object management configs
@@ -69,7 +72,7 @@ class ExecutableTrajectoryGenerator:
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
-    def _crop_object_roi(self, candidate_object_names, use_pcd=False):
+    def _crop_object_roi(self, candidate_object_names, use_pcd, scale_factor=1.0):
         if use_pcd:
             candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
                                                 for obj in candidate_object_names]
@@ -89,7 +92,8 @@ class ExecutableTrajectoryGenerator:
                 vis_pcds.append(object_pcd_in_board_coord)
                 o3d.visualization.draw_geometries(vis_pcds)
                 
-            object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
+            object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image, 
+                                                                                          scale_factor=scale_factor)
             if object_roi_color_image is None: 
                 raise ValueError("object_roi_color_image is None")
             
@@ -99,6 +103,8 @@ class ExecutableTrajectoryGenerator:
             return scene_color_image[180:540, 600:960]
             
     def determine_object(self, use_pcd=True):
+        use_remove_bg = self.roi_object_remove_bg
+        
         # candidate_object_names = ['orange_1024', 'realsense_box_1024']
         candidate_object_names = self.config["candidiates"]
         
@@ -110,13 +116,17 @@ class ExecutableTrajectoryGenerator:
         object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'
         
         if not self.classifier_object_in_loop:
-            object_roi_color_image = self._crop_object_roi(candidate_object_names, use_pcd=use_pcd)
+            object_roi_color_image = self._crop_object_roi(candidate_object_names, use_pcd=use_pcd, scale_factor=self.roi_object_scale_factor)
+            if use_remove_bg:
+                object_roi_color_image = remove(object_roi_color_image)
             cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
             candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
         else:
             # loop until success which when human key press any key
             while True:
-                object_roi_color_image = self._crop_object_roi(candidate_object_names, use_pcd=use_pcd)
+                object_roi_color_image = self._crop_object_roi(candidate_object_names, use_pcd=use_pcd, scale_factor=self.roi_object_scale_factor)
+                if use_remove_bg:
+                    object_roi_color_image = remove(object_roi_color_image)
                 cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
                 candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
                 print(f"------ candidate_object_name: {candidate_object_name} ------")
