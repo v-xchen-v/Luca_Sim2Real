@@ -136,7 +136,8 @@ class ExecutableTrajectoryGenerator:
             self.processor.locate_object(x_keep_range=self.x_keep_range, 
                                         y_keep_range=self.y_keep_range, 
                                         z_keep_range=self.z_keep_range,
-                                        vis_object_in_real=vis_object_in_real)
+                                        vis_object_in_real=vis_object_in_real,
+                                        vis_object_point_cloud=False)
         except ICPFitnessException as e:
             raise ICPFitnessException(f"ICP Fitness Exception: {e}")
             

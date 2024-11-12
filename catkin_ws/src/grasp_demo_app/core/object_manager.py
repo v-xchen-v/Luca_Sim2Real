@@ -33,7 +33,7 @@ class ObjectManager:
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
-                "hand_offset": 6, # degree
+                "hand_offset": 1, # degree
                 "pregrasp_tscale": 1.3,
                 "hand_preoffset_for_all_steps": 0,
                 "icp_fitness_threshold": 0.5,
@@ -50,7 +50,7 @@ class ObjectManager:
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 40, # start af offset at step n, when object is upper than table
-                "hand_offset": 3, # degree 
+                "hand_offset": 1, # degree 
                 "pregrasp_tscale": 1.2,
                 "hand_preoffset_for_all_steps": 0,
                 "icp_fitness_threshold": 0.5,

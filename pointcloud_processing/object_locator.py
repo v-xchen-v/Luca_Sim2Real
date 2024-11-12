@@ -184,7 +184,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.aligned_source, restored_target, self.source_to_algined_rotation_matrix,\
             fitness, rmse = align_source_to_target(self.object_model_pcd, 
                                                                  self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord),
-                                                                 vis_aligned=True,
+                                                                 vis_aligned=False,
                                                                  switch_source_target=True)
             
         if self.icp_fitness_threshold is not None and fitness < self.icp_fitness_threshold:
