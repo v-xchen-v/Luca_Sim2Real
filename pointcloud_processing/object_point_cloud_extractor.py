@@ -108,7 +108,7 @@ class ObjectPointCloudExtractor:
             x_min = int(x_min_range[0])
 
         if x_max < x_min_range[1]:
-            x_max = int(x_min_range)
+            x_max = int(x_min_range[1])
         
         if y_min > y_min_range[0]:
             y_min = int(y_min_range[0])
