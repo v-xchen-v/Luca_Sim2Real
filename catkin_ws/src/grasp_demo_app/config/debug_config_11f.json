@@ -23,5 +23,7 @@
     "vis_object_pcd": false,
     "vis_object_icp": true,
 
+    "classifier_object_in_loop": false,
+
     "execution_enabled": false
 }

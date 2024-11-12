@@ -12,6 +12,7 @@ import json
 import cv2
 from .object_classifier import get_object_name_from_clip
 from pointcloud_processing.pointcloud_exceptions import ICPFitnessException
+import select, sys
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -36,6 +37,8 @@ class ExecutableTrajectoryGenerator:
         # self.x_keep_range = [-0.2, +0.2]
         # self.y_keep_range = [-0.15, +0.15]
         # self.z_keep_range = [-0.3, -0.004]
+        
+        self.classifier_object_in_loop = self.config["classifier_object_in_loop"]
         
         self.x_keep_range = self.config["point_cloud_x_keep_range"]
         self.y_keep_range = self.config["point_cloud_y_keep_range"]
@@ -66,16 +69,7 @@ class ExecutableTrajectoryGenerator:
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
-    def determine_object(self, use_pcd=True):
-        # candidate_object_names = ['orange_1024', 'realsense_box_1024']
-        candidate_object_names = self.config["candidiates"]
-        
-        # if only one object, return it
-        if len(candidate_object_names) == 1:
-            self.object_manager_configs = self.object_manager.get_object_config(candidate_object_names[0])
-            return candidate_object_names[0]
-        
-        object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'
+    def _crop_object_roi(self, candidate_object_names, use_pcd=False):
         if use_pcd:
             candidate_object_modeling_files = [self.object_manager.get_object_config(obj)['modeling_file_path']
                                                 for obj in candidate_object_names]
@@ -94,20 +88,50 @@ class ExecutableTrajectoryGenerator:
                     vis_pcds.append(item)
                 vis_pcds.append(object_pcd_in_board_coord)
                 o3d.visualization.draw_geometries(vis_pcds)
+                
             object_roi_color_image = self.object_pc_extractor.get_object_rgb_in_cam_coord(scene_color_image)
             if object_roi_color_image is None: 
                 raise ValueError("object_roi_color_image is None")
             
-            cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
-
-            # # TODO: should get point cloud from scene and find best match
-            # _, best_matching_index, _, _, _, _ = get_closest_pcd_match(target_pcd=object_pcd_in_board_coord, 
-            #                                                            candidate_pcds=candidate_object_pcds)
+            return object_roi_color_image   
         else:
             _, scene_color_image = get_image_and_point_cloud_from_realseanse()
-            cv2.imwrite(object_roi_color_image_path, scene_color_image[180:540, 600:960])
+            return scene_color_image[180:540, 600:960]
             
-        candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
+    def determine_object(self, use_pcd=True):
+        # candidate_object_names = ['orange_1024', 'realsense_box_1024']
+        candidate_object_names = self.config["candidiates"]
+        
+        # if only one object, return it
+        if len(candidate_object_names) == 1:
+            self.object_manager_configs = self.object_manager.get_object_config(candidate_object_names[0])
+            return candidate_object_names[0]
+        
+        object_roi_color_image_path = 'data/debug_data/pointcloud_data/camera_captures/object_roi_color_image.png'
+        
+        if not self.classifier_object_in_loop:
+            object_roi_color_image = self._crop_object_roi(candidate_object_names, use_pcd=use_pcd)
+            cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
+            candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
+        else:
+            # loop until success which when human key press any key
+            while True:
+                object_roi_color_image = self._crop_object_roi(candidate_object_names, use_pcd=use_pcd)
+                cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
+                candidate_object_name = get_object_name_from_clip(object_roi_color_image_path)
+                print(f"------ candidate_object_name: {candidate_object_name} ------")
+                print("Press any key if the object is correctly identified")
+
+                # Waiting for Enter key input from the user to break the loop
+                # The select function waits for input, with a timeout of 1 second
+                if select.select([sys.stdin], [], [], 1)[0]:
+                    # If input is detected, read it and break the loop
+                    print("Exiting the loop.")
+                    break
+                else:
+                    # Continue the loop if no input is given within 1 second
+                    print("No input detected, continuing...")
+
         
         self.object_manager_configs = self.object_manager.get_object_config(candidate_object_name)
         # # Dummy logic to determine the object
