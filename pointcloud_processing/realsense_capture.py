@@ -28,7 +28,11 @@ class RealSenseCapture:
                     self.config.enable_stream(rs.stream.color, width, height, color_format, fps)
                     
                     # Start the pipeline
-                    self.pipeline.start(self.config)
+                    self.profile = self.pipeline.start(self.config)
+                    
+                    self.sensor = self.profile.get_device().first_color_sensor()
+                    self.sensor.set_option(rs.option.enable_auto_exposure, 0)
+                    self.sensor.set_option(rs.option.exposure, 400)  # RealSense中的曝光时间单位为微秒
                     self._initialized = True
                 except Exception as e:
                     print(f"Initialization failed (attempt {retry_count + 1}/{max_retries}):", e)

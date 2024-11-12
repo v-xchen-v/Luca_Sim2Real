@@ -143,6 +143,7 @@ class GraspAndPlaceApp:
                     except rospy.ServiceException as e:
                         print(f"Can not reach target position with moveit planner: {e}")
                         print(f"Moveit planning failed, or service not available.")
+                        input("Press Enter to continue next grasp iteration...")
                         continue
                 else:
                     self.execute()
