@@ -24,7 +24,7 @@
     "vis_object_icp": true,
 
     "classifier_object_in_loop": false,
-    "roi_object_remove_bg": true,
+    "roi_object_remove_bg": false,
     "roi_object_scale_factor": 2.8,
 
     "execution_enabled": false
