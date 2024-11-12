@@ -124,10 +124,9 @@ class GraspAndPlaceApp:
         """
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
-            
-
-            if self.execution_enabled:
-                self.executor.goto_home(table_obstacle=self.table_obstacle)
+            if iteration == 0:
+                if self.execution_enabled:
+                    self.executor.goto_home(table_obstacle=self.table_obstacle)
 
             
             # handle errors that can occur during the process and goto next iteration

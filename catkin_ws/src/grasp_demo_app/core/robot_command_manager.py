@@ -2,6 +2,7 @@ import rospy
 from ros_msra_robot.msg import (ArmJointCommandMsg, ArmDirectPoseCommandMsg, ArmDirectPoseDeltaCommandMsg)
 from ros_msra_robot.srv import MoveOnceService, MoveOnceServiceRequest
 import numpy as np
+from tqdm import tqdm
 
 class RobotCommandManager:
     def __init__(self) -> None:
@@ -106,7 +107,7 @@ class RobotCommandManager:
         
         rate = rospy.Rate(hz)
         
-        for i, traj_point in enumerate(trajectory):
+        for i, traj_point in tqdm(enumerate(trajectory), total=len(trajectory), desc="Executing Trajectory"):
             print(f"Executing trajectory point {i+1}/{len(trajectory)}")
             x, y, z, qx, qy, qz, qw = traj_point[:7]
             hand_joints = traj_point[7:13] # pinky, ring, middle, index, pitch, yaw

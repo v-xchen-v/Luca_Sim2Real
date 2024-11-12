@@ -12,13 +12,13 @@ class ObjectManager:
                 "icp_rot_euler_limit": None,
                 "icp_rot_euler_offset_after_limit": 0,
                 "first_n_steps": 70,
-                "grasp_traj_hz": 4,
+                "grasp_traj_hz": 5,
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
-                "hand_offset_at_n_step": None, # start af offset at step n, when object is upper than table
-                "hand_offset": 0, # degree
+                "hand_offset_at_n_step": 53, # start af offset at step n, when object is upper than table
+                "hand_offset": 5+3, # degree
                 "pregrasp_tscale": 1.5,                
-                "hand_preoffset_for_all_steps": 0,
+                "hand_preoffset_for_all_steps": -5,
                 "icp_fitness_threshold": 0.5,
             },
             {

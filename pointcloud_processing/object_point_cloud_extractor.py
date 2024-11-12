@@ -47,7 +47,8 @@ class ObjectPointCloudExtractor:
         self.object_pcd_in_cam_coord = object_pcd_in_cam_coord
         return object_pcd_in_cam_coord
     
-    def get_object_rgb_in_cam_coord(self, color_image: np.ndarray, scale_factor):
+    def get_object_rgb_in_cam_coord(self, color_image: np.ndarray, scale_factor,
+                                    x_min_range, y_min_range):
         if self.masked_pc_point_array is None:
             raise ValueError("Object point cloud in board coordinate is not yet extracted.")
         
@@ -102,6 +103,18 @@ class ObjectPointCloudExtractor:
         x_max = min(w, x_max + int((scale_factor-1) * (x_max - x_min)))
         y_min = max(0, y_min - int((scale_factor-1) * (y_max - y_min)))
         y_max = min(h, y_max + int((scale_factor-1) * (y_max - y_min)))
+        
+        if x_min > x_min_range[0]:
+            x_min = int(x_min_range[0])
+
+        if x_max < x_min_range[1]:
+            x_max = int(x_min_range)
+        
+        if y_min > y_min_range[0]:
+            y_min = int(y_min_range[0])
+        
+        if y_max < y_min_range[1]:
+            y_max = int(y_min_range[1])          
         
         # Crop the RGB image using the calculated pixel bounds
         cropped_rgb_image = color_image[x_min:x_max, y_min:y_max]
