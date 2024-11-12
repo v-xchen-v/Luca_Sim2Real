@@ -9,8 +9,7 @@
                     "cube_055_1103",
                     "bottle_coconut_1101",
                     "tape_measure_1105",
-                    "realsense_box_1024",
-                    "coke_can_1110"],
+                    "realsense_box_1024"],
     
     "object_crop_rgb_x_range": [180, 540],
     "object_crop_rgb_y_range": [400, 880],
@@ -22,7 +21,10 @@
     "vis_sim_init": false,
     "vis_sim_traj": false,
     "vis_object_in_real": false,
-    "vis_real_hand_approach_object": true,
+    "vis_real_hand_approach_object": false,
+
+    "vis_object_pcd": false,
+    "vis_object_icp": false,
 
     "execution_enabled": true
 }

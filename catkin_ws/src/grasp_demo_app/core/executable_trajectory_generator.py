@@ -41,6 +41,9 @@ class ExecutableTrajectoryGenerator:
         self.y_keep_range = self.config["point_cloud_y_keep_range"]
         self.z_keep_range = self.config["point_cloud_z_keep_range"]
         
+        self.vis_object_pcd = self.config["vis_object_pcd"]
+        self.vis_object_icp = self.config["vis_object_icp"]
+        
         self.calibration_error_threshold = self.config["calibration_error_threshold"]        
         # object management configs
         self.object_manager_configs = None
@@ -63,7 +66,7 @@ class ExecutableTrajectoryGenerator:
         self.object_pc_extractor = ObjectPointCloudExtractor(
             T_calibration_board_to_camera=self.processor.real_traj_adaptor.frame_manager.get_transformation("calibration_board_real", "camera_real"))
     
-    def determine_object(self, use_pcd=False):
+    def determine_object(self, use_pcd=True):
         # candidate_object_names = ['orange_1024', 'realsense_box_1024']
         candidate_object_names = self.config["candidiates"]
         
@@ -137,7 +140,8 @@ class ExecutableTrajectoryGenerator:
                                         y_keep_range=self.y_keep_range, 
                                         z_keep_range=self.z_keep_range,
                                         vis_object_in_real=vis_object_in_real,
-                                        vis_object_point_cloud=False)
+                                        vis_object_point_cloud=self.vis_object_pcd,
+                                        vis_object_icp=self.vis_object_icp)
         except ICPFitnessException as e:
             raise ICPFitnessException(f"ICP Fitness Exception: {e}")
             

@@ -142,7 +142,7 @@ class Sim2RealTrajectoryProcessor:
         
     def locate_object(self, x_keep_range, y_keep_range, z_keep_range, 
                       vis_object_in_real, reuse_env_board2cam=True,
-                      vis_object_point_cloud=False):
+                      vis_object_point_cloud=False, vis_object_icp=False):
         # Locate the object relative to the calibration board
         scene_data_save_dir = f"data/scene_data/{self.object_name}_test_scene_data"
         scene_data_file_name = "test_scene"
@@ -176,6 +176,7 @@ class Sim2RealTrajectoryProcessor:
             icp_rot_euler_limit=self.object_icp_rot_euler_limit,
             icp_rot_euler_offset_after_limit=self.object_icp_rot_euler_offset_after_limit,
             icp_fitness_threshold=self.object_icp_fitness_threshold,
+            vis_object_icp=vis_object_icp
         )
         print(f'Object position: {object_pos[:, 3]}')
         

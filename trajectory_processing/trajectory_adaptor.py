@@ -261,7 +261,8 @@ class TrajectoryAdaptor:
                                                   locate_rot_by_icp=False,
                                                   icp_rot_euler_limit=None,
                                                   icp_rot_euler_offset_after_limit=None,
-                                                  icp_fitness_threshold = None
+                                                  icp_fitness_threshold = None,
+                                                  vis_object_icp=False,
                                                   ):
         if euler_xyz is None:
             # TODO: use ICP to got the ori
@@ -289,6 +290,7 @@ class TrajectoryAdaptor:
                 vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
                 vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
                 vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
+                vis_object_icp=vis_object_icp,
             )
             
             T_board_to_object = create_transformation_matrix(object_xyz, R.from_euler("XYZ", euler_xyz).as_matrix())
@@ -312,6 +314,7 @@ class TrajectoryAdaptor:
                 icp_rot_euler_limit = icp_rot_euler_limit,
                 icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit,
                 icp_fitness_threshold = icp_fitness_threshold,
+                vis_object_icp=vis_object_icp,
             )
             
         T_object_in_readable = T_board_to_object
@@ -490,7 +493,8 @@ class TrajectoryAdaptor:
                                           T_calibration_board_to_camera,
                                             vis_filtered_point_cloud_in_board_coord,
                                             vis_scene_point_cloud_in_board_coord,
-                                            vis_scene_point_cloud_in_cam_coord):
+                                            vis_scene_point_cloud_in_cam_coord,
+                                            vis_object_icp):
         # using point cloud to locate the position of object in real world
         t_board_to_object = None
         from pointcloud_processing.object_locator import ObjectPositionLocator
@@ -505,7 +509,8 @@ class TrajectoryAdaptor:
             vis_scene_point_cloud_in_cam_coord=vis_scene_point_cloud_in_cam_coord,
             vis_scene_point_cloud_in_board_coord=vis_scene_point_cloud_in_board_coord,
             vis_filtered_point_cloud_in_board_coord=vis_filtered_point_cloud_in_board_coord,
-            T_calibration_board_to_camera=T_calibration_board_to_camera
+            T_calibration_board_to_camera=T_calibration_board_to_camera,
+            vis_object_icp=vis_object_icp
             )
 
         object_center = object_locator.locate_partial_view_object_position(
@@ -539,7 +544,9 @@ class TrajectoryAdaptor:
                                             R_calibration_board_to_object_placed_face_robot,
                                             icp_rot_euler_limit,
                                             icp_rot_euler_offset_after_limit,
-                                            icp_fitness_threshold):
+                                            icp_fitness_threshold,
+                                            vis_object_icp
+                                            ):
         # using point cloud to locate the position of object in real world
         T_board_to_object = None
         from pointcloud_processing.object_locator import ObjectPoseLocator
@@ -558,7 +565,8 @@ class TrajectoryAdaptor:
             R_calibration_board_to_object_placed_face_robot=R_calibration_board_to_object_placed_face_robot,
             icp_rot_euler_limit=icp_rot_euler_limit,
             icp_rot_euler_offset_after_limit = icp_rot_euler_offset_after_limit,
-            icp_fitness_threshold = icp_fitness_threshold
+            icp_fitness_threshold = icp_fitness_threshold,
+            vis_object_icp=vis_object_icp
             )
 
         T_board_to_object = object_locator.locate_object_pose(
@@ -711,7 +719,7 @@ class TrajectoryAdaptor:
     def _parse_sim_trajectory_file(self, traj_npy_file):
          # Read the trajectory file from the simulator
         traj_sim_data = np.load(traj_npy_file, allow_pickle=True)
-        print(traj_sim_data.item().keys())
+        # print(traj_sim_data.item().keys())
         
         # indexed joints information
         # # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15]

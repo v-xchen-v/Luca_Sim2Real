@@ -16,9 +16,12 @@
     "point_cloud_z_keep_range": [-0.2, -0.011],
 
     "vis_sim_init": false,
-    "vis_sim_traj": true,
+    "vis_sim_traj": false,
     "vis_object_in_real": false,
-    "vis_real_hand_approach_object": true,
+    "vis_real_hand_approach_object": false,
+
+    "vis_object_pcd": false,
+    "vis_object_icp": true,
 
     "execution_enabled": false
 }

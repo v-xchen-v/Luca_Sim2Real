@@ -106,6 +106,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
                  vis_filtered_point_cloud_in_cam_coord: bool = False,
                  T_calibration_board_to_camera: np.ndarray = None,
                  icp_fitness_threshold: float = None,
+                 vis_object_icp: bool = False,
                  ) -> None:
         super().__init__(scene_data_save_dir, 
                          scene_data_file_name, 
@@ -130,8 +131,11 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.vis_scene_point_cloud_in_board_coord = vis_scene_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_board_coord = vis_filtered_point_cloud_in_board_coord
         self.vis_filtered_point_cloud_in_cam_coord = vis_filtered_point_cloud_in_cam_coord
+        self.vis_object_icp = vis_object_icp
         
         self.icp_fitness_threshold = icp_fitness_threshold
+        
+        
     
     
     def get_object_point_cloud(self,
@@ -184,7 +188,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
         self.aligned_source, restored_target, self.source_to_algined_rotation_matrix,\
             fitness, rmse = align_source_to_target(self.object_model_pcd, 
                                                                  self._numpy_to_o3d(self.filtered_scene_point_cloud_in_board_coord),
-                                                                 vis_aligned=False,
+                                                                 vis_aligned=self.vis_object_icp,
                                                                  switch_source_target=True)
             
         if self.icp_fitness_threshold is not None and fitness < self.icp_fitness_threshold:
@@ -312,6 +316,7 @@ class ObjectPoseLocator(ObjectPositionLocator):
                  icp_rot_euler_limit:int = None,
                  icp_rot_euler_offset_after_limit = None,
                  icp_fitness_threshold: float = None,
+                 vis_object_icp=False,
                  ) -> None:
         super().__init__(scene_data_save_dir,
                         scene_data_file_name,
@@ -324,7 +329,8 @@ class ObjectPoseLocator(ObjectPositionLocator):
                         vis_scene_point_cloud_in_cam_coord,
                         vis_scene_point_cloud_in_board_coord,
                         vis_filtered_point_cloud_in_cam_coord,
-                        T_calibration_board_to_camera,)
+                        T_calibration_board_to_camera,
+                        vis_object_icp=vis_object_icp)
 
         """For a rotation matrix that transforms coordinates from an object’s model frame (likely
         in a virtual or CAD-based environment) to its actual orientation in the real world (specifically 
