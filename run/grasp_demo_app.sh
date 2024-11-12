@@ -3,10 +3,12 @@
 # chmod +x run/grasp_demo_app.sh
 
 # Define workspace variables
-WORK="/work"
-WORK1="/work1"
-# WORK="~/opt/ros/noetic"
-# WORK1="/home/yichao/Documents/repos/Luca_Transformation"
+# WORK="/work"
+# WORK1="/work1"
+WORK="/opt/ros/noetic/.."
+WORK1="/home/xichen/Documents/repos/Luca_Sim2Real"
+
+PYTHON="/home/xichen/miniconda3/envs/py38/bin/python3"
 
 # Optional: Kill all Python processes, to avoid camera issues
 read -p "Do you want to forcefully kill all Python processes? (y/n): " yn
@@ -45,7 +47,7 @@ case $yn in
     [Yy]* ) 
         echo "Running pre-launch checks..."
         cd "$WORK1"
-        python scripts/checking.py
+        $PYTHON scripts/checking.py
         echo "Pre-launch checks completed.";;
     * ) echo "Skipping pre-launch checks.";;
 esac
@@ -53,7 +55,7 @@ esac
 # Launch app in new terminal
 echo "Launching application..."
 cd "$WORK1"
-python catkin_ws/src/grasp_demo_app/scripts/main.py
+$PYTHON catkin_ws/src/grasp_demo_app/scripts/main.py
 echo "Application has finished."
 
 

@@ -33,7 +33,7 @@ class GraspAndPlaceApp:
         self.pregrasp_eef_pose = None
         self.pregrasp_hand_angles = None
 
-        rospy.init_node('grasp_and_place', anonymous=True)
+        # rospy.init_node('grasp_and_place', anonymous=True)
         self.speaker_pub = rospy.Publisher('speak_word', String, queue_size=1)
 
     # Step 1: Setup
@@ -146,6 +146,7 @@ class GraspAndPlaceApp:
                     except rospy.ServiceException as e:
                         print(f"Can not reach target position with moveit planner: {e}")
                         print(f"Moveit planning failed, or service not available.")
+                        self.speaker_pub.publish("Moveit planning failed.")
                         input("Press Enter to continue next grasp iteration...")
                         continue
                 else:
@@ -158,7 +159,6 @@ class GraspAndPlaceApp:
         self.setup_environment()
         input("Environment ready, Press Enter to continue...")
         
-        rospy.spin()
         """Execute the full grasp and place cycle."""
         self._grasp_and_place_cycle(repeat_count)
 
