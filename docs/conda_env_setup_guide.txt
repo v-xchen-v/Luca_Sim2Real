@@ -39,3 +39,6 @@ pip install PyQt5 # No module named 'PyQt5'
 conda or pip install torch
 pip install ftfy regex tqdm
 pip install git+https://github.com/openai/CLIP.git
+
+# Rembg
+pip install "rembg[gpu,cli]"

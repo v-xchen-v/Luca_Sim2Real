@@ -5,7 +5,7 @@ if module_path not in sys.path:
 
 CHECK_CAMERA_CONNECTION = True
 CHECK_CLASSIFIER = True
-
+CHECK_REMOVEBG = True
 if CHECK_CAMERA_CONNECTION:
     from pointcloud_processing.realsense_capture import realsense_instance
     import numpy as np
@@ -32,3 +32,8 @@ if CHECK_CLASSIFIER:
     object_name = get_object_name_from_clip('temp.jpg')
     print(f'Object Classifier Ready, object name: {object_name}')
     
+if CHECK_REMOVEBG:
+    from rembg import remove
+    removed = remove(rgb)
+    if removed is not None:
+        print('Background Remover Ready')
