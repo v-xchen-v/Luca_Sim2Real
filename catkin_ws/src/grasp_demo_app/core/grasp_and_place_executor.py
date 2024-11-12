@@ -87,7 +87,7 @@ class GraspAndPlaceExecutor:
                    
         print('Robot is reaching the pregrasp position.')
         import time
-        time.sleep(5)
+        time.sleep(1)
 
     def _execute_rl_trajectory(self, real_traj_path, first_n_steps, hz, 
                                hand_offset_at_n_step, hand_offset, hand_preoffset_for_all_steps):
