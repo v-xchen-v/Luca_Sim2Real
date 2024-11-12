@@ -8,6 +8,15 @@ WORK1="/work1"
 # WORK="~/opt/ros/noetic"
 # WORK1="/home/yichao/Documents/repos/Luca_Transformation"
 
+# Optional: Kill all Python processes, to avoid camera issues
+read -p "Do you want to forcefully kill all Python processes? (y/n): " yn
+case $yn in
+    [Yy]* ) 
+        echo "Killing all Python processes..."
+        pkill -9 -f python
+        echo "All Python processes killed.";;
+    * ) echo "Skipping killing Python processes.";;
+esac
 
 # Set up for ROS1
 echo "Sourcing ROS1 setup..."
