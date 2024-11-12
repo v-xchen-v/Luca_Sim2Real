@@ -66,7 +66,7 @@ class GraspAndPlaceApp:
         # Move to pregrasp position
         # TODO: config this vis switch to file
         
-        self._move_to_pregrasp_position(hz=2, vis=False)
+        self._move_to_pregrasp_position()
         self._execute_trajectory(self.traj_generator.traj_file_path, 
                                 steps=self.traj_generator.object_manager_configs["first_n_steps"], 
                                 hz=self.traj_generator.object_manager_configs["grasp_traj_hz"],
@@ -74,10 +74,10 @@ class GraspAndPlaceApp:
                                 hand_offset=self.traj_generator.object_manager_configs["hand_offset"],
                                 hand_preoffset_for_all_steps=self.traj_generator.object_manager_configs["hand_preoffset_for_all_steps"])
         self.executor.lift(0.1)
-        self.executor.goto_preplace(type="moveit",
+        self.executor.goto_preplace(
                                 table_obstacle=self.table_obstacle)
         self.executor.open_hand()
-        self.executor.goto_home()
+        self.executor.goto_home(table_obstacle=self.table_obstacle)
         
     def _execute_trajectory(self, trajectory_file, steps=120, hz=2, 
                             hand_offset_at_n_step=50, hand_offset=3,
@@ -104,7 +104,7 @@ class GraspAndPlaceApp:
             self.traj_generator.processor.real_traj_adaptor.visualize_tscale_hand_to_object_at_step0(t_scale)
         return eef_pose, finger_angles
 
-    def _move_to_pregrasp_position(self, hz):
+    def _move_to_pregrasp_position(self):
         """Move the executor to the pregrasp position.
         Parameters:
             t_scale (float): The scaling factor for the pregrasp pose, 
@@ -114,7 +114,6 @@ class GraspAndPlaceApp:
 
         self.executor.goto_pregrasp(pregrasp_eef_pose_matrix=self.pregrasp_eef_pose, 
                                     pregrasp_hand_angles=self.pregrasp_hand_angles, 
-                                    hz=hz,
                                     table_obstacle=self.table_obstacle)
 
     def _grasp_and_place_cycle(self, repeat_count=10, allow_moveit_failure=True):
@@ -128,8 +127,7 @@ class GraspAndPlaceApp:
             
 
             if self.execution_enabled:
-                self.executor.goto_home(type="moveit",
-                                        table_obstacle=self.table_obstacle)
+                self.executor.goto_home(table_obstacle=self.table_obstacle)
 
             
             # handle errors that can occur during the process and goto next iteration

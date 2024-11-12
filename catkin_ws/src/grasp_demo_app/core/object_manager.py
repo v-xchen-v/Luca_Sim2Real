@@ -105,22 +105,40 @@ class ObjectManager:
                 "icp_fitness_threshold": 0.5,
             },
             {
-                "name": "coke_can_1104",
-                "rotation_euler": [-np.pi/2, -np.pi/2-np.pi/2+np.pi/3+0/180*np.pi, 0],
+                "name": "coke_can_1110",
+                # "rotation_euler": [-np.pi/2, np.pi/2-np.pi/4, 0],
+                "rotation_euler": [-np.pi/2, np.pi/2-np.pi/4, 0],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/coke_can_new.npy',
                 "icp_rot_euler": False,
                 "icp_rot_euler_limit": None,
                 "icp_rot_euler_offset_after_limit": 0,
-                "first_n_steps": 200,
-                "grasp_traj_hz": 2, 
+                "first_n_steps": 120,
+                "grasp_traj_hz": 4, 
                 "hand_lift_offset": 0,    
-                "sim_traj_file_name": "step-4000.npy",
-                "hand_offset_at_n_step": 150, # start af offset at step n, when object is upper than table
-                "hand_offset": 30, # degree 
-                "pregrasp_tscale": 1.2,               
+                "sim_traj_file_name": "step-800_finetuned.npy",
+                "hand_offset_at_n_step": 50, # start af offset at step n, when object is upper than table
+                "hand_offset": 10, # degree 
+                "pregrasp_tscale": 1.5,               
                 "hand_preoffset_for_all_steps": 0,
                 "icp_fitness_threshold": 0.5,
             },
+            # {
+            #     "name": "coke_can_1104",
+            #     "rotation_euler": [-np.pi/2, -np.pi/2-np.pi/2+np.pi/3+0/180*np.pi, 0],
+            #     "modeling_file_path": r'data/pointcloud_data/candidiate_objects/coke_can_new.npy',
+            #     "icp_rot_euler": False,
+            #     "icp_rot_euler_limit": None,
+            #     "icp_rot_euler_offset_after_limit": 0,
+            #     "first_n_steps": 200,
+            #     "grasp_traj_hz": 2, 
+            #     "hand_lift_offset": 0,    
+            #     "sim_traj_file_name": "step-4000.npy",
+            #     "hand_offset_at_n_step": 150, # start af offset at step n, when object is upper than table
+            #     "hand_offset": 30, # degree 
+            #     "pregrasp_tscale": 1.2,               
+            #     "hand_preoffset_for_all_steps": 0,
+            #     "icp_fitness_threshold": 0.5,
+            # },
             {
                 "name": "duck_1104",
                 "rotation_euler": [-np.pi/2, np.pi/2, 0],

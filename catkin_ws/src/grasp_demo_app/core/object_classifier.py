@@ -44,7 +44,7 @@ class_mapping_dict = {
     # "toy hammer": "hammer_1102",
     "Rubik's cube white cube": "cube_055_1103",
     "milk juice": "bottle_coconut_1105",
-    "coke can": "coke_can_1104"
+    "coke can": "coke_can_1110"
 }
 
 def get_object_name_from_clip(rgb_color_image_path):
