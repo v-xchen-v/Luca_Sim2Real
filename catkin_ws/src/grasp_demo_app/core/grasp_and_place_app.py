@@ -1,5 +1,5 @@
 import os, sys
-
+from std_msgs.msg import String
 
 # Add module path for importing custom modules
 module_path = os.path.abspath(os.path.join('catkin_ws/src/grasp_demo_app'))
@@ -32,6 +32,9 @@ class GraspAndPlaceApp:
         
         self.pregrasp_eef_pose = None
         self.pregrasp_hand_angles = None
+
+        rospy.init_node('grasp_and_place', anonymous=True)
+        self.speaker_pub = rospy.Publisher('speak_word', String, queue_size=1)
 
     # Step 1: Setup
     def setup_environment(self):
@@ -155,6 +158,7 @@ class GraspAndPlaceApp:
         self.setup_environment()
         input("Environment ready, Press Enter to continue...")
         
+        rospy.spin()
         """Execute the full grasp and place cycle."""
         self._grasp_and_place_cycle(repeat_count)
 

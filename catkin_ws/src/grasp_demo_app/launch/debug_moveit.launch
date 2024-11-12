@@ -12,4 +12,6 @@
     </node>
 
     <include file="$(find robot_arm_pkg)/launch/moveit_planner_service.launch"/>
+
+    <include file="$(find robot_utils_pkg)/launch/robot_speaker.launch"/>
 </launch>
