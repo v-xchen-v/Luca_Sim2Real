@@ -140,7 +140,9 @@ class Sim2RealTrajectoryProcessor:
         if anim_sim_hand_approach:
             self.real_traj_adaptor.animate_sim_hand_approach_object(first_n_steps=200/5)
         
-    def locate_object(self, x_keep_range, y_keep_range, z_keep_range, vis_object_in_real, reuse_env_board2cam=True):
+    def locate_object(self, x_keep_range, y_keep_range, z_keep_range, 
+                      vis_object_in_real, reuse_env_board2cam=True,
+                      vis_object_point_cloud=False, vis_object_icp=False):
         # Locate the object relative to the calibration board
         scene_data_save_dir = f"data/scene_data/{self.object_name}_test_scene_data"
         scene_data_file_name = "test_scene"
@@ -163,7 +165,7 @@ class Sim2RealTrajectoryProcessor:
             overwrite_scene_table_calib_data_if_exists=True,
             vis_scene_point_cloud_in_cam_coord=False,
             vis_scene_point_cloud_in_board_coord=False,
-            vis_filtered_point_cloud_in_board_coord=True,
+            vis_filtered_point_cloud_in_board_coord=vis_object_point_cloud,
             object_modeling_file_path=self.object_modeling_file_path,
             x_keep_range=x_keep_range,
             y_keep_range=y_keep_range,
@@ -173,8 +175,8 @@ class Sim2RealTrajectoryProcessor:
             locate_rot_by_icp=self.object_icp_rot_euler,
             icp_rot_euler_limit=self.object_icp_rot_euler_limit,
             icp_rot_euler_offset_after_limit=self.object_icp_rot_euler_offset_after_limit,
-            icp_fitness_threshold=self.object_icp_fitness_threshold
-            
+            icp_fitness_threshold=self.object_icp_fitness_threshold,
+            vis_object_icp=vis_object_icp
         )
         print(f'Object position: {object_pos[:, 3]}')
         
