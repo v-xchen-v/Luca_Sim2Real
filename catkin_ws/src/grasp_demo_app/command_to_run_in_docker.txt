@@ -8,6 +8,7 @@ source /work1/catkin_ws/devel/setup.bash
 ## Optional
 rm -r /work1/catkin_ws/devel
 rm -r /work1/catkin_ws/build
+roslaunch grasp_demo_app debug_moveit.launch
 
 # prepare before launch app, load model and checking camera...
 cd /work1
