@@ -5,6 +5,7 @@ import os
 import pyrealsense2 as rs
 import cv2
 from .realsense_capture import realsense_instance
+import time
 
 def load_npy_file_as_point_cloud(path: str) -> o3d.geometry.PointCloud:
     """
@@ -106,6 +107,9 @@ def _save_realsense_point_cloud(pcd, color_image, save_dir: str, file_name: str,
     # save the color image
     print(f"Saving color image to {file_name}.png...")
     cv2.imwrite(f"{save_dir}/{file_name}.png", color_image)
+    
+    # Add a short delay to ensure file system writes complete
+    time.sleep(0.3)
     print("Done")
         
 # def save_point_cloud_from_sensors(self) -> np.ndarray:

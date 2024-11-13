@@ -16,9 +16,7 @@ class RealSenseCamera:
         # Start the camera pipeline
         self.profile = self.pipeline.start(self.config)
         
-        self.sensor = self.profile.get_device().first_color_sensor()
-        self.sensor.set_option(rs.option.enable_auto_exposure, 0)
-        self.sensor.set_option(rs.option.exposure, 400)  # RealSense中的曝光时间单位为微秒
+
 
     def get_rgb_frame(self):
         """

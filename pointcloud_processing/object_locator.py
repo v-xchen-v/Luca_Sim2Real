@@ -14,6 +14,7 @@ import os
 from pointcloud_processing.icp_matching import align_source_to_target
 from scipy.spatial.transform import Rotation as R   
 from pointcloud_processing.object_point_cloud_extractor import ObjectPointCloudExtractor
+from pointcloud_processing.pointcloud_exceptions import ICPFitnessException
 
 class ObjectLocatorBase:
     """Shared methods and attributes for ObjectPositionLocator and ObjectPoseLocator."""
@@ -192,7 +193,7 @@ class ObjectPositionLocator(ObjectLocatorBase):
                                                                  switch_source_target=True)
             
         if self.icp_fitness_threshold is not None and fitness < self.icp_fitness_threshold:
-            raise ValueError(f"ICP matching fitness is below threshold: {fitness}")
+            raise ICPFitnessException(f"ICP matching fitness is below threshold: {fitness}")
     
     def locate_object_position(self):
         """

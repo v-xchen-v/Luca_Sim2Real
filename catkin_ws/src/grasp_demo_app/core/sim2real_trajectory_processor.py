@@ -10,6 +10,7 @@ import numpy as np
 import json
 from .object_manager import ObjectManager
 from pytransform3d.transformations import invert_transform
+import time
 
 class Sim2RealTrajectoryProcessor:
     def __init__(self, config) -> None:
@@ -197,12 +198,14 @@ class Sim2RealTrajectoryProcessor:
         self.real_traj_adaptor.get_hand_to_robotbase_transform_with_robotbase_reference()
 
 
-    def save_real_trajectory(self):
+    def save_real_trajectory(self, overwrite_if_exists):
         # Save real trajectory datas
         save_path = f"data/trajectory_data/real_trajectory/{self.object_name}/step-0.npy"
-        self.real_traj_adaptor.save_executable_trajectory(save_path)
+        self.real_traj_adaptor.save_executable_trajectory(save_path, overwrite_if_exists)
         print(f'Real trajectory data saved at: {save_path}')
-        
+
+        # Add a short delay to ensure file system writes complete
+        time.sleep(1)
         return save_path
     
     def get_tscaled_robotbase_to_hand_at_first_point(self, t_scale=1):

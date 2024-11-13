@@ -23,6 +23,9 @@
     "vis_object_pcd": false,
     "vis_object_icp": true,
 
+    "object_roi_x_min_range": [180, 540],
+    "object_roi_y_min_range": [400, 880],
+    
     "classifier_object_in_loop": false,
     "roi_object_remove_bg": false,
     "roi_object_scale_factor": 2.8,

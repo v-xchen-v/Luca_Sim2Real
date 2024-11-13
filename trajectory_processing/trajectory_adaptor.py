@@ -579,7 +579,7 @@ class TrajectoryAdaptor:
         pass
 
         
-    def save_executable_trajectory(self, adapted_trajectory_save_path: str):
+    def save_executable_trajectory(self, adapted_trajectory_save_path: str, overwrite_if_exists: bool):
         if self.T_robot_base_to_hand_with_robotbase_ref is None:
             raise ValueError("Should do ... first.")
         
@@ -598,6 +598,11 @@ class TrajectoryAdaptor:
         
         if not os.path.exists(os.path.dirname(adapted_trajectory_save_path)):
             os.makedirs(os.path.dirname(adapted_trajectory_save_path))
+            
+        if overwrite_if_exists:
+            if os.path.isfile(adapted_trajectory_save_path):
+                os.remove(adapted_trajectory_save_path)
+                print(f'remove old traj file.')
         np.save(adapted_trajectory_save_path, adapted_real_trajectory_data)
                 
     def _compute_transformations_with_calibration_data(self):
