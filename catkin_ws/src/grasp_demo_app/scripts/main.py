@@ -10,8 +10,8 @@ from core.grasp_and_place_app import GraspAndPlaceApp
 
 def main():
     # Configuration for the systems
-    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_config_11f.json'
+    sim2real_config = 'catkin_ws/src/grasp_demo_app/config/debug_config_2f.json'
     app = GraspAndPlaceApp(sim2real_config)
-    app.run(repeat_count=10)
-    
+    app.run(repeat_count=1000)
+
 main()

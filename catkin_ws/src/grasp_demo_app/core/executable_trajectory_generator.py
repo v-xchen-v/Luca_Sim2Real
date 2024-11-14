@@ -15,6 +15,7 @@ from pointcloud_processing.pointcloud_exceptions import ICPFitnessException
 import select, sys
 from rembg import remove
 import time
+import numpy as np
 
 class ExecutableTrajectoryGenerator:
     def __init__(self, sim2real_traj_config) -> None:
@@ -109,9 +110,10 @@ class ExecutableTrajectoryGenerator:
             return object_roi_color_image   
         else:
             _, scene_color_image = get_image_and_point_cloud_from_realseanse()
-            return scene_color_image[180:540, 600:960]
+            return scene_color_image[int(x_min_range[0]):int(x_min_range[1]), 
+                                     int(y_min_range[0]):int(y_min_range[1])]
             
-    def determine_object(self, use_pcd=True):
+    def determine_object(self, use_pcd=False):
         use_remove_bg = self.roi_object_remove_bg
         
         # candidate_object_names = ['orange_1024', 'realsense_box_1024']
@@ -146,6 +148,18 @@ class ExecutableTrajectoryGenerator:
                     y_min_range=self.object_roi_y_min_range)
                 if use_remove_bg:
                     object_roi_color_image = remove(object_roi_color_image)
+                    alpha_channel = object_roi_color_image[:, :, 3]
+                    coord = np.argwhere(alpha_channel > 200)
+                    if coord.any():
+                        x_min, y_min = coord.min(axis=0)
+                        x_max, y_max = coord.max(axis=0)
+                        y_min = max(0, y_min)
+                        x_max = min(object_roi_color_image.shape[0], x_max)
+
+                        object_roi_color_image = object_roi_color_image[x_min:x_max, y_min:y_max, :3]
+                        if np.any(np.array(object_roi_color_image.shape) == 0):
+                            continue
+                            
                 cv2.imwrite(object_roi_color_image_path, object_roi_color_image)
                 
                 # Add a short delay to ensure file system writes complete

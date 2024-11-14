@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from typing import Callable
-USE_HEADLESS = False
+USE_HEADLESS = True
 if not USE_HEADLESS:
     import matplotlib
     matplotlib.use('TkAgg')  # Or 'Qt5Agg', depending on your setup

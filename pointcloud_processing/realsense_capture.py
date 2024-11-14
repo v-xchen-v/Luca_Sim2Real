@@ -32,7 +32,7 @@ class RealSenseCapture:
                     
                     self.sensor = self.profile.get_device().first_color_sensor()
                     self.sensor.set_option(rs.option.enable_auto_exposure, 0)
-                    self.sensor.set_option(rs.option.exposure, 400)  # RealSense中的曝光时间单位为微秒
+                    self.sensor.set_option(rs.option.exposure, 100)  # RealSense中的曝光时间单位为微秒
                     self._initialized = True
                 except Exception as e:
                     print(f"Initialization failed (attempt {retry_count + 1}/{max_retries}):", e)

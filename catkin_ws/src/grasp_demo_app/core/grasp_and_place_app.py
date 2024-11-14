@@ -127,6 +127,7 @@ class GraspAndPlaceApp:
         """
         for iteration in range(repeat_count):
             print(f"\n--- Iteration {iteration + 1} ---")
+            input("Press Enter to continue next grasp iteration...")
             if iteration == 0:
                 if self.execution_enabled:
                     self.executor.goto_home(table_obstacle=self.table_obstacle)
@@ -146,13 +147,12 @@ class GraspAndPlaceApp:
                     except rospy.ServiceException as e:
                         print(f"Can not reach target position with moveit planner: {e}")
                         print(f"Moveit planning failed, or service not available.")
-                        self.speaker_pub.publish("Moveit planning failed.")
+                        self.speaker_pub.publish("The target position is unreachable.")
                         input("Press Enter to continue next grasp iteration...")
                         continue
                 else:
                     self.execute()
             
-            input("Press Enter to continue next grasp iteration...")
 
     def run(self, repeat_count=10):
         """Setup the table robot camera calibration."""

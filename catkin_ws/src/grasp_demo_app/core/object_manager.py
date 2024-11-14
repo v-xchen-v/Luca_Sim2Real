@@ -16,14 +16,14 @@ class ObjectManager:
                 "hand_lift_offset": 0,    
                 "sim_traj_file_name": "step-0.npy",
                 "hand_offset_at_n_step": 53, # start af offset at step n, when object is upper than table
-                "hand_offset": 5+3, # degree
+                "hand_offset": 3+3, # degree
                 "pregrasp_tscale": 1.5,                
-                "hand_preoffset_for_all_steps": -5,
+                "hand_preoffset_for_all_steps": -3,
                 "icp_fitness_threshold": 0.5,
             },
             {
                 "name": "cube_055_1103",
-                "rotation_euler": [-np.pi, 0, 0],
+                "rotation_euler": [-np.pi, 0, np.pi/2],
                 "modeling_file_path": r'data/pointcloud_data/candidiate_objects/cube_055.npy',
                 "icp_rot_euler": True,
                 "icp_rot_euler_limit": 90,
